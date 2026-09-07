@@ -17,6 +17,11 @@ int APIENTRY wWinMain(_In_ HINSTANCE instance, _In_opt_ HINSTANCE prev,
   // plugins.
   ::CoInitializeEx(nullptr, COINIT_APARTMENTTHREADED);
 
+  // Use software rendering when a graphics driver cannot paint Flutter's
+  // first GPU frame and leaves the window gray.
+  _putenv_s("FLUTTER_ENGINE_SWITCHES", "1");
+  _putenv_s("FLUTTER_ENGINE_SWITCH_1", "enable-software-rendering=true");
+
   flutter::DartProject project(L"data");
 
   std::vector<std::string> command_line_arguments =
