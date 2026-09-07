@@ -30,7 +30,7 @@ Name: "korean"; MessagesFile: "compiler:Languages\Korean.isl"
 Name: "desktopicon"; Description: "바탕화면에 바로가기 만들기"; GroupDescription: "추가 바로가기:"; Flags: unchecked
 
 [Files]
-Source: "..\dist_titleicon4\CYViewer\*"; DestDir: "{app}"; Flags: ignoreversion recursesubdirs createallsubdirs
+Source: "..\dist_titleicon4\CYViewer\*"; DestDir: "{app}"; Excludes: "desktop.ini"; Flags: ignoreversion recursesubdirs createallsubdirs
 
 [Icons]
 Name: "{group}\{#MyAppName}"; Filename: "{app}\{#MyAppExeName}"; WorkingDir: "{app}"
