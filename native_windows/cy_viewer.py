@@ -30,6 +30,73 @@ COLORS = {
 }
 
 
+class RoundedButton(tk.Canvas):
+    """Tk 기본 버튼 대신 사용하는 부드러운 모서리의 작업 버튼."""
+
+    def __init__(self, parent: tk.Widget, text: str, command, variant: str = "secondary") -> None:
+        compact = text in {"+", "−"}
+        self.height = 38 if compact else 42
+        self.radius = 10
+        self.command = command
+        self.text = text
+        self.variant = variant
+        self.hovered = False
+        self.pressed = False
+        super().__init__(
+            parent,
+            height=self.height,
+            width=42 if compact else 220,
+            bg=parent.cget("bg"),
+            highlightthickness=0,
+            bd=0,
+            cursor="hand2",
+        )
+        self.bind("<Configure>", lambda _: self._draw())
+        self.bind("<Enter>", self._enter)
+        self.bind("<Leave>", self._leave)
+        self.bind("<ButtonPress-1>", self._press)
+        self.bind("<ButtonRelease-1>", self._release)
+        self._draw()
+
+    def _palette(self) -> tuple[str, str]:
+        if self.variant == "primary":
+            return ("#1D4ED8" if self.hovered else COLORS["blue"], "#FFFFFF")
+        return ("#E8F0FE" if self.hovered else COLORS["surface"], COLORS["ink"])
+
+    def _draw(self) -> None:
+        self.delete("all")
+        width, height = max(self.winfo_width(), 2), self.height
+        radius = min(self.radius, height // 2, width // 2)
+        background, foreground = self._palette()
+        outline = background if self.variant == "primary" else ("#C7D2E0" if not self.hovered else "#93C5FD")
+        self.create_rectangle(radius, 0, width - radius, height, fill=background, outline=outline)
+        self.create_rectangle(0, radius, width, height - radius, fill=background, outline=outline)
+        self.create_oval(0, 0, radius * 2, radius * 2, fill=background, outline=outline)
+        self.create_oval(width - radius * 2, 0, width, radius * 2, fill=background, outline=outline)
+        self.create_oval(0, height - radius * 2, radius * 2, height, fill=background, outline=outline)
+        self.create_oval(width - radius * 2, height - radius * 2, width, height, fill=background, outline=outline)
+        self.create_text(width // 2, height // 2, text=self.text, fill=foreground, font=("Malgun Gothic", 10, "bold" if self.variant == "primary" else "normal"))
+
+    def _enter(self, _) -> None:
+        self.hovered = True
+        self._draw()
+
+    def _leave(self, _) -> None:
+        self.hovered = False
+        self.pressed = False
+        self._draw()
+
+    def _press(self, _) -> None:
+        self.pressed = True
+
+    def _release(self, event) -> None:
+        was_pressed = self.pressed
+        self.pressed = False
+        self._draw()
+        if was_pressed and 0 <= event.x <= self.winfo_width() and 0 <= event.y <= self.height:
+            self.command()
+
+
 class CyViewer(tk.Tk):
     def __init__(self) -> None:
         super().__init__()
@@ -62,10 +129,6 @@ class CyViewer(tk.Tk):
     def _make_ui(self) -> None:
         style = ttk.Style(self)
         style.theme_use("clam")
-        style.configure("Action.TButton", font=("Malgun Gothic", 10), padding=(10, 8), background=COLORS["surface"], foreground=COLORS["ink"], bordercolor=COLORS["line"])
-        style.map("Action.TButton", background=[("active", COLORS["blue_soft"]), ("pressed", "#DBEAFE")])
-        style.configure("Primary.TButton", font=("Malgun Gothic", 10, "bold"), padding=(12, 9), background=COLORS["blue"], foreground="white", bordercolor=COLORS["blue"])
-        style.map("Primary.TButton", background=[("active", "#1D4ED8"), ("pressed", "#1E40AF")])
 
         header = tk.Frame(self, bg=COLORS["ink"], padx=24, pady=14)
         header.pack(fill="x")
@@ -87,12 +150,12 @@ class CyViewer(tk.Tk):
         self.save_badge = tk.Label(header, text=self.save_state, fg="#BFDBFE", bg="#1E3A5F", padx=10, pady=4, font=("Malgun Gothic", 9, "bold"))
         self.save_badge.pack(side="right")
 
-        workspace = tk.Frame(self, bg=COLORS["line"])
+        workspace = tk.Frame(self, bg="#EEF3F8")
         workspace.pack(fill="both", expand=True)
-        sidebar = tk.Frame(workspace, width=270, bg=COLORS["sidebar"], padx=16, pady=18)
+        sidebar = tk.Frame(workspace, width=300, bg="#F7F9FC", padx=20, pady=20)
         sidebar.pack(side="left", fill="y")
         sidebar.pack_propagate(False)
-        self._button(sidebar, "＋ PDF 열기", self.open_pdf, "Primary.TButton").pack(fill="x", pady=(0, 18))
+        self._button(sidebar, "＋  PDF 열기", self.open_pdf, "Primary.TButton").pack(fill="x", pady=(0, 20))
         navigation = self._section(sidebar, "01  문서 탐색")
         self._button(navigation, "◀  이전 페이지", self.previous_page).pack(fill="x", pady=2)
         self._button(navigation, "다음 페이지  ▶", self.next_page).pack(fill="x", pady=2)
@@ -125,10 +188,10 @@ class CyViewer(tk.Tk):
         self.selection_details.config(state="disabled")
         self._set_selection_details("문구, 이미지 또는 빈 공간을\n드래그해 선택하면 이곳에서\n선택한 내용을 확인할 수 있어요.")
 
-        content = tk.Frame(workspace, bg=COLORS["canvas"])
+        content = tk.Frame(workspace, bg="#EEF3F8")
         content.pack(side="left", fill="both", expand=True)
-        tools = tk.Frame(content, bg=COLORS["surface"], padx=18, pady=10)
-        tools.pack(fill="x")
+        tools = tk.Frame(content, bg=COLORS["surface"], padx=20, pady=13)
+        tools.pack(fill="x", padx=16, pady=(16, 10))
         tk.Label(tools, text="읽기", bg=COLORS["blue_soft"], fg="#1D4ED8", padx=9, pady=4, font=("Malgun Gothic", 9, "bold")).pack(side="left", padx=(0, 12))
         self.selection_state = tk.Label(
             tools, text="선택 없음", bg="#F1F5F9", fg=COLORS["muted"],
@@ -147,8 +210,8 @@ class CyViewer(tk.Tk):
         self.search_status = tk.Label(search_box, text="", bg=COLORS["surface"], fg=COLORS["muted"])
         self.search_status.pack(side="left", padx=5)
 
-        self.canvas = tk.Canvas(content, bg=COLORS["canvas"], highlightthickness=0)
-        self.canvas.pack(fill="both", expand=True)
+        self.canvas = tk.Canvas(content, bg="#DCE5EF", highlightthickness=0)
+        self.canvas.pack(fill="both", expand=True, padx=16, pady=(0, 12))
         self.canvas.bind("<Configure>", lambda _: self.draw_page())
         self.canvas.bind("<MouseWheel>", self._wheel_zoom)
         self.canvas.bind("<ButtonPress-1>", self.start_selection)
@@ -174,13 +237,13 @@ class CyViewer(tk.Tk):
             fg="white",
             font=("Malgun Gothic", 10),
         )
-        self.status.pack(fill="x")
+        self.status.pack(fill="x", padx=16, pady=(0, 16))
 
-    def _button(self, parent: tk.Widget, label: str, command, style: str = "Action.TButton") -> ttk.Button:
-        return ttk.Button(parent, text=label, command=command, style=style)
+    def _button(self, parent: tk.Widget, label: str, command, style: str = "Action.TButton") -> RoundedButton:
+        return RoundedButton(parent, label, command, "primary" if style == "Primary.TButton" else "secondary")
 
     def _side_title(self, parent: tk.Widget, text: str) -> None:
-        tk.Label(parent, text=text, bg=COLORS["sidebar"], fg="#475569", font=("Malgun Gothic", 9, "bold")).pack(anchor="w", pady=(12, 5))
+        tk.Label(parent, text=text, bg="#F7F9FC", fg="#475569", font=("Malgun Gothic", 10, "bold")).pack(anchor="w", pady=(16, 8))
 
     def _section(self, parent: tk.Widget, title: str) -> tk.Frame:
         self._side_title(parent, title)
