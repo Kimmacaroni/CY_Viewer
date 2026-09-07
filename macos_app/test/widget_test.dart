@@ -1,7 +1,9 @@
 import 'package:flutter_test/flutter_test.dart';
+import 'package:flutter/material.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 import 'package:cy_viewer/app.dart';
+import 'package:cy_viewer/advanced_reader.dart';
 
 void main() {
   testWidgets('CY뷰어 문서함이 표시된다', (tester) async {
@@ -36,5 +38,20 @@ void main() {
     });
 
     expect(item.lastPage, 1);
+  });
+
+  testWidgets('PDF가 준비되기 전에도 리더 화면을 만들 수 있다', (tester) async {
+    await tester.pumpWidget(
+      const MaterialApp(
+        home: AdvancedPdfReaderPage(
+          path: '/tmp/not-loaded-yet.pdf',
+          name: '준비 중.pdf',
+          initialPage: 1,
+        ),
+      ),
+    );
+
+    expect(find.text('준비 중.pdf'), findsOneWidget);
+    expect(tester.takeException(), isNull);
   });
 }

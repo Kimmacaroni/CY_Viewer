@@ -53,7 +53,7 @@ class _AdvancedPdfReaderPageState extends State<AdvancedPdfReaderPage> {
   static const _ocrChannel = MethodChannel('com.kimmacaroni.cyviewer/ocr');
   final _controller = PdfViewerController();
   final _searchInput = TextEditingController();
-  late final PdfTextSearcher _searcher = PdfTextSearcher(_controller);
+  PdfTextSearcher? _searcher;
   int _pageCount = 0;
   int _currentPage = 1;
   List<int> _bookmarks = [];
@@ -188,7 +188,7 @@ class _AdvancedPdfReaderPageState extends State<AdvancedPdfReaderPage> {
   }
 
   void _startSearch(String text) {
-    _searcher.startTextSearch(text, searchImmediately: true);
+    _searcher?.startTextSearch(text, searchImmediately: true);
     if (mounted) setState(() {});
   }
 
@@ -430,7 +430,7 @@ class _AdvancedPdfReaderPageState extends State<AdvancedPdfReaderPage> {
   @override
   void dispose() {
     _searchInput.dispose();
-    _searcher.dispose();
+    _searcher?.dispose();
     super.dispose();
   }
 
@@ -442,7 +442,7 @@ class _AdvancedPdfReaderPageState extends State<AdvancedPdfReaderPage> {
     },
     child: Scaffold(
       appBar: AppBar(
-        title: _searching
+        title: _searching && _searcher != null
             ? TextField(
                 controller: _searchInput,
                 autofocus: true,
@@ -463,28 +463,28 @@ class _AdvancedPdfReaderPageState extends State<AdvancedPdfReaderPage> {
                   Text(widget.name, overflow: TextOverflow.ellipsis),
                 ],
               ),
-        actions: _searching
+        actions: _searching && _searcher != null
             ? [
                 AnimatedBuilder(
-                  animation: _searcher,
+                  animation: _searcher!,
                   builder: (context, child) => Text(
-                    '${_searcher.currentIndex == null ? 0 : _searcher.currentIndex! + 1}/${_searcher.matches.length}',
+                    '${_searcher!.currentIndex == null ? 0 : _searcher!.currentIndex! + 1}/${_searcher!.matches.length}',
                   ),
                 ),
                 IconButton(
                   tooltip: '이전 결과',
-                  onPressed: _searcher.goToPrevMatch,
+                  onPressed: _searcher!.goToPrevMatch,
                   icon: const Icon(Icons.keyboard_arrow_up),
                 ),
                 IconButton(
                   tooltip: '다음 결과',
-                  onPressed: _searcher.goToNextMatch,
+                  onPressed: _searcher!.goToNextMatch,
                   icon: const Icon(Icons.keyboard_arrow_down),
                 ),
                 IconButton(
                   tooltip: '검색 닫기',
                   onPressed: () {
-                    _searcher.resetTextSearch();
+                    _searcher?.resetTextSearch();
                     _searchInput.clear();
                     setState(() => _searching = false);
                   },
@@ -494,7 +494,9 @@ class _AdvancedPdfReaderPageState extends State<AdvancedPdfReaderPage> {
             : [
                 IconButton(
                   tooltip: '검색',
-                  onPressed: () => setState(() => _searching = true),
+                  onPressed: _searcher == null
+                      ? null
+                      : () => setState(() => _searching = true),
                   icon: const Icon(Icons.search),
                 ),
                 IconButton(
@@ -642,6 +644,45 @@ class _AdvancedPdfReaderPageState extends State<AdvancedPdfReaderPage> {
             key: ValueKey(_viewMode),
             controller: _controller,
             params: PdfViewerParams(
+              errorBannerBuilder: (context, error, _, _) {
+                debugPrint('PDF 열기 실패: $error');
+                return Center(
+                  child: Card(
+                    margin: const EdgeInsets.all(32),
+                    child: Padding(
+                      padding: const EdgeInsets.all(24),
+                      child: Column(
+                        mainAxisSize: MainAxisSize.min,
+                        children: [
+                          Icon(
+                            Icons.error_outline,
+                            size: 48,
+                            color: Theme.of(context).colorScheme.error,
+                          ),
+                          const SizedBox(height: 16),
+                          Text(
+                            'PDF를 열 수 없습니다',
+                            style: Theme.of(context).textTheme.titleLarge,
+                          ),
+                          const SizedBox(height: 8),
+                          const Text(
+                            '파일이 이동되었거나 접근 권한이 변경되었을 수 있습니다. '
+                            '문서함으로 돌아가 PDF를 다시 선택해 주세요.',
+                            textAlign: TextAlign.center,
+                          ),
+                          const SizedBox(height: 20),
+                          FilledButton.icon(
+                            onPressed: () =>
+                                Navigator.of(context).pop(_currentPage),
+                            icon: const Icon(Icons.arrow_back),
+                            label: const Text('문서함으로 돌아가기'),
+                          ),
+                        ],
+                      ),
+                    ),
+                  ),
+                );
+              },
               // pdfrx의 데스크톱 컨텍스트 메뉴는 일부 환경에서 선택 좌표가
               // 비어 있을 때 예외를 냈다. 동작이 확실한 화면 하단 도구막대를 사용한다.
               buildContextMenu: (_, _) => null,
@@ -659,7 +700,11 @@ class _AdvancedPdfReaderPageState extends State<AdvancedPdfReaderPage> {
               onViewerReady: (document, _) async {
                 if (!mounted) return;
                 final pageCount = document.pages.length;
+                _searcher?.dispose();
+                final searcher = PdfTextSearcher(_controller);
                 setState(() {
+                  _searcher = searcher;
+                  _searching = false;
                   _pageCount = pageCount;
                   _bookmarks.removeWhere((page) => page > pageCount);
                 });
@@ -679,7 +724,7 @@ class _AdvancedPdfReaderPageState extends State<AdvancedPdfReaderPage> {
               },
               pagePaintCallbacks: [
                 _paintMarks,
-                _searcher.pageTextMatchPaintCallback,
+                if (_searcher != null) _searcher!.pageTextMatchPaintCallback,
               ],
               layoutPages: _viewMode == _ViewMode.scroll
                   ? null
