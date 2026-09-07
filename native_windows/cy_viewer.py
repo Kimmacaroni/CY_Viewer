@@ -170,17 +170,32 @@ class CyViewer(tk.Tk):
         following.grid(row=0, column=2, sticky="ew")
         for column in range(3):
             page_controls.grid_columnconfigure(column, weight=1, uniform="page_navigation")
-        self._button(navigation, "책갈피 목록", self.show_bookmarks).pack(fill="x", pady=(0, 8))
-        self._button(navigation, "OCR", self.ocr_document).pack(fill="x")
-        editing = self._section(sidebar, "02  선택 · 표시 · 수정")
+        quick_actions = tk.Frame(navigation, bg=COLORS["sidebar"])
+        quick_actions.pack(fill="x")
+        self._button(quick_actions, "☆", self.toggle_bookmark).pack(side="left")
+        self._button(quick_actions, "OCR", self.ocr_document).pack(side="left", fill="x", expand=True, padx=(8, 0))
+        editing = tk.Frame(sidebar, bg="#F7F9FC")
+        editing.pack(fill="x", pady=(16, 0))
         tk.Label(
             editing,
             text="문구를 드래그해 선택한 뒤\n마우스 오른쪽 버튼을 누르세요.\n\n형광펜 · 밑줄 · 취소선 · 굵게\n문구 수정 · 텍스트 복사를 제공합니다.",
             justify="left", anchor="w", bg=COLORS["sidebar"], fg=COLORS["muted"],
             font=("Malgun Gothic", 9),
         ).pack(fill="x", pady=(0, 6))
-        self._side_title(sidebar, "03  사본으로 저장")
-        self._button(sidebar, "PDF로 저장", self.save_as, "Primary.TButton").pack(fill="x")
+        save_actions = tk.Frame(sidebar, bg="#F7F9FC")
+        save_actions.pack(fill="x", pady=(16, 0))
+        self._button(save_actions, "PDF로 저장", self.save_as, "Primary.TButton").pack(fill="x", pady=(0, 8))
+        image_saves = tk.Frame(save_actions, bg="#F7F9FC")
+        image_saves.pack(fill="x", pady=(0, 8))
+        jpg_button = self._button(image_saves, "JPG로 저장", lambda: self.export_page("jpg"))
+        jpg_button.configure(width=1)
+        jpg_button.grid(row=0, column=0, sticky="ew")
+        png_button = self._button(image_saves, "PNG로 저장", lambda: self.export_page("png"))
+        png_button.configure(width=1)
+        png_button.grid(row=0, column=1, sticky="ew", padx=(8, 0))
+        image_saves.grid_columnconfigure(0, weight=1, uniform="image_save")
+        image_saves.grid_columnconfigure(1, weight=1, uniform="image_save")
+        self._button(save_actions, "인쇄", self.print_document).pack(fill="x")
         selection_card = tk.Frame(sidebar, bg=COLORS["blue_soft"], padx=10, pady=10)
         selection_card.pack(fill="both", expand=True, pady=(16, 0))
         self.selection_label = tk.Label(
@@ -207,7 +222,6 @@ class CyViewer(tk.Tk):
             padx=10, pady=4, font=("Malgun Gothic", 9, "bold"),
         )
         self.selection_state.pack(side="left", padx=(0, 12))
-        self._button(tools, "☆", self.toggle_bookmark).pack(side="left", padx=(0, 10))
         self._button(tools, "−", lambda: self.change_zoom(-0.2)).pack(side="left", padx=2)
         self._button(tools, "+", lambda: self.change_zoom(0.2)).pack(side="left", padx=2)
         tk.Label(tools, text="Ctrl + 휠: 확대/축소", bg=COLORS["surface"], fg=COLORS["muted"], font=("Malgun Gothic", 9)).pack(side="left", padx=10)
@@ -737,6 +751,44 @@ class CyViewer(tk.Tk):
             messagebox.showinfo("CY뷰어", "편집한 PDF를 저장했습니다.")
         except Exception as error:
             messagebox.showerror("CY뷰어", f"저장할 수 없습니다.\n\n{error}")
+
+    def export_page(self, image_format: str) -> None:
+        if not self.document:
+            messagebox.showinfo("CY뷰어", "먼저 PDF를 열어 주세요.")
+            return
+        extension = ".jpg" if image_format == "jpg" else ".png"
+        selected = filedialog.asksaveasfilename(
+            title=f"현재 페이지를 {image_format.upper()}로 저장",
+            defaultextension=extension,
+            filetypes=[(f"{image_format.upper()} 이미지", f"*{extension}")],
+        )
+        if not selected:
+            return
+        try:
+            pixmap = self.document[self.page_number].get_pixmap(matrix=pymupdf.Matrix(2, 2), alpha=False)
+            image = Image.frombytes("RGB", (pixmap.width, pixmap.height), pixmap.samples)
+            if image_format == "jpg":
+                image.save(selected, format="JPEG", quality=95)
+            else:
+                image.save(selected, format="PNG")
+            self.status.config(text=f"현재 페이지를 {Path(selected).name}으로 저장했습니다.")
+            messagebox.showinfo("CY뷰어", f"현재 페이지를 {image_format.upper()} 이미지로 저장했습니다.")
+        except Exception as error:
+            messagebox.showerror("CY뷰어", f"이미지로 저장할 수 없습니다.\n\n{error}")
+
+    def print_document(self) -> None:
+        if not self.document:
+            messagebox.showinfo("CY뷰어", "먼저 PDF를 열어 주세요.")
+            return
+        try:
+            output = Path(tempfile.gettempdir()) / "CYViewer-print.pdf"
+            if output.exists():
+                output.unlink()
+            self.document.save(str(output))
+            os.startfile(str(output), "print")
+            self.status.config(text="인쇄 요청을 보냈습니다. Windows 프린터 설정을 확인해 주세요.")
+        except Exception as error:
+            messagebox.showerror("CY뷰어", f"인쇄를 시작할 수 없습니다.\n\n{error}")
 
     def previous_page(self) -> None:
         if self.document and self.page_number > 0:
