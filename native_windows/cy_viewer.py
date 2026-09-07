@@ -281,32 +281,18 @@ class CyViewer(tk.Tk):
                     width=2,
                 )
         if self.selected_rect:
-            selected_words = self._selected_word_rects()
-            if selected_words:
-                # 일반 문서 뷰어처럼 실제 선택된 글자 영역을 파란색으로 표시한다.
-                for rect in selected_words:
-                    self.canvas.create_rectangle(
-                        left + rect.x0 * self.zoom,
-                        top + rect.y0 * self.zoom,
-                        left + rect.x1 * self.zoom,
-                        top + rect.y1 * self.zoom,
-                        fill="#60A5FA",
-                        stipple="gray50",
-                        outline="#2563EB",
-                        width=1,
-                    )
-            else:
-                rect = self.selected_rect
-                self.canvas.create_rectangle(
-                    left + rect.x0 * self.zoom,
-                    top + rect.y0 * self.zoom,
-                    left + rect.x1 * self.zoom,
-                    top + rect.y1 * self.zoom,
-                    fill="#93C5FD",
-                    stipple="gray50",
-                    outline=COLORS["blue"],
-                    width=2,
-                )
+            rect = self.selected_rect
+            # 단어 사이의 띄어쓰기까지 포함해, 드래그한 전체 범위를 선택 색으로 보여 준다.
+            self.canvas.create_rectangle(
+                left + rect.x0 * self.zoom,
+                top + rect.y0 * self.zoom,
+                left + rect.x1 * self.zoom,
+                top + rect.y1 * self.zoom,
+                fill="#60A5FA",
+                stipple="gray50",
+                outline="#2563EB",
+                width=1,
+            )
         bookmark = "  ★ 책갈피" if self.page_number in self.bookmarks else ""
         selection = "  |  문구 선택됨: 왼쪽에서 표시 또는 수정" if self.selected_rect else ""
         dirty = "  |  저장 필요" if self.is_dirty else ""
@@ -500,22 +486,18 @@ class CyViewer(tk.Tk):
         if not rect or not self.document:
             return
         page = self.document[self.page_number]
-        word_rects = self._selected_word_rects() or [rect]
         if kind == "highlight":
-            for word_rect in word_rects:
-                annotation = page.add_rect_annot(word_rect)
-                annotation.set_colors(fill=(1, 0.92, 0))
-                annotation.set_opacity(0.38)
-                annotation.set_border(width=0)
-                annotation.update()
+            annotation = page.add_rect_annot(rect)
+            annotation.set_colors(fill=(1, 0.92, 0))
+            annotation.set_opacity(0.38)
+            annotation.set_border(width=0)
+            annotation.update()
         elif kind == "underline":
-            for word_rect in word_rects:
-                annotation = page.add_underline_annot(word_rect)
-                annotation.update()
+            annotation = page.add_underline_annot(rect)
+            annotation.update()
         else:
-            for word_rect in word_rects:
-                annotation = page.add_strikeout_annot(word_rect)
-                annotation.update()
+            annotation = page.add_strikeout_annot(rect)
+            annotation.update()
         self.selected_rect = None
         label = {"highlight": "형광펜", "underline": "밑줄", "strike": "취소선"}[kind]
         self._mark_dirty(f"{label} 표시를 적용했습니다.")
