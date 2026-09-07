@@ -112,17 +112,21 @@ class CyViewer(TkinterDnD.Tk):
         self.document_path: Path | None = None
         self.page_number = 0
         self.zoom = 1.2
+        self.view_mode = "scroll"
         self.bookmarks: set[int] = set()
         self.search_text = ""
         self.search_matches: list[tuple[int, pymupdf.Rect]] = []
         self.search_index = -1
         self.ocr_words: dict[int, list[tuple[pymupdf.Rect, str]]] = {}
         self.page_image: ImageTk.PhotoImage | None = None
+        self.page_images: list[ImageTk.PhotoImage] = []
+        self.page_layouts: dict[int, tuple[int, int, int, int]] = {}
         self.page_left = 0
         self.page_top = 0
         self.selected_rect: pymupdf.Rect | None = None
         self.selection_regions: list[pymupdf.Rect] = []
         self.selection_start: tuple[int, int] | None = None
+        self.selection_kind = "none"
         self.selection_preview: int | None = None
         self.is_dirty = False
         self.save_state = "새 문서 없음"
@@ -222,6 +226,10 @@ class CyViewer(TkinterDnD.Tk):
         tools = tk.Frame(content, bg=COLORS["surface"], padx=20, pady=13)
         tools.pack(fill="x", padx=16, pady=(16, 10))
         tk.Label(tools, text="읽기", bg=COLORS["blue_soft"], fg="#1D4ED8", padx=9, pady=4, font=("Malgun Gothic", 9, "bold")).pack(side="left", padx=(0, 12))
+        self.view_mode_var = tk.StringVar(value="스크롤 보기")
+        view_selector = ttk.Combobox(tools, textvariable=self.view_mode_var, state="readonly", width=11, values=("스크롤 보기", "좌우 보기"), font=("Malgun Gothic", 9))
+        view_selector.pack(side="left", padx=(0, 12), ipady=4)
+        view_selector.bind("<<ComboboxSelected>>", self._change_view_mode)
         self.selection_state = tk.Label(
             tools, text="선택 없음", bg="#F1F5F9", fg=COLORS["muted"],
             padx=10, pady=4, font=("Malgun Gothic", 9, "bold"),
@@ -242,8 +250,17 @@ class CyViewer(TkinterDnD.Tk):
         self.search_status = tk.Label(search_box, text="", bg="#F1F5F9", fg=COLORS["muted"], font=("Malgun Gothic", 9))
         self.search_status.pack(side="left", padx=(8, 2))
 
-        self.canvas = tk.Canvas(content, bg="#DCE5EF", highlightthickness=0)
-        self.canvas.pack(fill="both", expand=True, padx=16, pady=(0, 12))
+        canvas_frame = tk.Frame(content, bg="#DCE5EF")
+        canvas_frame.pack(fill="both", expand=True, padx=16, pady=(0, 12))
+        self.canvas = tk.Canvas(canvas_frame, bg="#DCE5EF", highlightthickness=0)
+        self.canvas.grid(row=0, column=0, sticky="nsew")
+        self.canvas_vscroll = ttk.Scrollbar(canvas_frame, orient="vertical", command=self.canvas.yview)
+        self.canvas_vscroll.grid(row=0, column=1, sticky="ns")
+        self.canvas_hscroll = ttk.Scrollbar(canvas_frame, orient="horizontal", command=self.canvas.xview)
+        self.canvas_hscroll.grid(row=1, column=0, sticky="ew")
+        canvas_frame.rowconfigure(0, weight=1)
+        canvas_frame.columnconfigure(0, weight=1)
+        self.canvas.configure(yscrollcommand=self.canvas_vscroll.set, xscrollcommand=self.canvas_hscroll.set)
         self.canvas.bind("<Configure>", lambda _: self.draw_page())
         self.canvas.bind("<MouseWheel>", self._wheel_zoom)
         self.canvas.bind("<ButtonPress-1>", self.start_selection)
@@ -300,9 +317,11 @@ class CyViewer(TkinterDnD.Tk):
         self.selection_details.insert("1.0", text)
         self.selection_details.config(state="disabled")
 
-    def _set_selection_feedback(self, text: str | None = None) -> None:
+    def _set_selection_feedback(self, text: str | None = None, kind: str = "none") -> None:
         if text:
             self.selection_state.config(text=f"텍스트 선택됨 · {len(text)}자", bg="#DBEAFE", fg="#1D4ED8")
+        elif kind == "image":
+            self.selection_state.config(text="이미지 선택됨", bg="#EDE9FE", fg="#6D28D9")
         else:
             self.selection_state.config(text="선택 없음", bg="#F1F5F9", fg=COLORS["muted"])
 
@@ -339,6 +358,7 @@ class CyViewer(TkinterDnD.Tk):
             self.ocr_words.clear()
             self.selected_rect = None
             self.selection_regions = []
+            self.selection_kind = "none"
             self.is_dirty = False
             self.file_label.config(text=f"{self.document_path.name} · 읽기 및 편집 가능")
             self._set_save_state("변경 없음")
@@ -378,46 +398,63 @@ class CyViewer(TkinterDnD.Tk):
             self.canvas.create_text(width // 2, height // 2 + 48, text="왼쪽의 ‘PDF 열기’ 버튼으로 시작하세요.", fill=COLORS["blue"], font=("Malgun Gothic", 10, "bold"))
             self.status.config(text="PDF 열기를 눌러 문서를 선택하세요.")
             return
-        page = self.document[self.page_number]
-        pixmap = page.get_pixmap(matrix=pymupdf.Matrix(self.zoom, self.zoom), alpha=False)
-        image = Image.frombytes("RGB", (pixmap.width, pixmap.height), pixmap.samples)
-        self.page_image = ImageTk.PhotoImage(image)
         self.canvas.delete("all")
         width, height = self.canvas.winfo_width(), self.canvas.winfo_height()
-        left = max((width - pixmap.width) // 2, 10)
-        top = max((height - pixmap.height) // 2, 10)
-        self.page_left, self.page_top = left, top
-        self.canvas.create_image(left, top, anchor="nw", image=self.page_image)
-        for page_no, rect in self.search_matches:
-            if page_no == self.page_number:
-                self.canvas.create_rectangle(
-                    left + rect.x0 * self.zoom,
-                    top + rect.y0 * self.zoom,
-                    left + rect.x1 * self.zoom,
-                    top + rect.y1 * self.zoom,
-                    outline="#ef4444",
-                    width=2,
-                )
-        if self.selected_rect:
-            # 글자가 있는 줄만 선택한다. 같은 줄의 단어 사이 띄어쓰기는 포함하되,
-            # 문단 주변의 빈 공간이나 줄 사이의 빈 공간은 선택 색으로 칠하지 않는다.
-            for rect in self.selection_regions:
-                self.canvas.create_rectangle(
-                    left + rect.x0 * self.zoom,
-                    top + rect.y0 * self.zoom,
-                    left + rect.x1 * self.zoom,
-                    top + rect.y1 * self.zoom,
-                    fill="#60A5FA",
-                    stipple="gray50",
-                    outline="#2563EB",
-                    width=1,
-                )
+        self.page_images, self.page_layouts = [], {}
+        pages = range(len(self.document)) if self.view_mode == "scroll" else range(self.page_number, min(self.page_number + 2, len(self.document)))
+        rendered = []
+        for page_no in pages:
+            pixmap = self.document[page_no].get_pixmap(matrix=pymupdf.Matrix(self.zoom, self.zoom), alpha=False)
+            photo = ImageTk.PhotoImage(Image.frombytes("RGB", (pixmap.width, pixmap.height), pixmap.samples))
+            self.page_images.append(photo)
+            rendered.append((page_no, photo, pixmap.width, pixmap.height))
+        gap, margin = 24, 20
+        if self.view_mode == "scroll":
+            top = margin
+            content_width = max([width] + [item[2] + margin * 2 for item in rendered])
+            for page_no, photo, page_width, page_height in rendered:
+                left = max((content_width - page_width) // 2, margin)
+                self._draw_rendered_page(page_no, photo, left, top, page_width, page_height)
+                top += page_height + gap
+            content_height = max(height, top)
+        else:
+            total_width = sum(item[2] for item in rendered) + gap * max(0, len(rendered) - 1)
+            content_width = max(width, total_width + margin * 2)
+            left = max((content_width - total_width) // 2, margin)
+            max_height = 0
+            for page_no, photo, page_width, page_height in rendered:
+                self._draw_rendered_page(page_no, photo, left, margin, page_width, page_height)
+                left += page_width + gap
+                max_height = max(max_height, page_height)
+            content_height = max(height, max_height + margin * 2)
+        self.canvas.configure(scrollregion=(0, 0, content_width, content_height))
+        if self.page_number in self.page_layouts:
+            self.page_left, self.page_top = self.page_layouts[self.page_number][:2]
         bookmark = "  ★ 책갈피" if self.page_number in self.bookmarks else ""
         selection = "  |  문구 선택됨: 왼쪽에서 표시 또는 수정" if self.selected_rect else ""
         dirty = "  |  저장 필요" if self.is_dirty else ""
         self.status.config(
-            text=f"{self.page_number + 1} / {len(self.document)} 페이지   |   확대 {int(self.zoom * 100)}%{bookmark}{selection}{dirty}"
+            text=f"{self.page_number + 1} / {len(self.document)} 페이지   |   {'스크롤 보기' if self.view_mode == 'scroll' else '좌우 보기'}   |   확대 {int(self.zoom * 100)}%{bookmark}{selection}{dirty}"
         )
+
+    def _draw_rendered_page(self, page_no: int, photo: ImageTk.PhotoImage, left: int, top: int, width: int, height: int) -> None:
+        self.page_layouts[page_no] = (left, top, width, height)
+        self.canvas.create_image(left, top, anchor="nw", image=photo)
+        for match_page, rect in self.search_matches:
+            if match_page == page_no:
+                self.canvas.create_rectangle(left + rect.x0 * self.zoom, top + rect.y0 * self.zoom, left + rect.x1 * self.zoom, top + rect.y1 * self.zoom, outline="#EF4444", width=2)
+        if self.selected_rect and page_no == self.page_number:
+            for rect in self.selection_regions or [self.selected_rect]:
+                image_selection = self.selection_kind == "image"
+                self.canvas.create_rectangle(left + rect.x0 * self.zoom, top + rect.y0 * self.zoom, left + rect.x1 * self.zoom, top + rect.y1 * self.zoom, fill="" if image_selection else "#60A5FA", stipple="" if image_selection else "gray50", outline="#7C3AED" if image_selection else "#2563EB", width=3 if image_selection else 1)
+
+    def _change_view_mode(self, _event=None) -> None:
+        self.view_mode = "spread" if self.view_mode_var.get() == "좌우 보기" else "scroll"
+        if self.view_mode == "spread" and self.page_number % 2:
+            self.page_number -= 1
+        self.canvas.xview_moveto(0)
+        self.canvas.yview_moveto(0)
+        self.draw_page()
 
     def _canvas_to_page(self, x: int, y: int) -> pymupdf.Point:
         return pymupdf.Point(
@@ -425,12 +462,31 @@ class CyViewer(TkinterDnD.Tk):
             (y - self.page_top) / self.zoom,
         )
 
+    def _page_at_canvas_point(self, x: float, y: float) -> int | None:
+        for page_no, (left, top, width, height) in self.page_layouts.items():
+            if left <= x <= left + width and top <= y <= top + height:
+                return page_no
+        return None
+
+    def _image_rects(self, page_number: int) -> list[pymupdf.Rect]:
+        if not self.document:
+            return []
+        return [pymupdf.Rect(block["bbox"]) for block in self.document[page_number].get_text("dict").get("blocks", []) if block.get("type") == 1]
+
     def start_selection(self, event) -> None:
         if not self.document:
             return
-        self.selection_start = (event.x, event.y)
+        canvas_x, canvas_y = self.canvas.canvasx(event.x), self.canvas.canvasy(event.y)
+        selected_page = self._page_at_canvas_point(canvas_x, canvas_y)
+        if selected_page is None:
+            self.selection_start = None
+            return
+        self.page_number = selected_page
+        self.page_left, self.page_top = self.page_layouts[selected_page][:2]
+        self.selection_start = (canvas_x, canvas_y)
         self.selected_rect = None
         self.selection_regions = []
+        self.selection_kind = "none"
         self.selection_preview = None
         self._set_selection_feedback()
 
@@ -443,8 +499,8 @@ class CyViewer(TkinterDnD.Tk):
         self.selection_preview = self.canvas.create_rectangle(
             start_x,
             start_y,
-            event.x,
-            event.y,
+            self.canvas.canvasx(event.x),
+            self.canvas.canvasy(event.y),
             outline="#2563eb",
             dash=(4, 2),
             width=2,
@@ -458,15 +514,22 @@ class CyViewer(TkinterDnD.Tk):
         if self.selection_preview:
             self.canvas.delete(self.selection_preview)
             self.selection_preview = None
-        rect = pymupdf.Rect(self._canvas_to_page(start_x, start_y), self._canvas_to_page(event.x, event.y))
+        end_x, end_y = self.canvas.canvasx(event.x), self.canvas.canvasy(event.y)
+        rect = pymupdf.Rect(self._canvas_to_page(start_x, start_y), self._canvas_to_page(end_x, end_y))
         rect = rect & self.document[self.page_number].rect
         self.selected_rect = rect if rect.width > 3 and rect.height > 3 else None
         if self.selected_rect:
             word_rects = self._selected_word_rects()
             self.selection_regions = self._line_regions(word_rects)
-            if not word_rects:
+            if word_rects:
+                self.selection_kind = "text"
+            elif any(image_rect.intersects(self.selected_rect) for image_rect in self._image_rects(self.page_number)):
+                self.selection_kind = "image"
+                self.selection_regions = [self.selected_rect]
+            else:
                 self.selected_rect = None
                 self.selection_regions = []
+                self.selection_kind = "none"
         if self.selected_rect:
             self._inspect_selection()
         else:
@@ -484,7 +547,17 @@ class CyViewer(TkinterDnD.Tk):
         words = self.document[self.page_number].get_text("words")
         selected = [(pymupdf.Rect(word[:4]), word[4]) for word in words if pymupdf.Rect(word[:4]).intersects(self.selected_rect)]
         if not selected:
-            selected = [(rect, text) for rect, text in self.ocr_words.get(self.page_number, []) if rect.intersects(self.selected_rect)]
+            selected = []
+            for rect, text in self.ocr_words.get(self.page_number, []):
+                intersection = rect & self.selected_rect
+                if not intersection.is_empty and intersection.get_area() / max(rect.get_area(), 1) >= 0.35:
+                    selected.append((rect, text))
+            # 그림의 넓은 영역을 잡았을 때 그림 속 우연한 OCR 결과가 텍스트로
+            # 오인되지 않도록, 실제 글자 상자가 차지하는 비율도 확인한다.
+            if selected and any(rect.intersects(self.selected_rect) for rect in self._image_rects(self.page_number)):
+                covered = sum((rect & self.selected_rect).get_area() for rect, _ in selected)
+                if covered / max(self.selected_rect.get_area(), 1) < 0.08:
+                    selected = []
         return selected
 
     def _selected_word_rects(self) -> list[pymupdf.Rect]:
@@ -659,7 +732,7 @@ class CyViewer(TkinterDnD.Tk):
         if not parts:
             parts.append("빈 공간")
         self.selection_label.config(text="선택 검사 · " + " · ".join(parts))
-        self._set_selection_feedback(text)
+        self._set_selection_feedback(text, "image" if image_count and not text else "text" if text else "none")
 
         details = [f"선택 종류: {', '.join(parts)}"]
         if text:
@@ -895,13 +968,22 @@ class CyViewer(TkinterDnD.Tk):
 
     def previous_page(self) -> None:
         if self.document and self.page_number > 0:
-            self.page_number -= 1
-            self.draw_page()
+            self.page_number = max(0, self.page_number - (2 if self.view_mode == "spread" else 1))
+            self._show_current_page()
 
     def next_page(self) -> None:
         if self.document and self.page_number < len(self.document) - 1:
-            self.page_number += 1
-            self.draw_page()
+            self.page_number = min(len(self.document) - 1, self.page_number + (2 if self.view_mode == "spread" else 1))
+            self._show_current_page()
+
+    def _show_current_page(self) -> None:
+        self.draw_page()
+        self.update_idletasks()
+        if self.view_mode == "scroll" and self.page_number in self.page_layouts:
+            top = self.page_layouts[self.page_number][1]
+            scroll_region = self.canvas.bbox("all")
+            if scroll_region and scroll_region[3] > self.canvas.winfo_height():
+                self.canvas.yview_moveto(top / scroll_region[3])
 
     def change_zoom(self, change: float) -> None:
         if self.document:
@@ -911,6 +993,12 @@ class CyViewer(TkinterDnD.Tk):
     def _wheel_zoom(self, event) -> None:
         if event.state & 0x0004:
             self.change_zoom(0.1 if event.delta > 0 else -0.1)
+        elif self.view_mode == "scroll":
+            self.canvas.yview_scroll(-3 if event.delta > 0 else 3, "units")
+            center_y = self.canvas.canvasy(self.canvas.winfo_height() // 2)
+            nearest = min(self.page_layouts, key=lambda page: abs(self.page_layouts[page][1] + self.page_layouts[page][3] / 2 - center_y), default=self.page_number)
+            self.page_number = nearest
+            return "break"
         elif event.delta > 0:
             self.previous_page()
         else:
