@@ -6,7 +6,7 @@ PDF를 읽고, 찾고, 표시하고, 저장하고, 인쇄할 수 있는 개인�
 
 [Windows용 CY뷰어 최신 버전 다운로드](https://github.com/Kimmacaroni/CY_Viewer/releases/latest)
 
-Windows 10·11 64비트 환경을 지원합니다. 다운로드한 ZIP 파일의 압축을 푼 뒤 `CYViewer.exe`를 실행하세요.
+Windows 10·11 64비트 환경을 지원합니다. Release에서 `CYViewer-Windows-x64-v1.0.0.exe`를 내려받아 바로 실행하세요.
 
 ## 주요 기능
 
