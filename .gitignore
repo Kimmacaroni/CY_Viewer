@@ -8,3 +8,4 @@ windows_print/bin/
 windows_print/obj/
 windows_print/AppPackages*/
 windows_print/publish/
+release/
