@@ -1,10 +1,14 @@
-import 'dart:io';
 import 'dart:convert';
+import 'dart:io';
+import 'dart:math' as math;
 
+import 'package:file_picker/file_picker.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
+import 'package:image/image.dart' as image_lib;
 import 'package:pdfrx/pdfrx.dart';
-import 'package:shared_preferences/shared_preferences.dart';
 import 'package:printing/printing.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 
 enum _ReaderAction {
   bookmark,
@@ -17,6 +21,10 @@ enum _ReaderAction {
 }
 
 enum _MarkType { highlight, underline, strike, bold }
+
+enum _ViewMode { scroll, horizontal, facing }
+
+enum _ExportFormat { pdf, png, jpg }
 
 class _TextMark {
   const _TextMark(this.range, this.type);
@@ -42,6 +50,7 @@ class AdvancedPdfReaderPage extends StatefulWidget {
 }
 
 class _AdvancedPdfReaderPageState extends State<AdvancedPdfReaderPage> {
+  static const _ocrChannel = MethodChannel('com.kimmacaroni.cyviewer/ocr');
   final _controller = PdfViewerController();
   final _searchInput = TextEditingController();
   late final PdfTextSearcher _searcher = PdfTextSearcher(_controller);
@@ -51,6 +60,9 @@ class _AdvancedPdfReaderPageState extends State<AdvancedPdfReaderPage> {
   bool _searching = false;
   final List<_TextMark> _marks = [];
   bool _hasSelectedText = false;
+  bool _busy = false;
+  String _busyMessage = '';
+  _ViewMode _viewMode = _ViewMode.scroll;
 
   String get _bookmarkKey =>
       'pdf_bookmarks_${base64Url.encode(utf8.encode(widget.path))}';
@@ -197,6 +209,124 @@ class _AdvancedPdfReaderPageState extends State<AdvancedPdfReaderPage> {
       if (!mounted) return;
       ScaffoldMessenger.of(context)
           .showSnackBar(SnackBar(content: Text('인쇄 창을 열 수 없습니다: $error')));
+    }
+  }
+
+  Future<void> _export(_ExportFormat format) async {
+    if (_busy) return;
+    try {
+      setState(() {
+        _busy = true;
+        _busyMessage = '파일을 준비하고 있습니다…';
+      });
+      final bytes = await File(widget.path).readAsBytes();
+      final baseName = widget.name.toLowerCase().endsWith('.pdf')
+          ? widget.name.substring(0, widget.name.length - 4)
+          : widget.name;
+      if (format == _ExportFormat.pdf) {
+        await FilePicker.saveFile(
+          dialogTitle: 'PDF로 저장',
+          fileName: '$baseName-복사본.pdf',
+          bytes: bytes,
+          type: FileType.custom,
+          allowedExtensions: const ['pdf'],
+        );
+      } else {
+        final directory = await FilePicker.getDirectoryPath(
+          dialogTitle: format == _ExportFormat.png
+              ? 'PNG 저장 폴더 선택'
+              : 'JPG 저장 폴더 선택',
+        );
+        if (directory == null) return;
+        var pageNumber = 0;
+        await for (final page in Printing.raster(bytes, dpi: 180)) {
+          pageNumber++;
+          if (mounted) {
+            setState(
+              () => _busyMessage = '페이지 $pageNumber / $_pageCount 저장 중…',
+            );
+          }
+          final extension = format == _ExportFormat.png ? 'png' : 'jpg';
+          final output = File(
+            '$directory${Platform.pathSeparator}$baseName-${pageNumber.toString().padLeft(3, '0')}.$extension',
+          );
+          if (format == _ExportFormat.png) {
+            await output.writeAsBytes(await page.toPng(), flush: true);
+          } else {
+            final decoded = image_lib.decodePng(await page.toPng());
+            if (decoded == null) {
+              throw StateError('페이지 이미지를 변환할 수 없습니다.');
+            }
+            await output.writeAsBytes(
+              image_lib.encodeJpg(decoded, quality: 92),
+              flush: true,
+            );
+          }
+        }
+        if (mounted) {
+          ScaffoldMessenger.of(
+            context,
+          ).showSnackBar(SnackBar(content: Text('$pageNumber개 페이지를 저장했습니다.')));
+        }
+      }
+    } catch (error) {
+      if (mounted) {
+        ScaffoldMessenger.of(context)
+            .showSnackBar(SnackBar(content: Text('저장할 수 없습니다: $error')));
+      }
+    } finally {
+      if (mounted) setState(() => _busy = false);
+    }
+  }
+
+  Future<void> _runOcr() async {
+    if (_busy) return;
+    try {
+      setState(() {
+        _busy = true;
+        _busyMessage = '문서 전체의 글자를 인식하고 있습니다…';
+      });
+      final text = await _ocrChannel.invokeMethod<String>('recognizePdf', {
+        'path': widget.path,
+      });
+      if (!mounted) return;
+      final result = text?.trim() ?? '';
+      await showDialog<void>(
+        context: context,
+        builder: (context) => AlertDialog(
+          title: const Text('OCR 결과'),
+          content: SizedBox(
+            width: 680,
+            height: 460,
+            child: result.isEmpty
+                ? const Center(child: Text('인식된 텍스트가 없습니다.'))
+                : SingleChildScrollView(child: SelectableText(result)),
+          ),
+          actions: [
+            if (result.isNotEmpty)
+              TextButton.icon(
+                onPressed: () async {
+                  await Clipboard.setData(ClipboardData(text: result));
+                  if (context.mounted) Navigator.pop(context);
+                },
+                icon: const Icon(Icons.copy_outlined),
+                label: const Text('전체 복사'),
+              ),
+            FilledButton(
+              onPressed: () => Navigator.pop(context),
+              child: const Text('닫기'),
+            ),
+          ],
+        ),
+      );
+    } on PlatformException catch (error) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text(error.message ?? 'OCR을 실행할 수 없습니다.')),
+        );
+      }
+    } finally {
+      if (mounted) setState(() => _busy = false);
     }
   }
 
@@ -378,6 +508,50 @@ class _AdvancedPdfReaderPageState extends State<AdvancedPdfReaderPage> {
                   onPressed: _printDocument,
                   icon: const Icon(Icons.print_outlined),
                 ),
+                PopupMenuButton<_ViewMode>(
+                  tooltip: '보기 방식',
+                  initialValue: _viewMode,
+                  onSelected: (mode) => setState(() => _viewMode = mode),
+                  icon: const Icon(Icons.view_carousel_outlined),
+                  itemBuilder: (context) => const [
+                    PopupMenuItem(
+                      value: _ViewMode.scroll,
+                      child: Text('세로 스크롤'),
+                    ),
+                    PopupMenuItem(
+                      value: _ViewMode.horizontal,
+                      child: Text('가로 스크롤'),
+                    ),
+                    PopupMenuItem(
+                      value: _ViewMode.facing,
+                      child: Text('두 페이지 보기'),
+                    ),
+                  ],
+                ),
+                IconButton(
+                  tooltip: '문서 전체 OCR',
+                  onPressed: _busy ? null : _runOcr,
+                  icon: const Icon(Icons.document_scanner_outlined),
+                ),
+                PopupMenuButton<_ExportFormat>(
+                  tooltip: '다른 형식으로 저장',
+                  onSelected: _export,
+                  icon: const Icon(Icons.save_alt_outlined),
+                  itemBuilder: (context) => const [
+                    PopupMenuItem(
+                      value: _ExportFormat.pdf,
+                      child: Text('PDF로 저장'),
+                    ),
+                    PopupMenuItem(
+                      value: _ExportFormat.png,
+                      child: Text('PNG로 저장'),
+                    ),
+                    PopupMenuItem(
+                      value: _ExportFormat.jpg,
+                      child: Text('JPG로 저장'),
+                    ),
+                  ],
+                ),
                 PopupMenuButton<_ReaderAction>(
                   tooltip: '기능 메뉴',
                   onSelected: _selectAction,
@@ -440,6 +614,7 @@ class _AdvancedPdfReaderPageState extends State<AdvancedPdfReaderPage> {
         children: [
           PdfViewer.file(
             widget.path,
+            key: ValueKey(_viewMode),
             controller: _controller,
             params: PdfViewerParams(
               // pdfrx의 데스크톱 컨텍스트 메뉴는 일부 환경에서 선택 좌표가
@@ -475,6 +650,66 @@ class _AdvancedPdfReaderPageState extends State<AdvancedPdfReaderPage> {
                 _paintMarks,
                 _searcher.pageTextMatchPaintCallback,
               ],
+              layoutPages: _viewMode == _ViewMode.scroll
+                  ? null
+                  : (pages, params) {
+                      if (_viewMode == _ViewMode.horizontal) {
+                        final height = pages.fold<double>(
+                          0,
+                          (value, page) => math.max(value, page.height),
+                        );
+                        final layouts = <Rect>[];
+                        var x = params.margin;
+                        for (final page in pages) {
+                          layouts.add(
+                            Rect.fromLTWH(
+                              x,
+                              params.margin + (height - page.height) / 2,
+                              page.width,
+                              page.height,
+                            ),
+                          );
+                          x += page.width + params.margin;
+                        }
+                        return PdfPageLayout(
+                          pageLayouts: layouts,
+                          documentSize: Size(x, height + params.margin * 2),
+                        );
+                      }
+                      final width = pages.fold<double>(
+                        0,
+                        (value, page) => math.max(value, page.width),
+                      );
+                      final layouts = <Rect>[];
+                      var y = params.margin;
+                      for (var index = 0; index < pages.length; index++) {
+                        final page = pages[index];
+                        final position = index + 1;
+                        final isLeft = position.isEven;
+                        final otherIndex = isLeft ? index - 1 : index + 1;
+                        final rowHeight =
+                            otherIndex >= 0 && otherIndex < pages.length
+                            ? math.max(page.height, pages[otherIndex].height)
+                            : page.height;
+                        layouts.add(
+                          Rect.fromLTWH(
+                            isLeft
+                                ? params.margin * 2 + width
+                                : params.margin + width - page.width,
+                            y + (rowHeight - page.height) / 2,
+                            page.width,
+                            page.height,
+                          ),
+                        );
+                        if (isLeft || index == pages.length - 1) {
+                          y += rowHeight + params.margin;
+                        }
+                      }
+                      return PdfPageLayout(
+                        pageLayouts: layouts,
+                        documentSize: Size(width * 2 + params.margin * 3, y),
+                      );
+                    },
             ),
           ),
           if (_pageCount > 0)
@@ -530,6 +765,31 @@ class _AdvancedPdfReaderPageState extends State<AdvancedPdfReaderPage> {
                           child: const Text('강조'),
                         ),
                       ],
+                    ),
+                  ),
+                ),
+              ),
+            ),
+          if (_busy)
+            Positioned.fill(
+              child: ColoredBox(
+                color: Colors.black.withAlpha(55),
+                child: Center(
+                  child: Card(
+                    child: Padding(
+                      padding: const EdgeInsets.all(24),
+                      child: Row(
+                        mainAxisSize: MainAxisSize.min,
+                        children: [
+                          const SizedBox(
+                            width: 22,
+                            height: 22,
+                            child: CircularProgressIndicator(strokeWidth: 2.5),
+                          ),
+                          const SizedBox(width: 16),
+                          Text(_busyMessage),
+                        ],
+                      ),
                     ),
                   ),
                 ),

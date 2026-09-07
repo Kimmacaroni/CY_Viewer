@@ -16,6 +16,9 @@ CY뷰어 메인 저장소에서 관리하는 macOS용 앱입니다.
 - 페이지 책갈피
 - Finder에서 PDF 끌어놓기
 - macOS 시스템 인쇄 창
+- 세로·가로 스크롤 및 두 페이지 보기
+- PDF 복사본, 페이지별 PNG·JPG 저장
+- Apple Vision 기반 한국어·영어 문서 전체 OCR
 - CY뷰어 전용 앱 아이콘
 
 완성된 macOS 설치 파일은 공개 [CY뷰어 다운로드 저장소](https://github.com/Kimmacaroni/CY_Viewer_Download/releases)에만 게시합니다.
