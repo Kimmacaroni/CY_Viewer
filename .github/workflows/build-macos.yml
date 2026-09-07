@@ -1,0 +1,53 @@
+name: macOS build
+
+on:
+  workflow_dispatch:
+  push:
+    branches: [main]
+    paths:
+      - "macos_app/**"
+      - ".github/workflows/build-macos.yml"
+
+jobs:
+  build:
+    runs-on: macos-15
+    timeout-minutes: 30
+    defaults:
+      run:
+        working-directory: macos_app
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Set up Flutter
+        uses: subosito/flutter-action@v2
+        with:
+          channel: stable
+          cache: true
+
+      - name: Resolve packages
+        run: flutter pub get
+
+      - name: Analyze
+        run: flutter analyze
+
+      - name: Test
+        run: flutter test
+
+      - name: Build macOS app
+        run: flutter build macos --release
+
+      - name: Create DMG
+        run: |
+          mkdir -p build/dmg
+          cp -R "build/macos/Build/Products/Release/CYViewer.app" build/dmg/
+          ln -s /Applications build/dmg/Applications
+          hdiutil create -volname "CY뷰어" -srcfolder build/dmg -ov -format UDZO "build/CYViewer-macOS-v1.0.0.dmg"
+
+      - name: Upload macOS package
+        uses: actions/upload-artifact@v4
+        with:
+          name: CYViewer-macOS-v1.0.0
+          path: macos_app/build/CYViewer-macOS-v1.0.0.dmg
+          if-no-files-found: error
