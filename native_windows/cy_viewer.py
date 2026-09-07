@@ -881,6 +881,76 @@ class CyViewer(TkinterDnD.Tk):
             messagebox.showinfo("CY뷰어", "먼저 PDF를 열어 주세요.")
             return
 
+        preview = tk.Toplevel(self)
+        preview.title("인쇄 미리보기 | CY뷰어")
+        preview.geometry("980x760")
+        preview.minsize(680, 520)
+        preview.configure(bg=COLORS["canvas"])
+        preview.transient(self)
+
+        header = tk.Frame(preview, bg=COLORS["ink"], padx=20, pady=14)
+        header.pack(fill="x")
+        tk.Label(header, text="인쇄 미리보기", bg=COLORS["ink"], fg="white", font=("Malgun Gothic", 16, "bold")).pack(side="left")
+        page_label = tk.Label(header, text="", bg=COLORS["ink"], fg="#CBD5E1", font=("Malgun Gothic", 10))
+        page_label.pack(side="left", padx=18)
+
+        controls = tk.Frame(preview, bg=COLORS["surface"], padx=16, pady=10)
+        controls.pack(fill="x")
+        preview_canvas = tk.Canvas(preview, bg="#DCE5EF", highlightthickness=0)
+        preview_canvas.pack(fill="both", expand=True, padx=16, pady=(12, 16))
+        state = {"page": self.page_number, "zoom": 1.0, "image": None}
+
+        def draw_preview(_event=None) -> None:
+            if not preview.winfo_exists() or not self.document:
+                return
+            page = self.document[state["page"]]
+            available_width = max(preview_canvas.winfo_width() - 48, 100)
+            available_height = max(preview_canvas.winfo_height() - 48, 100)
+            fit = min(available_width / page.rect.width, available_height / page.rect.height)
+            scale = max(0.2, min(3.0, fit * state["zoom"]))
+            pixmap = page.get_pixmap(matrix=pymupdf.Matrix(scale, scale), alpha=False)
+            state["image"] = ImageTk.PhotoImage(Image.frombytes("RGB", (pixmap.width, pixmap.height), pixmap.samples))
+            preview_canvas.delete("all")
+            x = max((preview_canvas.winfo_width() - pixmap.width) // 2, 24)
+            y = max((preview_canvas.winfo_height() - pixmap.height) // 2, 24)
+            preview_canvas.create_rectangle(x - 1, y - 1, x + pixmap.width + 1, y + pixmap.height + 1, fill="white", outline="#CBD5E1")
+            preview_canvas.create_image(x, y, anchor="nw", image=state["image"])
+            page_label.config(text=f"{state['page'] + 1} / {len(self.document)} 페이지 · {int(state['zoom'] * 100)}%")
+
+        def move_page(change: int) -> None:
+            state["page"] = max(0, min(len(self.document) - 1, state["page"] + change))
+            draw_preview()
+
+        def change_preview_zoom(change: float) -> None:
+            state["zoom"] = max(0.5, min(2.0, round(state["zoom"] + change, 1)))
+            draw_preview()
+
+        self._button(controls, "◀ 이전", lambda: move_page(-1)).pack(side="left", padx=(0, 8))
+        self._button(controls, "다음 ▶", lambda: move_page(1)).pack(side="left", padx=(0, 16))
+        self._button(controls, "−", lambda: change_preview_zoom(-0.1)).pack(side="left", padx=(0, 6))
+        self._button(controls, "+", lambda: change_preview_zoom(0.1)).pack(side="left")
+
+        def open_printer_settings() -> None:
+            preview.destroy()
+            self._show_print_dialog()
+
+        print_button = self._button(controls, "프린터 설정 및 인쇄", open_printer_settings, "Primary.TButton")
+        print_button.configure(width=170)
+        print_button.pack(side="right")
+        close_button = self._button(controls, "닫기", preview.destroy)
+        close_button.configure(width=80)
+        close_button.pack(side="right", padx=(0, 8))
+        preview_canvas.bind("<Configure>", draw_preview)
+        preview.bind("<Left>", lambda _: move_page(-1))
+        preview.bind("<Right>", lambda _: move_page(1))
+        preview.bind("<Escape>", lambda _: preview.destroy())
+        preview.after_idle(draw_preview)
+        preview.focus_set()
+
+    def _show_print_dialog(self) -> None:
+        if not self.document:
+            return
+
         class PrintDialog(ctypes.Structure):
             _fields_ = [
                 ("lStructSize", ctypes.c_uint32),
