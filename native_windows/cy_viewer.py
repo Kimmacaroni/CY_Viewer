@@ -10,7 +10,6 @@ import os
 import subprocess
 import sys
 import tempfile
-import uuid
 from pathlib import Path
 from tkinter import filedialog, messagebox, simpledialog, ttk
 
@@ -882,45 +881,6 @@ class CyViewer(TkinterDnD.Tk):
             messagebox.showinfo("CY뷰어", "먼저 PDF를 열어 주세요.")
             return
 
-        # Windows의 구형 PrintDlg는 문서 미리보기를 제공하지 않는다. 편집 중인
-        # 문서를 임시 PDF로 만든 뒤 Windows 기본 PDF 호스트의 인쇄 미리보기를
-        # 열면, 사용자가 확인한 인쇄 작업이 정상적으로 스풀러 대기열에 들어간다.
-        try:
-            edge_candidates = (
-                Path("C:/Program Files (x86)/Microsoft/Edge/Application/msedge.exe"),
-                Path("C:/Program Files/Microsoft/Edge/Application/msedge.exe"),
-            )
-            edge = next((path for path in edge_candidates if path.exists()), None)
-            if not edge:
-                raise RuntimeError("Windows PDF 인쇄 화면을 여는 Microsoft Edge를 찾을 수 없습니다.")
-
-            preview_directory = Path(tempfile.gettempdir()) / "CYViewer" / "print-preview"
-            preview_directory.mkdir(parents=True, exist_ok=True)
-            preview_path = preview_directory / f"CYViewer_print_{uuid.uuid4().hex}.pdf"
-            self.document.save(str(preview_path))
-            subprocess.Popen(
-                [str(edge), "--new-window", preview_path.as_uri()],
-                creationflags=getattr(subprocess, "CREATE_NO_WINDOW", 0),
-            )
-
-            # Edge가 PDF를 표시한 다음 Ctrl+P를 보내 Windows PDF 인쇄 미리보기를 연다.
-            # 별도 콘솔 창은 만들지 않는다.
-            preview_name = preview_path.stem.replace("'", "''")
-            script = (
-                "$shell=New-Object -ComObject WScript.Shell; "
-                "Start-Sleep -Milliseconds 1800; "
-                f"if(-not $shell.AppActivate('{preview_name}')){{$shell.AppActivate('Microsoft Edge')|Out-Null}}; "
-                "Start-Sleep -Milliseconds 250; $shell.SendKeys('^p')"
-            )
-            subprocess.Popen(
-                ["powershell.exe", "-NoProfile", "-NonInteractive", "-WindowStyle", "Hidden", "-Command", script],
-                creationflags=getattr(subprocess, "CREATE_NO_WINDOW", 0),
-            )
-            self.status.config(text="Windows 인쇄 미리보기를 여는 중입니다… 인쇄를 확정하면 대기열에 등록됩니다.")
-        except Exception as error:
-            messagebox.showerror("CY뷰어", f"Windows 인쇄 미리보기를 열 수 없습니다.\n\n{error}")
-        return
-
         preview = tk.Toplevel(self)
         preview.title("인쇄 미리보기 | CY뷰어")
         preview.geometry("980x760")
@@ -971,8 +931,8 @@ class CyViewer(TkinterDnD.Tk):
         self._button(controls, "+", lambda: change_preview_zoom(0.1)).pack(side="left")
 
         def open_printer_settings() -> None:
-            preview.destroy()
-            self._show_print_dialog()
+            if self._show_print_dialog():
+                preview.destroy()
 
         print_button = self._button(controls, "프린터 설정 및 인쇄", open_printer_settings, "Primary.TButton")
         print_button.configure(width=170)
@@ -987,9 +947,9 @@ class CyViewer(TkinterDnD.Tk):
         preview.after_idle(draw_preview)
         preview.focus_set()
 
-    def _show_print_dialog(self) -> None:
+    def _show_print_dialog(self) -> bool:
         if not self.document:
-            return
+            return False
 
         class PrintDialog(ctypes.Structure):
             _fields_ = [
@@ -1039,15 +999,20 @@ class CyViewer(TkinterDnD.Tk):
                 if error:
                     raise RuntimeError(f"Windows 인쇄 대화상자 오류: {error}")
                 self.status.config(text="인쇄가 취소됐습니다.")
-                return
+                return False
 
             first_page = dialog.nFromPage if dialog.Flags & pd_page_nums else 1
             last_page = dialog.nToPage if dialog.Flags & pd_page_nums else len(self.document)
             printer_dc = win32ui.CreateDCFromHandle(int(dialog.hDC))
-            printer_dc.StartDoc(f"CY뷰어 - {self.document_path.name if self.document_path else 'PDF 문서'}")
+            document_name = f"CY뷰어 - {self.document_path.name if self.document_path else 'PDF 문서'}"
+            job_id = printer_dc.StartDoc(document_name)
+            if not job_id or job_id <= 0:
+                raise RuntimeError("Windows 인쇄 대기열에 작업을 만들지 못했습니다.")
             try:
                 printable_width = printer_dc.GetDeviceCaps(8)
                 printable_height = printer_dc.GetDeviceCaps(10)
+                if printable_width <= 0 or printable_height <= 0:
+                    raise RuntimeError("선택한 프린터의 인쇄 가능 영역을 확인할 수 없습니다.")
                 for page_number in range(first_page - 1, last_page):
                     page = self.document[page_number]
                     pixmap = page.get_pixmap(matrix=pymupdf.Matrix(2, 2), alpha=False)
@@ -1057,19 +1022,24 @@ class CyViewer(TkinterDnD.Tk):
                     draw_height = int(image.height * scale)
                     left = (printable_width - draw_width) // 2
                     top = (printable_height - draw_height) // 2
-                    printer_dc.StartPage()
+                    if printer_dc.StartPage() <= 0:
+                        raise RuntimeError(f"{page_number + 1}페이지 인쇄 작업을 시작하지 못했습니다.")
                     ImageWin.Dib(image).draw(printer_dc.GetHandleOutput(), (left, top, left + draw_width, top + draw_height))
-                    printer_dc.EndPage()
+                    if printer_dc.EndPage() <= 0:
+                        raise RuntimeError(f"{page_number + 1}페이지를 인쇄 대기열에 보내지 못했습니다.")
             except Exception:
                 printer_dc.AbortDoc()
                 raise
             else:
                 printer_dc.EndDoc()
-                self.status.config(text=f"인쇄 완료 · {first_page}~{last_page}페이지")
+                self.status.config(text=f"인쇄 대기열 전송 완료 · 작업 #{job_id} · {first_page}~{last_page}페이지")
+                messagebox.showinfo("CY뷰어", f"인쇄 작업을 Windows 대기열에 보냈습니다.\n\n작업 번호: {job_id}\n페이지: {first_page}~{last_page}")
+                return True
             finally:
                 printer_dc.DeleteDC()
         except Exception as error:
             messagebox.showerror("CY뷰어", f"인쇄를 시작할 수 없습니다.\n\n{error}")
+            return False
         finally:
             if dialog.hDevMode:
                 ctypes.windll.kernel32.GlobalFree(dialog.hDevMode)
