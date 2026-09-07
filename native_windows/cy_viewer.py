@@ -3,10 +3,13 @@
 from __future__ import annotations
 
 import tkinter as tk
+import os
+import sys
 from pathlib import Path
 from tkinter import filedialog, messagebox, simpledialog, ttk
 
 import pymupdf
+import pytesseract
 from PIL import Image, ImageTk
 
 
@@ -40,6 +43,7 @@ class CyViewer(tk.Tk):
         self.search_text = ""
         self.search_matches: list[tuple[int, pymupdf.Rect]] = []
         self.search_index = -1
+        self.ocr_words: dict[int, list[tuple[pymupdf.Rect, str]]] = {}
         self.page_image: ImageTk.PhotoImage | None = None
         self.page_left = 0
         self.page_top = 0
@@ -91,12 +95,14 @@ class CyViewer(tk.Tk):
         self._button(navigation, "페이지로 이동", self.go_to_page).pack(fill="x", pady=2)
         self._button(navigation, "☆  이 페이지 책갈피", self.toggle_bookmark).pack(fill="x", pady=2)
         self._button(navigation, "책갈피 목록", self.show_bookmarks).pack(fill="x", pady=2)
+        self._button(navigation, "OCR · 현재 페이지 글자 인식", self.ocr_current_page).pack(fill="x", pady=(8, 2))
         editing = self._section(sidebar, "02  선택 · 표시 · 수정")
         self._button(editing, "형광펜 표시", lambda: self.mark_selection("highlight")).pack(fill="x", pady=2)
         self._button(editing, "밑줄", lambda: self.mark_selection("underline")).pack(fill="x", pady=2)
         self._button(editing, "취소선", lambda: self.mark_selection("strike")).pack(fill="x", pady=2)
         self._button(editing, "굵게 처리", self.bold_selection).pack(fill="x", pady=2)
         self._button(editing, "문구 수정", self.edit_selection).pack(fill="x", pady=2)
+        self._button(editing, "선택 텍스트 복사", self.copy_selected_text).pack(fill="x", pady=2)
         self._side_title(sidebar, "03  사본으로 저장")
         self._button(sidebar, "PDF로 저장", self.save_as, "Primary.TButton").pack(fill="x", pady=(14, 4))
         selection_card = tk.Frame(sidebar, bg=COLORS["blue_soft"], padx=10, pady=10)
@@ -206,6 +212,7 @@ class CyViewer(tk.Tk):
             self.bookmarks.clear()
             self.search_matches.clear()
             self.search_index = -1
+            self.ocr_words.clear()
             self.selected_rect = None
             self.is_dirty = False
             self.file_label.config(text=f"{self.document_path.name} · 읽기 및 편집 가능")
@@ -352,16 +359,86 @@ class CyViewer(tk.Tk):
             return ""
         words = self.document[self.page_number].get_text("words")
         selected = [word[4] for word in words if pymupdf.Rect(word[:4]).intersects(self.selected_rect)]
+        if not selected:
+            selected = [text for rect, text in self.ocr_words.get(self.page_number, []) if rect.intersects(self.selected_rect)]
         return " ".join(selected)
 
     def _selected_word_rects(self) -> list[pymupdf.Rect]:
         if not self.document or not self.selected_rect:
             return []
-        return [
+        native_words = [
             pymupdf.Rect(word[:4])
             for word in self.document[self.page_number].get_text("words")
             if pymupdf.Rect(word[:4]).intersects(self.selected_rect)
         ]
+        if native_words:
+            return native_words
+        return [rect for rect, _ in self.ocr_words.get(self.page_number, []) if rect.intersects(self.selected_rect)]
+
+    def _ocr_data_path(self) -> Path:
+        base = Path(getattr(sys, "_MEIPASS", Path(__file__).parent))
+        return base / "tessdata"
+
+    def _configure_ocr(self) -> str:
+        candidates = [
+            Path("C:/Program Files/Tesseract-OCR/tesseract.exe"),
+            Path("C:/Program Files (x86)/Tesseract-OCR/tesseract.exe"),
+        ]
+        executable = next((candidate for candidate in candidates if candidate.exists()), None)
+        if not executable:
+            raise RuntimeError("OCR 엔진을 찾을 수 없습니다. Tesseract OCR을 설치한 뒤 다시 시도하세요.")
+        pytesseract.pytesseract.tesseract_cmd = str(executable)
+        data_path = self._ocr_data_path()
+        if not (data_path / "kor.traineddata").exists():
+            raise RuntimeError("한국어 OCR 언어 데이터를 찾을 수 없습니다.")
+        return f'--oem 3 --psm 6 --tessdata-dir "{data_path}"'
+
+    def ocr_current_page(self) -> None:
+        if not self.document:
+            messagebox.showinfo("CY뷰어", "먼저 PDF를 열어 주세요.")
+            return
+        try:
+            self.status.config(text="OCR 진행 중 · 현재 페이지의 글자를 인식하고 있습니다…")
+            self.update_idletasks()
+            config = self._configure_ocr()
+            scale = 2.0
+            page = self.document[self.page_number]
+            pixmap = page.get_pixmap(matrix=pymupdf.Matrix(scale, scale), alpha=False)
+            image = Image.frombytes("RGB", (pixmap.width, pixmap.height), pixmap.samples)
+            data = pytesseract.image_to_data(image, lang="kor+eng", config=config, output_type=pytesseract.Output.DICT)
+            words: list[tuple[pymupdf.Rect, str]] = []
+            for index, raw_text in enumerate(data["text"]):
+                text = raw_text.strip()
+                confidence = float(data["conf"][index]) if data["conf"][index] != "-1" else -1
+                if not text or confidence < 20:
+                    continue
+                rect = pymupdf.Rect(
+                    data["left"][index] / scale,
+                    data["top"][index] / scale,
+                    (data["left"][index] + data["width"][index]) / scale,
+                    (data["top"][index] + data["height"][index]) / scale,
+                )
+                words.append((rect, text))
+            self.ocr_words[self.page_number] = words
+            if words:
+                self.status.config(text=f"OCR 완료 · {len(words)}개 단어를 인식했습니다. 문구를 드래그해 선택하거나 검색하세요.")
+                messagebox.showinfo("CY뷰어", f"현재 페이지 OCR이 완료됐습니다.\n\n인식 단어: {len(words)}개\n이제 인식한 글자를 드래그해 선택하고 복사·표시·수정할 수 있습니다.")
+            else:
+                self.status.config(text="OCR 결과 없음 · 이미지 품질 또는 글자 크기를 확인하세요.")
+                messagebox.showinfo("CY뷰어", "글자를 인식하지 못했습니다. 더 선명한 문서에서 다시 시도해 주세요.")
+        except Exception as error:
+            self.status.config(text="OCR 실패")
+            messagebox.showerror("CY뷰어", f"OCR을 실행할 수 없습니다.\n\n{error}")
+
+    def copy_selected_text(self) -> None:
+        text = self._selected_text()
+        if not text:
+            self._require_selection()
+            return
+        self.clipboard_clear()
+        self.clipboard_append(text)
+        self.update()
+        self.status.config(fg="white", text=f"선택 텍스트를 클립보드에 복사했습니다. ({len(text)}자)")
 
     def _inspect_selection(self) -> None:
         if not self.document or not self.selected_rect:
@@ -540,6 +617,11 @@ class CyViewer(tk.Tk):
             self.search_matches = []
             for number, page in enumerate(self.document):
                 self.search_matches.extend((number, rect) for rect in page.search_for(query))
+            query_lower = query.casefold()
+            for number, words in self.ocr_words.items():
+                self.search_matches.extend(
+                    (number, rect) for rect, text in words if query_lower in text.casefold()
+                )
             self.search_index = -1
         if not self.search_matches:
             self.search_status.config(text="결과 없음")
