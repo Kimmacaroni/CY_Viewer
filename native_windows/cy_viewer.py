@@ -120,6 +120,11 @@ class CyViewer(tk.Tk):
         tools = tk.Frame(content, bg=COLORS["surface"], padx=18, pady=10)
         tools.pack(fill="x")
         tk.Label(tools, text="읽기", bg=COLORS["blue_soft"], fg="#1D4ED8", padx=9, pady=4, font=("Malgun Gothic", 9, "bold")).pack(side="left", padx=(0, 12))
+        self.selection_state = tk.Label(
+            tools, text="선택 없음", bg="#F1F5F9", fg=COLORS["muted"],
+            padx=10, pady=4, font=("Malgun Gothic", 9, "bold"),
+        )
+        self.selection_state.pack(side="left", padx=(0, 12))
         self._button(tools, "−", lambda: self.change_zoom(-0.2)).pack(side="left", padx=2)
         self._button(tools, "+", lambda: self.change_zoom(0.2)).pack(side="left", padx=2)
         tk.Label(tools, text="Ctrl + 휠: 확대/축소", bg=COLORS["surface"], fg=COLORS["muted"], font=("Malgun Gothic", 9)).pack(side="left", padx=10)
@@ -179,6 +184,12 @@ class CyViewer(tk.Tk):
         self.selection_details.insert("1.0", text)
         self.selection_details.config(state="disabled")
 
+    def _set_selection_feedback(self, text: str | None = None) -> None:
+        if text:
+            self.selection_state.config(text=f"텍스트 선택됨 · {len(text)}자", bg="#DBEAFE", fg="#1D4ED8")
+        else:
+            self.selection_state.config(text="선택 없음", bg="#F1F5F9", fg=COLORS["muted"])
+
     def open_pdf(self) -> None:
         selected = filedialog.askopenfilename(
             title="PDF 파일 선택", filetypes=[("PDF 문서", "*.pdf")]
@@ -201,6 +212,7 @@ class CyViewer(tk.Tk):
             self._set_save_state("변경 없음")
             self.selection_label.config(text="선택 검사")
             self._set_selection_details("문구, 이미지 또는 빈 공간을\n드래그해 선택하면 이곳에서\n선택한 내용을 확인할 수 있어요.")
+            self._set_selection_feedback()
             self.draw_page()
         except Exception as error:
             messagebox.showerror("CY뷰어", f"PDF를 열 수 없습니다.\n\n{error}")
@@ -282,6 +294,7 @@ class CyViewer(tk.Tk):
         self.selection_start = (event.x, event.y)
         self.selected_rect = None
         self.selection_preview = None
+        self._set_selection_feedback()
 
     def update_selection(self, event) -> None:
         if not self.selection_start:
@@ -315,6 +328,7 @@ class CyViewer(tk.Tk):
         else:
             self.selection_label.config(text="선택 검사")
             self._set_selection_details("유효한 영역이 선택되지 않았습니다.\n문구, 이미지 또는 빈 공간을\n조금 더 넓게 드래그해 보세요.")
+            self._set_selection_feedback()
         self.draw_page()
 
     def _selected_text(self) -> str:
@@ -345,6 +359,7 @@ class CyViewer(tk.Tk):
         if not parts:
             parts.append("빈 공간")
         self.selection_label.config(text="선택 검사 · " + " · ".join(parts))
+        self._set_selection_feedback(text)
 
         details = [f"선택 종류: {', '.join(parts)}"]
         if text:
