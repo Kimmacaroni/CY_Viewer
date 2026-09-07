@@ -1,8 +1,10 @@
+import 'dart:io';
 import 'dart:convert';
 
 import 'package:flutter/material.dart';
 import 'package:pdfrx/pdfrx.dart';
 import 'package:shared_preferences/shared_preferences.dart';
+import 'package:printing/printing.dart';
 
 enum _ReaderAction {
   bookmark,
@@ -183,6 +185,21 @@ class _AdvancedPdfReaderPageState extends State<AdvancedPdfReaderPage> {
     _controller.invalidate();
   }
 
+  Future<void> _printDocument() async {
+    try {
+      final bytes = await File(widget.path).readAsBytes();
+      await Printing.layoutPdf(
+        name: widget.name,
+        dynamicLayout: false,
+        onLayout: (_) async => bytes,
+      );
+    } catch (error) {
+      if (!mounted) return;
+      ScaffoldMessenger.of(context)
+          .showSnackBar(SnackBar(content: Text('인쇄 창을 열 수 없습니다: $error')));
+    }
+  }
+
   void _paintMarks(Canvas canvas, Rect pageRect, PdfPage page) {
     for (final mark in _marks.where(
       (item) => item.range.pageNumber == page.pageNumber,
@@ -356,6 +373,11 @@ class _AdvancedPdfReaderPageState extends State<AdvancedPdfReaderPage> {
                   onPressed: _pageCount == 0 ? null : _goToPage,
                   icon: const Icon(Icons.find_in_page_outlined),
                 ),
+                IconButton(
+                  tooltip: '인쇄',
+                  onPressed: _printDocument,
+                  icon: const Icon(Icons.print_outlined),
+                ),
                 PopupMenuButton<_ReaderAction>(
                   tooltip: '기능 메뉴',
                   onSelected: _selectAction,
@@ -426,8 +448,11 @@ class _AdvancedPdfReaderPageState extends State<AdvancedPdfReaderPage> {
               textSelectionParams: PdfTextSelectionParams(
                 showContextMenuAutomatically: false,
                 onTextSelectionChange: (selection) {
-                  if (mounted && _hasSelectedText != selection.hasSelectedText) {
-                    setState(() => _hasSelectedText = selection.hasSelectedText);
+                  if (mounted &&
+                      _hasSelectedText != selection.hasSelectedText) {
+                    setState(
+                      () => _hasSelectedText = selection.hasSelectedText,
+                    );
                   }
                 },
               ),
@@ -471,14 +496,19 @@ class _AdvancedPdfReaderPageState extends State<AdvancedPdfReaderPage> {
                   borderRadius: BorderRadius.circular(14),
                   child: SingleChildScrollView(
                     scrollDirection: Axis.horizontal,
-                    padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 4),
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: 6,
+                      vertical: 4,
+                    ),
                     child: Row(
                       mainAxisSize: MainAxisSize.min,
                       children: [
                         TextButton.icon(
                           onPressed: () async {
-                            await _controller.textSelectionDelegate.copyTextSelection();
-                            await _controller.textSelectionDelegate.clearTextSelection();
+                            await _controller.textSelectionDelegate
+                                .copyTextSelection();
+                            await _controller.textSelectionDelegate
+                                .clearTextSelection();
                           },
                           icon: const Icon(Icons.copy_outlined, size: 18),
                           label: const Text('복사'),

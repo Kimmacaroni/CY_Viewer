@@ -39,6 +39,8 @@ dependencies:
   pdfrx: ^2.6.1
   file_picker: ^12.2.0
   shared_preferences: ^2.5.5
+  desktop_drop: ^0.8.4
+  printing: ^5.15.0
 
 dev_dependencies:
   flutter_test:
