@@ -10,13 +10,27 @@ import pymupdf
 from PIL import Image, ImageTk
 
 
+COLORS = {
+    "ink": "#0F172A",
+    "muted": "#64748B",
+    "line": "#E2E8F0",
+    "surface": "#FFFFFF",
+    "canvas": "#EAF0F6",
+    "blue": "#2563EB",
+    "blue_soft": "#E0F2FE",
+    "green": "#15803D",
+    "red": "#DC2626",
+    "sidebar": "#F8FAFC",
+}
+
+
 class CyViewer(tk.Tk):
     def __init__(self) -> None:
         super().__init__()
         self.title("CY뷰어 | 개인용 PDF 뷰어")
         self.geometry("1280x820")
         self.minsize(780, 560)
-        self.configure(bg="#eef2f7")
+        self.configure(bg=COLORS["canvas"])
 
         self.document: pymupdf.Document | None = None
         self.document_path: Path | None = None
@@ -32,82 +46,90 @@ class CyViewer(tk.Tk):
         self.selected_rect: pymupdf.Rect | None = None
         self.selection_start: tuple[int, int] | None = None
         self.selection_preview: int | None = None
+        self.is_dirty = False
+        self.save_state = "새 문서 없음"
 
         self._make_ui()
 
     def _make_ui(self) -> None:
         style = ttk.Style(self)
         style.theme_use("clam")
-        style.configure("Action.TButton", font=("Malgun Gothic", 10), padding=(10, 7))
-        style.configure("Primary.TButton", font=("Malgun Gothic", 10, "bold"), padding=(12, 8))
+        style.configure("Action.TButton", font=("Malgun Gothic", 10), padding=(10, 8), background=COLORS["surface"], foreground=COLORS["ink"], bordercolor=COLORS["line"])
+        style.map("Action.TButton", background=[("active", COLORS["blue_soft"]), ("pressed", "#DBEAFE")])
+        style.configure("Primary.TButton", font=("Malgun Gothic", 10, "bold"), padding=(12, 9), background=COLORS["blue"], foreground="white", bordercolor=COLORS["blue"])
+        style.map("Primary.TButton", background=[("active", "#1D4ED8"), ("pressed", "#1E40AF")])
 
-        header = tk.Frame(self, bg="#0f172a", padx=24, pady=16)
+        header = tk.Frame(self, bg=COLORS["ink"], padx=24, pady=14)
         header.pack(fill="x")
         tk.Label(
             header,
-            text="CY뷰어  |  PDF 작업 공간",
+            text="CY뷰어",
             fg="white",
-            bg="#0f172a",
+            bg=COLORS["ink"],
             font=("Malgun Gothic", 18, "bold"),
         ).pack(side="left")
         self.file_label = tk.Label(
             header,
-            text="문서를 열어 시작하세요",
-            fg="#94a3b8",
-            bg="#0f172a",
+            text="PDF 편집 작업 공간 · 문서를 열어 시작하세요",
+            fg="#CBD5E1",
+            bg=COLORS["ink"],
             font=("Malgun Gothic", 10),
         )
         self.file_label.pack(side="left", padx=18)
+        self.save_badge = tk.Label(header, text=self.save_state, fg="#BFDBFE", bg="#1E3A5F", padx=10, pady=4, font=("Malgun Gothic", 9, "bold"))
+        self.save_badge.pack(side="right")
 
-        workspace = tk.Frame(self, bg="#e2e8f0")
+        workspace = tk.Frame(self, bg=COLORS["line"])
         workspace.pack(fill="both", expand=True)
-        sidebar = tk.Frame(workspace, width=250, bg="#f8fafc", padx=16, pady=18)
+        sidebar = tk.Frame(workspace, width=270, bg=COLORS["sidebar"], padx=16, pady=18)
         sidebar.pack(side="left", fill="y")
         sidebar.pack_propagate(False)
         self._button(sidebar, "＋ PDF 열기", self.open_pdf, "Primary.TButton").pack(fill="x", pady=(0, 18))
-        self._side_title(sidebar, "문서 탐색")
-        self._button(sidebar, "◀  이전 페이지", self.previous_page).pack(fill="x", pady=2)
-        self._button(sidebar, "다음 페이지  ▶", self.next_page).pack(fill="x", pady=2)
-        self._button(sidebar, "페이지로 이동", self.go_to_page).pack(fill="x", pady=2)
-        self._button(sidebar, "☆  이 페이지 책갈피", self.toggle_bookmark).pack(fill="x", pady=2)
-        self._button(sidebar, "책갈피 목록", self.show_bookmarks).pack(fill="x", pady=2)
-        self._side_title(sidebar, "선택한 문구 편집")
-        self._button(sidebar, "형광펜 표시", lambda: self.mark_selection("highlight")).pack(fill="x", pady=2)
-        self._button(sidebar, "밑줄", lambda: self.mark_selection("underline")).pack(fill="x", pady=2)
-        self._button(sidebar, "취소선", lambda: self.mark_selection("strike")).pack(fill="x", pady=2)
-        self._button(sidebar, "굵게 처리", self.bold_selection).pack(fill="x", pady=2)
-        self._button(sidebar, "문구 수정", self.edit_selection).pack(fill="x", pady=2)
+        navigation = self._section(sidebar, "01  문서 탐색")
+        self._button(navigation, "◀  이전 페이지", self.previous_page).pack(fill="x", pady=2)
+        self._button(navigation, "다음 페이지  ▶", self.next_page).pack(fill="x", pady=2)
+        self._button(navigation, "페이지로 이동", self.go_to_page).pack(fill="x", pady=2)
+        self._button(navigation, "☆  이 페이지 책갈피", self.toggle_bookmark).pack(fill="x", pady=2)
+        self._button(navigation, "책갈피 목록", self.show_bookmarks).pack(fill="x", pady=2)
+        editing = self._section(sidebar, "02  선택 · 표시 · 수정")
+        self._button(editing, "형광펜 표시", lambda: self.mark_selection("highlight")).pack(fill="x", pady=2)
+        self._button(editing, "밑줄", lambda: self.mark_selection("underline")).pack(fill="x", pady=2)
+        self._button(editing, "취소선", lambda: self.mark_selection("strike")).pack(fill="x", pady=2)
+        self._button(editing, "굵게 처리", self.bold_selection).pack(fill="x", pady=2)
+        self._button(editing, "문구 수정", self.edit_selection).pack(fill="x", pady=2)
+        self._side_title(sidebar, "03  사본으로 저장")
         self._button(sidebar, "PDF로 저장", self.save_as, "Primary.TButton").pack(fill="x", pady=(14, 4))
         self.selection_label = tk.Label(
             sidebar,
-            text="사용 순서\n1. PDF 열기\n2. 문구를 드래그\n3. 왼쪽 기능 선택\n4. PDF로 저장",
+            text="선택한 문구가 없습니다.\n\n문서의 글자를 드래그하면\n표시와 문구 수정 기능을 쓸 수 있어요.",
             justify="left",
             anchor="w",
-            bg="#e0f2fe",
-            fg="#0c4a6e",
+            bg=COLORS["blue_soft"],
+            fg="#0C4A6E",
             padx=12,
             pady=12,
             font=("Malgun Gothic", 9),
         )
         self.selection_label.pack(fill="x", pady=(16, 0))
 
-        content = tk.Frame(workspace, bg="#e2e8f0")
+        content = tk.Frame(workspace, bg=COLORS["canvas"])
         content.pack(side="left", fill="both", expand=True)
-        tools = tk.Frame(content, bg="#ffffff", padx=16, pady=10)
+        tools = tk.Frame(content, bg=COLORS["surface"], padx=18, pady=10)
         tools.pack(fill="x")
+        tk.Label(tools, text="읽기", bg=COLORS["blue_soft"], fg="#1D4ED8", padx=9, pady=4, font=("Malgun Gothic", 9, "bold")).pack(side="left", padx=(0, 12))
         self._button(tools, "−", lambda: self.change_zoom(-0.2)).pack(side="left", padx=2)
         self._button(tools, "+", lambda: self.change_zoom(0.2)).pack(side="left", padx=2)
-        tk.Label(tools, text="Ctrl + 휠로 확대/축소", bg="#ffffff", fg="#64748b", font=("Malgun Gothic", 9)).pack(side="left", padx=10)
-        search_box = tk.Frame(tools, bg="#ffffff")
+        tk.Label(tools, text="Ctrl + 휠: 확대/축소", bg=COLORS["surface"], fg=COLORS["muted"], font=("Malgun Gothic", 9)).pack(side="left", padx=10)
+        search_box = tk.Frame(tools, bg=COLORS["surface"])
         search_box.pack(side="right")
         self.search_entry = ttk.Entry(search_box, width=24)
         self.search_entry.pack(side="left", padx=(0, 4))
         self.search_entry.bind("<Return>", lambda _: self.find_next())
         self._button(search_box, "검색", self.find_next).pack(side="left", padx=3)
-        self.search_status = tk.Label(search_box, text="", bg="#ffffff")
+        self.search_status = tk.Label(search_box, text="", bg=COLORS["surface"], fg=COLORS["muted"])
         self.search_status.pack(side="left", padx=5)
 
-        self.canvas = tk.Canvas(content, bg="#94a3b8", highlightthickness=0)
+        self.canvas = tk.Canvas(content, bg=COLORS["canvas"], highlightthickness=0)
         self.canvas.pack(fill="both", expand=True)
         self.canvas.bind("<Configure>", lambda _: self.draw_page())
         self.canvas.bind("<MouseWheel>", self._wheel_zoom)
@@ -121,7 +143,7 @@ class CyViewer(tk.Tk):
             anchor="w",
             padx=14,
             pady=7,
-            bg="#0f172a",
+            bg=COLORS["ink"],
             fg="white",
             font=("Malgun Gothic", 10),
         )
@@ -131,7 +153,22 @@ class CyViewer(tk.Tk):
         return ttk.Button(parent, text=label, command=command, style=style)
 
     def _side_title(self, parent: tk.Widget, text: str) -> None:
-        tk.Label(parent, text=text, bg="#f8fafc", fg="#475569", font=("Malgun Gothic", 9, "bold")).pack(anchor="w", pady=(12, 5))
+        tk.Label(parent, text=text, bg=COLORS["sidebar"], fg="#475569", font=("Malgun Gothic", 9, "bold")).pack(anchor="w", pady=(12, 5))
+
+    def _section(self, parent: tk.Widget, title: str) -> tk.Frame:
+        self._side_title(parent, title)
+        section = tk.Frame(parent, bg=COLORS["sidebar"])
+        section.pack(fill="x")
+        return section
+
+    def _set_save_state(self, state: str, color: str = "#BFDBFE", background: str = "#1E3A5F") -> None:
+        self.save_state = state
+        self.save_badge.config(text=state, fg=color, bg=background)
+
+    def _mark_dirty(self, message: str) -> None:
+        self.is_dirty = True
+        self._set_save_state("저장 필요", "#FEF3C7", "#92400E")
+        self.status.config(text=message + "  |  오른쪽이 아닌 왼쪽 아래 ‘PDF로 저장’으로 사본을 보관하세요.")
 
     def open_pdf(self) -> None:
         selected = filedialog.askopenfilename(
@@ -149,7 +186,11 @@ class CyViewer(tk.Tk):
             self.bookmarks.clear()
             self.search_matches.clear()
             self.search_index = -1
-            self.file_label.config(text=self.document_path.name)
+            self.selected_rect = None
+            self.is_dirty = False
+            self.file_label.config(text=f"{self.document_path.name} · 읽기 및 편집 가능")
+            self._set_save_state("변경 없음")
+            self.selection_label.config(text="선택한 문구가 없습니다.\n\n문서의 글자를 드래그하면\n표시와 문구 수정 기능을 쓸 수 있어요.")
             self.draw_page()
         except Exception as error:
             messagebox.showerror("CY뷰어", f"PDF를 열 수 없습니다.\n\n{error}")
@@ -160,20 +201,26 @@ class CyViewer(tk.Tk):
         if not self.document:
             self.canvas.delete("all")
             width, height = self.canvas.winfo_width(), self.canvas.winfo_height()
+            self.canvas.create_rectangle(
+                width // 2 - 245, height // 2 - 116, width // 2 + 245, height // 2 + 116,
+                fill="#FFFFFF", outline=COLORS["line"], width=1,
+            )
             self.canvas.create_text(
                 width // 2,
-                height // 2 - 20,
-                text="CY뷰어에 오신 것을 환영합니다",
-                fill="white",
+                height // 2 - 52,
+                text="CY뷰어에서 PDF를 편집하세요",
+                fill=COLORS["ink"],
                 font=("Malgun Gothic", 20, "bold"),
             )
             self.canvas.create_text(
                 width // 2,
-                height // 2 + 24,
-                text="왼쪽의 ‘PDF 열기’ 버튼을 눌러 문서를 선택하세요.",
-                fill="#e2e8f0",
+                height // 2 - 10,
+                text="열기 → 읽기·검색 → 문구 드래그 → 표시 또는 수정 → 저장",
+                fill=COLORS["muted"],
                 font=("Malgun Gothic", 11),
             )
+            self.canvas.create_text(width // 2, height // 2 + 48, text="왼쪽의 ‘PDF 열기’ 버튼으로 시작하세요.", fill=COLORS["blue"], font=("Malgun Gothic", 10, "bold"))
+            self.status.config(text="PDF 열기를 눌러 문서를 선택하세요.")
             return
         page = self.document[self.page_number]
         pixmap = page.get_pixmap(matrix=pymupdf.Matrix(self.zoom, self.zoom), alpha=False)
@@ -195,10 +242,22 @@ class CyViewer(tk.Tk):
                     outline="#ef4444",
                     width=2,
                 )
+        if self.selected_rect:
+            rect = self.selected_rect
+            self.canvas.create_rectangle(
+                left + rect.x0 * self.zoom,
+                top + rect.y0 * self.zoom,
+                left + rect.x1 * self.zoom,
+                top + rect.y1 * self.zoom,
+                outline=COLORS["blue"],
+                dash=(4, 2),
+                width=2,
+            )
         bookmark = "  ★ 책갈피" if self.page_number in self.bookmarks else ""
-        selection = "  |  텍스트 선택됨" if self.selected_rect else ""
+        selection = "  |  문구 선택됨: 왼쪽에서 표시 또는 수정" if self.selected_rect else ""
+        dirty = "  |  저장 필요" if self.is_dirty else ""
         self.status.config(
-            text=f"{self.page_number + 1} / {len(self.document)} 페이지   |   확대 {int(self.zoom * 100)}%{bookmark}{selection}"
+            text=f"{self.page_number + 1} / {len(self.document)} 페이지   |   확대 {int(self.zoom * 100)}%{bookmark}{selection}{dirty}"
         )
 
     def _canvas_to_page(self, x: int, y: int) -> pymupdf.Point:
@@ -275,6 +334,8 @@ class CyViewer(tk.Tk):
             annotation = page.add_strikeout_annot(rect)
         annotation.update()
         self.selected_rect = None
+        label = {"highlight": "형광펜", "underline": "밑줄", "strike": "취소선"}[kind]
+        self._mark_dirty(f"{label} 표시를 적용했습니다.")
         self.draw_page()
 
     def _replace_selected_text(self, text: str, bold: bool) -> None:
@@ -294,6 +355,7 @@ class CyViewer(tk.Tk):
             **font_kwargs,
         )
         self.selected_rect = None
+        self._mark_dirty("문구를 변경했습니다." if not bold else "선택 문구를 굵게 처리했습니다.")
         self.draw_page()
 
     def bold_selection(self) -> None:
@@ -301,7 +363,8 @@ class CyViewer(tk.Tk):
         if not text:
             self._require_selection()
             return
-        self._replace_selected_text(text, bold=True)
+        if messagebox.askyesno("굵게 처리", "선택 문구를 굵게 바꿉니다. 이 변경은 저장 전까지 되돌릴 수 없습니다. 계속할까요?", parent=self):
+            self._replace_selected_text(text, bold=True)
 
     def edit_selection(self) -> None:
         original = self._selected_text()
@@ -310,7 +373,8 @@ class CyViewer(tk.Tk):
             return
         changed = simpledialog.askstring("문구 수정", "새 문구를 입력하세요.", initialvalue=original, parent=self)
         if changed is not None and changed.strip():
-            self._replace_selected_text(changed.strip(), bold=False)
+            if messagebox.askyesno("문구 수정", "기존 문구를 새 문구로 바꿉니다. 이 변경은 저장 전까지 되돌릴 수 없습니다. 계속할까요?", parent=self):
+                self._replace_selected_text(changed.strip(), bold=False)
 
     def save_as(self) -> None:
         if not self.document:
@@ -324,6 +388,9 @@ class CyViewer(tk.Tk):
             return
         try:
             self.document.save(selected)
+            self.is_dirty = False
+            self._set_save_state("저장 완료", "#DCFCE7", "#166534")
+            self.status.config(text=f"저장 완료 · {Path(selected).name}")
             messagebox.showinfo("CY뷰어", "편집한 PDF를 저장했습니다.")
         except Exception as error:
             messagebox.showerror("CY뷰어", f"저장할 수 없습니다.\n\n{error}")
