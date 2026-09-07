@@ -168,9 +168,9 @@ class CyViewer(tk.Tk):
         following = self._button(page_controls, "다음 ▶", self.next_page)
         following.configure(width=72)
         following.pack(side="left")
-        self._button(navigation, "☆  이 페이지 책갈피", self.toggle_bookmark).pack(fill="x", pady=2)
-        self._button(navigation, "책갈피 목록", self.show_bookmarks).pack(fill="x", pady=2)
-        self._button(navigation, "OCR · 현재 페이지 글자 인식", self.ocr_current_page).pack(fill="x", pady=(8, 2))
+        self._button(navigation, "☆  이 페이지 책갈피", self.toggle_bookmark).pack(fill="x", pady=(0, 8))
+        self._button(navigation, "책갈피 목록", self.show_bookmarks).pack(fill="x", pady=(0, 8))
+        self._button(navigation, "OCR", self.ocr_document).pack(fill="x")
         editing = self._section(sidebar, "02  선택 · 표시 · 수정")
         tk.Label(
             editing,
@@ -179,7 +179,7 @@ class CyViewer(tk.Tk):
             font=("Malgun Gothic", 9),
         ).pack(fill="x", pady=(0, 6))
         self._side_title(sidebar, "03  사본으로 저장")
-        self._button(sidebar, "PDF로 저장", self.save_as, "Primary.TButton").pack(fill="x", pady=(14, 4))
+        self._button(sidebar, "PDF로 저장", self.save_as, "Primary.TButton").pack(fill="x")
         selection_card = tk.Frame(sidebar, bg=COLORS["blue_soft"], padx=10, pady=10)
         selection_card.pack(fill="both", expand=True, pady=(16, 0))
         self.selection_label = tk.Label(
@@ -514,56 +514,73 @@ class CyViewer(tk.Tk):
                 continue
         return raw.decode("utf-8", errors="replace")
 
-    def ocr_current_page(self) -> None:
+    def _ocr_page(self, page_number: int, executable: Path, data_path: Path) -> list[tuple[pymupdf.Rect, str]]:
+        if not self.document:
+            return []
+        scale = 2.0
+        page = self.document[page_number]
+        pixmap = page.get_pixmap(matrix=pymupdf.Matrix(scale, scale), alpha=False)
+        image = Image.frombytes("RGB", (pixmap.width, pixmap.height), pixmap.samples)
+        with tempfile.NamedTemporaryFile(suffix=".png", delete=False) as temporary:
+            image_path = Path(temporary.name)
+        try:
+            image.save(image_path)
+            result = subprocess.run(
+                [
+                    str(executable), "--tessdata-dir", str(data_path), str(image_path), "stdout",
+                    "-l", "kor+eng", "--oem", "3", "--psm", "6", "-c", "tessedit_create_tsv=1",
+                ],
+                capture_output=True,
+                check=False,
+            )
+            if result.returncode != 0:
+                raise RuntimeError(self._decode_ocr_output(result.stderr).strip() or "OCR 엔진이 결과를 만들지 못했습니다.")
+            data = list(csv.DictReader(io.StringIO(self._decode_ocr_output(result.stdout)), delimiter="\t"))
+        finally:
+            image_path.unlink(missing_ok=True)
+
+        words: list[tuple[pymupdf.Rect, str]] = []
+        for item in data:
+            text = item.get("text", "").strip()
+            confidence = float(item.get("conf", "-1")) if item.get("conf", "-1") != "-1" else -1
+            if not text or confidence < 20:
+                continue
+            rect = pymupdf.Rect(
+                float(item.get("left", 0)) / scale,
+                float(item.get("top", 0)) / scale,
+                (float(item.get("left", 0)) + float(item.get("width", 0))) / scale,
+                (float(item.get("top", 0)) + float(item.get("height", 0))) / scale,
+            )
+            words.append((rect, text))
+        return words
+
+    def ocr_document(self) -> None:
         if not self.document:
             messagebox.showinfo("CY뷰어", "먼저 PDF를 열어 주세요.")
             return
         try:
-            self.status.config(text="OCR 진행 중 · 현재 페이지의 글자를 인식하고 있습니다…")
-            self.update_idletasks()
             executable, data_path = self._configure_ocr()
-            scale = 2.0
-            page = self.document[self.page_number]
-            pixmap = page.get_pixmap(matrix=pymupdf.Matrix(scale, scale), alpha=False)
-            image = Image.frombytes("RGB", (pixmap.width, pixmap.height), pixmap.samples)
-            with tempfile.NamedTemporaryFile(suffix=".png", delete=False) as temporary:
-                image_path = Path(temporary.name)
-            try:
-                image.save(image_path)
-                result = subprocess.run(
-                    [
-                        str(executable), "--tessdata-dir", str(data_path), str(image_path), "stdout",
-                        "-l", "kor+eng", "--oem", "3", "--psm", "6",
-                        "-c", "tessedit_create_tsv=1",
-                    ],
-                    capture_output=True,
-                    check=False,
-                )
-                if result.returncode != 0:
-                    raise RuntimeError(self._decode_ocr_output(result.stderr).strip() or "OCR 엔진이 결과를 만들지 못했습니다.")
-                data = list(csv.DictReader(io.StringIO(self._decode_ocr_output(result.stdout)), delimiter="\t"))
-            finally:
-                image_path.unlink(missing_ok=True)
-            words: list[tuple[pymupdf.Rect, str]] = []
-            for item in data:
-                text = item.get("text", "").strip()
-                confidence = float(item.get("conf", "-1")) if item.get("conf", "-1") != "-1" else -1
-                if not text or confidence < 20:
-                    continue
-                rect = pymupdf.Rect(
-                    float(item.get("left", 0)) / scale,
-                    float(item.get("top", 0)) / scale,
-                    (float(item.get("left", 0)) + float(item.get("width", 0))) / scale,
-                    (float(item.get("top", 0)) + float(item.get("height", 0))) / scale,
-                )
-                words.append((rect, text))
-            self.ocr_words[self.page_number] = words
-            if words:
-                self.status.config(text=f"OCR 완료 · {len(words)}개 단어를 인식했습니다. 문구를 드래그해 선택하거나 검색하세요.")
-                messagebox.showinfo("CY뷰어", f"현재 페이지 OCR이 완료됐습니다.\n\n인식 단어: {len(words)}개\n이제 인식한 글자를 드래그해 선택하고 복사·표시·수정할 수 있습니다.")
+            self.ocr_words.clear()
+            total_words = 0
+            failed_pages: list[int] = []
+            total_pages = len(self.document)
+            for number in range(total_pages):
+                self.status.config(text=f"OCR 진행 중 · {number + 1} / {total_pages} 페이지를 인식하고 있습니다…")
+                self.update_idletasks()
+                try:
+                    words = self._ocr_page(number, executable, data_path)
+                    self.ocr_words[number] = words
+                    total_words += len(words)
+                except Exception:
+                    failed_pages.append(number + 1)
+            self.draw_page()
+            if failed_pages:
+                pages = ", ".join(map(str, failed_pages))
+                self.status.config(text=f"OCR 완료 · {total_pages - len(failed_pages)} / {total_pages} 페이지, {total_words}개 단어 인식")
+                messagebox.showwarning("CY뷰어", f"문서 OCR을 마쳤습니다.\n\n인식 단어: {total_words}개\n실패한 페이지: {pages}")
             else:
-                self.status.config(text="OCR 결과 없음 · 이미지 품질 또는 글자 크기를 확인하세요.")
-                messagebox.showinfo("CY뷰어", "글자를 인식하지 못했습니다. 더 선명한 문서에서 다시 시도해 주세요.")
+                self.status.config(text=f"OCR 완료 · 전체 {total_pages}페이지에서 {total_words}개 단어를 인식했습니다.")
+                messagebox.showinfo("CY뷰어", f"문서 전체 OCR이 완료됐습니다.\n\n페이지: {total_pages}개\n인식 단어: {total_words}개\n이제 모든 페이지에서 검색·선택·복사·표시·수정할 수 있습니다.")
         except Exception as error:
             self.status.config(text="OCR 실패")
             messagebox.showerror("CY뷰어", f"OCR을 실행할 수 없습니다.\n\n{error}")
