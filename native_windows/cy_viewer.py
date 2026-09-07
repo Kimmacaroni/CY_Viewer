@@ -3,13 +3,16 @@
 from __future__ import annotations
 
 import tkinter as tk
+import csv
+import io
 import os
+import subprocess
 import sys
+import tempfile
 from pathlib import Path
 from tkinter import filedialog, messagebox, simpledialog, ttk
 
 import pymupdf
-import pytesseract
 from PIL import Image, ImageTk
 
 
@@ -406,7 +409,7 @@ class CyViewer(tk.Tk):
         base = Path(getattr(sys, "_MEIPASS", Path(__file__).parent))
         return base / "tessdata"
 
-    def _configure_ocr(self) -> str:
+    def _configure_ocr(self) -> tuple[Path, Path]:
         candidates = [
             Path("C:/Program Files/Tesseract-OCR/tesseract.exe"),
             Path("C:/Program Files (x86)/Tesseract-OCR/tesseract.exe"),
@@ -414,11 +417,19 @@ class CyViewer(tk.Tk):
         executable = next((candidate for candidate in candidates if candidate.exists()), None)
         if not executable:
             raise RuntimeError("OCR 엔진을 찾을 수 없습니다. Tesseract OCR을 설치한 뒤 다시 시도하세요.")
-        pytesseract.pytesseract.tesseract_cmd = str(executable)
         data_path = self._ocr_data_path()
-        if not (data_path / "kor.traineddata").exists():
-            raise RuntimeError("한국어 OCR 언어 데이터를 찾을 수 없습니다.")
-        return f'--oem 3 --psm 6 --tessdata-dir "{data_path}"'
+        if not (data_path / "kor.traineddata").exists() or not (data_path / "eng.traineddata").exists():
+            raise RuntimeError("한국어·영어 OCR 언어 데이터를 찾을 수 없습니다.")
+        return executable, data_path
+
+    @staticmethod
+    def _decode_ocr_output(raw: bytes) -> str:
+        for encoding in ("utf-8", "cp949", "euc-kr"):
+            try:
+                return raw.decode(encoding)
+            except UnicodeDecodeError:
+                continue
+        return raw.decode("utf-8", errors="replace")
 
     def ocr_current_page(self) -> None:
         if not self.document:
@@ -427,23 +438,39 @@ class CyViewer(tk.Tk):
         try:
             self.status.config(text="OCR 진행 중 · 현재 페이지의 글자를 인식하고 있습니다…")
             self.update_idletasks()
-            config = self._configure_ocr()
+            executable, data_path = self._configure_ocr()
             scale = 2.0
             page = self.document[self.page_number]
             pixmap = page.get_pixmap(matrix=pymupdf.Matrix(scale, scale), alpha=False)
             image = Image.frombytes("RGB", (pixmap.width, pixmap.height), pixmap.samples)
-            data = pytesseract.image_to_data(image, lang="kor+eng", config=config, output_type=pytesseract.Output.DICT)
+            with tempfile.NamedTemporaryFile(suffix=".png", delete=False) as temporary:
+                image_path = Path(temporary.name)
+            try:
+                image.save(image_path)
+                result = subprocess.run(
+                    [
+                        str(executable), str(image_path), "stdout", "-l", "kor+eng",
+                        "--oem", "3", "--psm", "6", "--tessdata-dir", str(data_path), "tsv",
+                    ],
+                    capture_output=True,
+                    check=False,
+                )
+                if result.returncode != 0:
+                    raise RuntimeError(self._decode_ocr_output(result.stderr).strip() or "OCR 엔진이 결과를 만들지 못했습니다.")
+                data = list(csv.DictReader(io.StringIO(self._decode_ocr_output(result.stdout)), delimiter="\t"))
+            finally:
+                image_path.unlink(missing_ok=True)
             words: list[tuple[pymupdf.Rect, str]] = []
-            for index, raw_text in enumerate(data["text"]):
-                text = raw_text.strip()
-                confidence = float(data["conf"][index]) if data["conf"][index] != "-1" else -1
+            for item in data:
+                text = item["text"].strip()
+                confidence = float(item["conf"]) if item["conf"] != "-1" else -1
                 if not text or confidence < 20:
                     continue
                 rect = pymupdf.Rect(
-                    data["left"][index] / scale,
-                    data["top"][index] / scale,
-                    (data["left"][index] + data["width"][index]) / scale,
-                    (data["top"][index] + data["height"][index]) / scale,
+                    float(item["left"]) / scale,
+                    float(item["top"]) / scale,
+                    (float(item["left"]) + float(item["width"])) / scale,
+                    (float(item["top"]) + float(item["height"])) / scale,
                 )
                 words.append((rect, text))
             self.ocr_words[self.page_number] = words
