@@ -27,6 +27,11 @@ class CyViewer(tk.Tk):
         self.search_matches: list[tuple[int, pymupdf.Rect]] = []
         self.search_index = -1
         self.page_image: ImageTk.PhotoImage | None = None
+        self.page_left = 0
+        self.page_top = 0
+        self.selected_rect: pymupdf.Rect | None = None
+        self.selection_start: tuple[int, int] | None = None
+        self.selection_preview: int | None = None
 
         self._make_ui()
 
@@ -59,6 +64,12 @@ class CyViewer(tk.Tk):
         self._button(tools, "페이지 이동", self.go_to_page).pack(side="left", padx=3)
         self._button(tools, "☆ 책갈피", self.toggle_bookmark).pack(side="left", padx=3)
         self._button(tools, "책갈피 목록", self.show_bookmarks).pack(side="left", padx=3)
+        self._button(tools, "형광펜", lambda: self.mark_selection("highlight")).pack(side="left", padx=3)
+        self._button(tools, "밑줄", lambda: self.mark_selection("underline")).pack(side="left", padx=3)
+        self._button(tools, "취소선", lambda: self.mark_selection("strike")).pack(side="left", padx=3)
+        self._button(tools, "굵게", self.bold_selection).pack(side="left", padx=3)
+        self._button(tools, "문구 수정", self.edit_selection).pack(side="left", padx=3)
+        self._button(tools, "다른 이름으로 저장", self.save_as).pack(side="left", padx=3)
 
         search_box = tk.Frame(tools, bg="#d9e2ec")
         search_box.pack(side="right")
@@ -73,6 +84,9 @@ class CyViewer(tk.Tk):
         self.canvas.pack(fill="both", expand=True)
         self.canvas.bind("<Configure>", lambda _: self.draw_page())
         self.canvas.bind("<MouseWheel>", self._wheel_zoom)
+        self.canvas.bind("<ButtonPress-1>", self.start_selection)
+        self.canvas.bind("<B1-Motion>", self.update_selection)
+        self.canvas.bind("<ButtonRelease-1>", self.finish_selection)
 
         self.status = tk.Label(
             self,
@@ -121,6 +135,7 @@ class CyViewer(tk.Tk):
         width, height = self.canvas.winfo_width(), self.canvas.winfo_height()
         left = max((width - pixmap.width) // 2, 10)
         top = max((height - pixmap.height) // 2, 10)
+        self.page_left, self.page_top = left, top
         self.canvas.create_image(left, top, anchor="nw", image=self.page_image)
         for page_no, rect in self.search_matches:
             if page_no == self.page_number:
@@ -133,9 +148,131 @@ class CyViewer(tk.Tk):
                     width=2,
                 )
         bookmark = "  ★ 책갈피" if self.page_number in self.bookmarks else ""
+        selection = "  |  텍스트 선택됨" if self.selected_rect else ""
         self.status.config(
-            text=f"{self.page_number + 1} / {len(self.document)} 페이지   |   확대 {int(self.zoom * 100)}%{bookmark}"
+            text=f"{self.page_number + 1} / {len(self.document)} 페이지   |   확대 {int(self.zoom * 100)}%{bookmark}{selection}"
         )
+
+    def _canvas_to_page(self, x: int, y: int) -> pymupdf.Point:
+        return pymupdf.Point(
+            (x - self.page_left) / self.zoom,
+            (y - self.page_top) / self.zoom,
+        )
+
+    def start_selection(self, event) -> None:
+        if not self.document:
+            return
+        self.selection_start = (event.x, event.y)
+        self.selected_rect = None
+        self.selection_preview = None
+
+    def update_selection(self, event) -> None:
+        if not self.selection_start:
+            return
+        start_x, start_y = self.selection_start
+        if self.selection_preview:
+            self.canvas.delete(self.selection_preview)
+        self.selection_preview = self.canvas.create_rectangle(
+            start_x,
+            start_y,
+            event.x,
+            event.y,
+            outline="#2563eb",
+            dash=(4, 2),
+            width=2,
+        )
+
+    def finish_selection(self, event) -> None:
+        if not self.document or not self.selection_start:
+            return
+        start_x, start_y = self.selection_start
+        self.selection_start = None
+        if self.selection_preview:
+            self.canvas.delete(self.selection_preview)
+            self.selection_preview = None
+        rect = pymupdf.Rect(self._canvas_to_page(start_x, start_y), self._canvas_to_page(event.x, event.y))
+        rect = rect & self.document[self.page_number].rect
+        self.selected_rect = rect if rect.width > 3 and rect.height > 3 else None
+        self.draw_page()
+
+    def _selected_text(self) -> str:
+        if not self.document or not self.selected_rect:
+            return ""
+        words = self.document[self.page_number].get_text("words")
+        selected = [word[4] for word in words if pymupdf.Rect(word[:4]).intersects(self.selected_rect)]
+        return " ".join(selected)
+
+    def _require_selection(self) -> pymupdf.Rect | None:
+        if not self.document or not self.selected_rect:
+            messagebox.showinfo("CY뷰어", "문서에서 문구를 드래그해 먼저 선택하세요.")
+            return None
+        return self.selected_rect
+
+    def mark_selection(self, kind: str) -> None:
+        rect = self._require_selection()
+        if not rect or not self.document:
+            return
+        page = self.document[self.page_number]
+        if kind == "highlight":
+            annotation = page.add_highlight_annot(rect)
+        elif kind == "underline":
+            annotation = page.add_underline_annot(rect)
+        else:
+            annotation = page.add_strikeout_annot(rect)
+        annotation.update()
+        self.selected_rect = None
+        self.draw_page()
+
+    def _replace_selected_text(self, text: str, bold: bool) -> None:
+        rect = self._require_selection()
+        if not rect or not self.document:
+            return
+        page = self.document[self.page_number]
+        page.add_redact_annot(rect, fill=(1, 1, 1))
+        page.apply_redactions()
+        font_path = Path("C:/Windows/Fonts/malgunbd.ttf" if bold else "C:/Windows/Fonts/malgun.ttf")
+        font_kwargs = {"fontname": "malgun", "fontfile": str(font_path)} if font_path.exists() else {"fontname": "helv"}
+        page.insert_textbox(
+            rect,
+            text,
+            fontsize=max(8, min(18, rect.height * 0.7)),
+            color=(0, 0, 0),
+            **font_kwargs,
+        )
+        self.selected_rect = None
+        self.draw_page()
+
+    def bold_selection(self) -> None:
+        text = self._selected_text()
+        if not text:
+            self._require_selection()
+            return
+        self._replace_selected_text(text, bold=True)
+
+    def edit_selection(self) -> None:
+        original = self._selected_text()
+        if not original:
+            self._require_selection()
+            return
+        changed = simpledialog.askstring("문구 수정", "새 문구를 입력하세요.", initialvalue=original, parent=self)
+        if changed is not None and changed.strip():
+            self._replace_selected_text(changed.strip(), bold=False)
+
+    def save_as(self) -> None:
+        if not self.document:
+            return
+        selected = filedialog.asksaveasfilename(
+            title="편집한 PDF 저장",
+            defaultextension=".pdf",
+            filetypes=[("PDF 문서", "*.pdf")],
+        )
+        if not selected:
+            return
+        try:
+            self.document.save(selected)
+            messagebox.showinfo("CY뷰어", "편집한 PDF를 저장했습니다.")
+        except Exception as error:
+            messagebox.showerror("CY뷰어", f"저장할 수 없습니다.\n\n{error}")
 
     def previous_page(self) -> None:
         if self.document and self.page_number > 0:
