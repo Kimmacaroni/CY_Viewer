@@ -265,16 +265,32 @@ class CyViewer(tk.Tk):
                     width=2,
                 )
         if self.selected_rect:
-            rect = self.selected_rect
-            self.canvas.create_rectangle(
-                left + rect.x0 * self.zoom,
-                top + rect.y0 * self.zoom,
-                left + rect.x1 * self.zoom,
-                top + rect.y1 * self.zoom,
-                outline=COLORS["blue"],
-                dash=(4, 2),
-                width=2,
-            )
+            selected_words = self._selected_word_rects()
+            if selected_words:
+                # 일반 문서 뷰어처럼 실제 선택된 글자 영역을 파란색으로 표시한다.
+                for rect in selected_words:
+                    self.canvas.create_rectangle(
+                        left + rect.x0 * self.zoom,
+                        top + rect.y0 * self.zoom,
+                        left + rect.x1 * self.zoom,
+                        top + rect.y1 * self.zoom,
+                        fill="#60A5FA",
+                        stipple="gray50",
+                        outline="#2563EB",
+                        width=1,
+                    )
+            else:
+                rect = self.selected_rect
+                self.canvas.create_rectangle(
+                    left + rect.x0 * self.zoom,
+                    top + rect.y0 * self.zoom,
+                    left + rect.x1 * self.zoom,
+                    top + rect.y1 * self.zoom,
+                    fill="#93C5FD",
+                    stipple="gray50",
+                    outline=COLORS["blue"],
+                    width=2,
+                )
         bookmark = "  ★ 책갈피" if self.page_number in self.bookmarks else ""
         selection = "  |  문구 선택됨: 왼쪽에서 표시 또는 수정" if self.selected_rect else ""
         dirty = "  |  저장 필요" if self.is_dirty else ""
@@ -337,6 +353,15 @@ class CyViewer(tk.Tk):
         words = self.document[self.page_number].get_text("words")
         selected = [word[4] for word in words if pymupdf.Rect(word[:4]).intersects(self.selected_rect)]
         return " ".join(selected)
+
+    def _selected_word_rects(self) -> list[pymupdf.Rect]:
+        if not self.document or not self.selected_rect:
+            return []
+        return [
+            pymupdf.Rect(word[:4])
+            for word in self.document[self.page_number].get_text("words")
+            if pymupdf.Rect(word[:4]).intersects(self.selected_rect)
+        ]
 
     def _inspect_selection(self) -> None:
         if not self.document or not self.selected_rect:
