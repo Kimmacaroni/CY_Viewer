@@ -14,6 +14,7 @@ from tkinter import filedialog, messagebox, simpledialog, ttk
 
 import pymupdf
 from PIL import Image, ImageDraw, ImageTk
+from tkinterdnd2 import DND_FILES, TkinterDnD
 
 
 COLORS = {
@@ -97,7 +98,7 @@ class RoundedButton(tk.Canvas):
             self.command()
 
 
-class CyViewer(tk.Tk):
+class CyViewer(TkinterDnD.Tk):
     def __init__(self) -> None:
         super().__init__()
         self.title("CY뷰어 | 개인용 PDF 뷰어")
@@ -125,6 +126,8 @@ class CyViewer(tk.Tk):
         self.save_state = "새 문서 없음"
 
         self._make_ui()
+        self.drop_target_register(DND_FILES)
+        self.dnd_bind("<<Drop>>", self.drop_pdf)
 
     def _make_ui(self) -> None:
         style = ttk.Style(self)
@@ -245,6 +248,8 @@ class CyViewer(tk.Tk):
         self.canvas.bind("<B1-Motion>", self.update_selection)
         self.canvas.bind("<ButtonRelease-1>", self.finish_selection)
         self.canvas.bind("<Button-3>", self.show_context_menu)
+        self.canvas.drop_target_register(DND_FILES)
+        self.canvas.dnd_bind("<<Drop>>", self.drop_pdf)
         self.context_menu = tk.Menu(self, tearoff=0, font=("Malgun Gothic", 10), bg=COLORS["surface"], fg=COLORS["ink"], activebackground=COLORS["blue_soft"], activeforeground=COLORS["ink"])
         self.context_menu.add_command(label="형광펜", command=lambda: self.mark_selection("highlight"))
         self.context_menu.add_command(label="밑줄", command=lambda: self.mark_selection("underline"))
@@ -305,11 +310,25 @@ class CyViewer(tk.Tk):
         )
         if not selected:
             return
+        self.load_pdf(Path(selected))
+
+    def drop_pdf(self, event) -> str:
+        files = self.tk.splitlist(event.data)
+        if not files:
+            return "break"
+        selected = Path(files[0])
+        if selected.suffix.lower() != ".pdf":
+            messagebox.showinfo("CY뷰어", "PDF 파일만 열 수 있습니다.")
+            return "break"
+        self.load_pdf(selected)
+        return "break"
+
+    def load_pdf(self, selected: Path) -> None:
         try:
             if self.document:
                 self.document.close()
-            self.document = pymupdf.open(selected)
-            self.document_path = Path(selected)
+            self.document = pymupdf.open(str(selected))
+            self.document_path = selected
             self.page_number = 0
             self.zoom = 1.2
             self.bookmarks.clear()
@@ -348,7 +367,7 @@ class CyViewer(tk.Tk):
             self.canvas.create_text(
                 width // 2,
                 height // 2 - 10,
-                text="열기 → 읽기·검색 → 문구 드래그 → 표시 또는 수정 → 저장",
+                text="열기 또는 PDF를 여기로 끌어 놓기 → 읽기·검색 → 문구 드래그 → 표시 또는 수정 → 저장",
                 fill=COLORS["muted"],
                 font=("Malgun Gothic", 11),
             )
