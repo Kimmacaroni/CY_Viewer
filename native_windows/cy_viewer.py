@@ -35,6 +35,12 @@ COLORS = {
 }
 
 
+def bundled_path(relative_path: str) -> Path:
+    """개발 실행과 PyInstaller 배포본에서 동일한 앱 자산 경로를 반환합니다."""
+    bundle_root = Path(getattr(sys, "_MEIPASS", Path(__file__).resolve().parent.parent))
+    return bundle_root / relative_path
+
+
 class RoundedButton(tk.Canvas):
     """Tk 기본 버튼 대신 사용하는 일관된 작업 버튼."""
 
@@ -106,6 +112,9 @@ class CyViewer(TkinterDnD.Tk):
     def __init__(self) -> None:
         super().__init__()
         self.title("CY뷰어 | 개인용 PDF 뷰어")
+        app_icon = bundled_path("assets/CYViewer.ico")
+        if app_icon.exists():
+            self.iconbitmap(default=str(app_icon))
         self.geometry("1280x820")
         self.minsize(780, 560)
         self.configure(bg=COLORS["canvas"])
