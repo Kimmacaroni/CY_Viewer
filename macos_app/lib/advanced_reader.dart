@@ -75,15 +75,23 @@ class _AdvancedPdfReaderPageState extends State<AdvancedPdfReaderPage> {
   }
 
   Future<void> _loadBookmarks() async {
-    final values =
-        (await SharedPreferences.getInstance()).getStringList(_bookmarkKey) ??
-        [];
-    if (mounted) {
+    try {
+      final values =
+          (await SharedPreferences.getInstance()).getStringList(_bookmarkKey) ??
+          [];
+      if (!mounted) return;
       setState(
-        () =>
-            _bookmarks = values.map(int.tryParse).whereType<int>().toList()
+        () => _bookmarks =
+            values
+                .map(int.tryParse)
+                .whereType<int>()
+                .where((page) => page > 0)
+                .toSet()
+                .toList()
               ..sort(),
       );
+    } on Object catch (error) {
+      _showMessage('책갈피를 불러오지 못했습니다: $error');
     }
   }
 
@@ -91,6 +99,7 @@ class _AdvancedPdfReaderPageState extends State<AdvancedPdfReaderPage> {
       .setStringList(_bookmarkKey, _bookmarks.map((e) => '$e').toList());
 
   Future<void> _toggleBookmark() async {
+    if (_pageCount == 0 || !mounted) return;
     setState(() {
       if (_bookmarks.contains(_currentPage)) {
         _bookmarks.remove(_currentPage);
@@ -99,7 +108,17 @@ class _AdvancedPdfReaderPageState extends State<AdvancedPdfReaderPage> {
         _bookmarks.sort();
       }
     });
-    await _saveBookmarks();
+    try {
+      await _saveBookmarks();
+    } on Object catch (error) {
+      _showMessage('책갈피를 저장하지 못했습니다: $error');
+    }
+  }
+
+  void _showMessage(String message) {
+    if (!mounted) return;
+    ScaffoldMessenger.of(context)
+        .showSnackBar(SnackBar(content: Text(message)));
   }
 
   Future<void> _showBookmarks() async {
@@ -162,6 +181,7 @@ class _AdvancedPdfReaderPageState extends State<AdvancedPdfReaderPage> {
         ],
       ),
     );
+    input.dispose();
     if (page != null && page >= 1 && page <= _pageCount) {
       await _controller.goToPage(pageNumber: page);
     }
@@ -169,12 +189,13 @@ class _AdvancedPdfReaderPageState extends State<AdvancedPdfReaderPage> {
 
   void _startSearch(String text) {
     _searcher.startTextSearch(text, searchImmediately: true);
-    setState(() {});
+    if (mounted) setState(() {});
   }
 
   Future<void> _applyMark(_MarkType type) async {
     final selection = _controller.textSelectionDelegate;
     final ranges = await selection.getSelectedTextRanges();
+    if (!mounted) return;
     if (ranges.isEmpty) {
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
@@ -198,7 +219,12 @@ class _AdvancedPdfReaderPageState extends State<AdvancedPdfReaderPage> {
   }
 
   Future<void> _printDocument() async {
+    if (_busy) return;
     try {
+      setState(() {
+        _busy = true;
+        _busyMessage = '인쇄할 문서를 준비하고 있습니다…';
+      });
       final bytes = await File(widget.path).readAsBytes();
       await Printing.layoutPdf(
         name: widget.name,
@@ -206,9 +232,9 @@ class _AdvancedPdfReaderPageState extends State<AdvancedPdfReaderPage> {
         onLayout: (_) async => bytes,
       );
     } catch (error) {
-      if (!mounted) return;
-      ScaffoldMessenger.of(context)
-          .showSnackBar(SnackBar(content: Text('인쇄 창을 열 수 없습니다: $error')));
+      _showMessage('인쇄 창을 열 수 없습니다: $error');
+    } finally {
+      if (mounted) setState(() => _busy = false);
     }
   }
 
@@ -224,13 +250,14 @@ class _AdvancedPdfReaderPageState extends State<AdvancedPdfReaderPage> {
           ? widget.name.substring(0, widget.name.length - 4)
           : widget.name;
       if (format == _ExportFormat.pdf) {
-        await FilePicker.saveFile(
+        final savedPath = await FilePicker.saveFile(
           dialogTitle: 'PDF로 저장',
           fileName: '$baseName-복사본.pdf',
           bytes: bytes,
           type: FileType.custom,
           allowedExtensions: const ['pdf'],
         );
+        if (savedPath != null) _showMessage('PDF 복사본을 저장했습니다.');
       } else {
         final directory = await FilePicker.getDirectoryPath(
           dialogTitle: format == _ExportFormat.png
@@ -320,11 +347,9 @@ class _AdvancedPdfReaderPageState extends State<AdvancedPdfReaderPage> {
         ),
       );
     } on PlatformException catch (error) {
-      if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text(error.message ?? 'OCR을 실행할 수 없습니다.')),
-        );
-      }
+      _showMessage(error.message ?? 'OCR을 실행할 수 없습니다.');
+    } on Object catch (error) {
+      _showMessage('OCR을 실행할 수 없습니다: $error');
     } finally {
       if (mounted) setState(() => _busy = false);
     }
@@ -632,17 +657,23 @@ class _AdvancedPdfReaderPageState extends State<AdvancedPdfReaderPage> {
                 },
               ),
               onViewerReady: (document, _) async {
-                setState(() => _pageCount = document.pages.length);
-                final initial = widget.initialPage.clamp(
-                  1,
-                  document.pages.length,
-                );
+                if (!mounted) return;
+                final pageCount = document.pages.length;
+                setState(() {
+                  _pageCount = pageCount;
+                  _bookmarks.removeWhere((page) => page > pageCount);
+                });
+                if (pageCount == 0) {
+                  _showMessage('페이지가 없는 PDF 문서입니다.');
+                  return;
+                }
+                final initial = widget.initialPage.clamp(1, pageCount);
                 if (initial > 1) {
                   await _controller.goToPage(pageNumber: initial);
                 }
               },
               onPageChanged: (page) {
-                if (page != null) {
+                if (mounted && page != null) {
                   setState(() => _currentPage = page);
                 }
               },

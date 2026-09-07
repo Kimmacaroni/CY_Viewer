@@ -1,5 +1,6 @@
 import 'dart:convert';
 import 'dart:io';
+import 'dart:math' as math;
 
 import 'package:desktop_drop/desktop_drop.dart';
 import 'package:file_picker/file_picker.dart';
@@ -68,7 +69,7 @@ class SavedPdf {
     name: map['name'] as String,
     openedAt: DateTime.parse(map['openedAt'] as String),
     favorite: map['favorite'] as bool? ?? false,
-    lastPage: map['lastPage'] as int? ?? 1,
+    lastPage: math.max(map['lastPage'] as int? ?? 1, 1),
   );
 }
 
@@ -92,29 +93,60 @@ class _LibraryPageState extends State<LibraryPage> {
   }
 
   Future<void> _load() async {
-    final raw = (await SharedPreferences.getInstance()).getString(_key);
-    if (raw != null) {
-      _items = (jsonDecode(raw) as List)
-          .map((e) => SavedPdf.fromJson(Map<String, dynamic>.from(e as Map)))
-          .toList();
+    try {
+      final raw = (await SharedPreferences.getInstance()).getString(_key);
+      if (raw != null) {
+        final decoded = jsonDecode(raw);
+        if (decoded is! List) throw const FormatException('문서 목록 형식 오류');
+        _items = decoded
+            .whereType<Map>()
+            .map((item) {
+              try {
+                return SavedPdf.fromJson(Map<String, dynamic>.from(item));
+              } on Object {
+                return null;
+              }
+            })
+            .whereType<SavedPdf>()
+            .toList();
+      }
+    } on Object {
+      // 손상되었거나 이전 버전과 호환되지 않는 값 때문에 앱 시작이
+      // 중단되지 않도록 문서함만 초기화한다.
+      _items = [];
     }
     _items.removeWhere((item) => !File(item.path).existsSync());
     _items.sort((a, b) => b.openedAt.compareTo(a.openedAt));
-    await _save();
-    if (mounted) setState(() => _loading = false);
+    try {
+      await _save();
+    } on Object {
+      // 문서 목록 저장 실패는 PDF 열람 자체를 막지 않는다.
+    }
+    if (!mounted) return;
+    setState(() => _loading = false);
   }
 
   Future<void> _save() async => (await SharedPreferences.getInstance())
       .setString(_key, jsonEncode(_items.map((e) => e.toJson()).toList()));
 
   Future<void> _pick() async {
-    final files = await FilePicker.pickFiles(
-      type: FileType.custom,
-      allowedExtensions: const ['pdf'],
-    );
-    final file = files.isEmpty ? null : files.single;
-    if (file?.path == null) return;
-    await _addAndOpen(file!.path!, file.name);
+    try {
+      final files = await FilePicker.pickFiles(
+        type: FileType.custom,
+        allowedExtensions: const ['pdf'],
+      );
+      final file = files.isEmpty ? null : files.first;
+      if (file?.path == null) return;
+      await _addAndOpen(file!.path!, file.name);
+    } on Object catch (error) {
+      _showMessage('파일 선택 창을 열 수 없습니다: $error');
+    }
+  }
+
+  void _showMessage(String message) {
+    if (!mounted) return;
+    ScaffoldMessenger.of(context)
+        .showSnackBar(SnackBar(content: Text(message)));
   }
 
   Future<void> _addAndOpen(String path, String name) async {
@@ -144,11 +176,14 @@ class _LibraryPageState extends State<LibraryPage> {
       lastPage: lastPage,
     );
     _items.insert(0, item);
-    await _save();
-    if (mounted) {
-      setState(() {});
-      await _open(item);
+    try {
+      await _save();
+    } on Object catch (error) {
+      _showMessage('최근 문서 목록을 저장하지 못했습니다: $error');
     }
+    if (!mounted) return;
+    setState(() {});
+    await _open(item);
   }
 
   Future<void> _open(SavedPdf item) async {
@@ -188,8 +223,13 @@ class _LibraryPageState extends State<LibraryPage> {
 
   Future<void> _favorite(SavedPdf item) async {
     final index = _items.indexWhere((e) => e.path == item.path);
+    if (index < 0) return;
     _items[index] = item.copyWith(favorite: !item.favorite);
-    await _save();
+    try {
+      await _save();
+    } on Object catch (error) {
+      _showMessage('즐겨찾기를 저장하지 못했습니다: $error');
+    }
     if (mounted) setState(() {});
   }
 
@@ -215,9 +255,14 @@ class _LibraryPageState extends State<LibraryPage> {
         label: const Text('PDF 열기'),
       ),
       body: DropTarget(
-        onDragEntered: (_) => setState(() => _dragging = true),
-        onDragExited: (_) => setState(() => _dragging = false),
+        onDragEntered: (_) {
+          if (mounted) setState(() => _dragging = true);
+        },
+        onDragExited: (_) {
+          if (mounted) setState(() => _dragging = false);
+        },
         onDragDone: (detail) async {
+          if (!mounted) return;
           setState(() => _dragging = false);
           final pdfs = detail.files
               .where((file) => file.path.toLowerCase().endsWith('.pdf'))
