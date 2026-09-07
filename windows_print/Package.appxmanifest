@@ -3,7 +3,7 @@
          xmlns:uap="http://schemas.microsoft.com/appx/manifest/uap/windows10"
          xmlns:rescap="http://schemas.microsoft.com/appx/manifest/foundation/windows10/restrictedcapabilities"
          IgnorableNamespaces="uap rescap">
-  <Identity Name="Kimmacaroni.CYViewer.Print" Publisher="CN=CYViewer Print Dev" Version="1.0.0.1" />
+  <Identity Name="Kimmacaroni.CYViewer.Print" Publisher="CN=CYViewer Print Dev" Version="1.0.0.2" />
   <Properties>
     <DisplayName>CY뷰어 인쇄</DisplayName>
     <PublisherDisplayName>Kimmacaroni</PublisherDisplayName>
