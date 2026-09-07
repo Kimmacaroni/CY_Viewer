@@ -596,29 +596,8 @@ class CyViewer(tk.Tk):
         if not text:
             self._require_selection()
             return
-        if messagebox.askyesno("굵게 처리", "원문은 지우지 않고 굵은 글자를 덧씌웁니다. 계속할까요?", parent=self):
-            self._apply_bold_overlay(text)
-
-    def _apply_bold_overlay(self, text: str) -> None:
-        rect = self._require_selection()
-        if not rect or not self.document:
-            return
-        rect = self._selection_bounds() or rect
-        page = self.document[self.page_number]
-        font_path = Path("C:/Windows/Fonts/malgunbd.ttf")
-        font_kwargs = {"fontname": "malgunbold", "fontfile": str(font_path)} if font_path.exists() else {"fontname": "hebo"}
-        for word_rect, word_text in self._selected_word_items():
-            fontsize = max(5, min(16, word_rect.height * 0.78))
-            page.insert_text(
-                pymupdf.Point(word_rect.x0, word_rect.y1 - max(1, word_rect.height * 0.12)),
-                word_text,
-                fontsize=fontsize,
-                color=(0, 0, 0),
-                **font_kwargs,
-            )
-        self.selected_rect = None
-        self._mark_dirty("선택 문구를 굵게 처리했습니다.")
-        self.draw_page()
+        if messagebox.askyesno("굵게 처리", "원문을 굵은 글꼴로 교체합니다. 계속할까요?", parent=self):
+            self._replace_selected_text(text, bold=True)
 
     def edit_selection(self) -> None:
         original = self._selected_text()
