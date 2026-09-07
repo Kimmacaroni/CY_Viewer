@@ -48,6 +48,7 @@ class CyViewer(tk.Tk):
         self.page_left = 0
         self.page_top = 0
         self.selected_rect: pymupdf.Rect | None = None
+        self.selection_regions: list[pymupdf.Rect] = []
         self.selection_start: tuple[int, int] | None = None
         self.selection_preview: int | None = None
         self.is_dirty = False
@@ -223,6 +224,7 @@ class CyViewer(tk.Tk):
             self.search_index = -1
             self.ocr_words.clear()
             self.selected_rect = None
+            self.selection_regions = []
             self.is_dirty = False
             self.file_label.config(text=f"{self.document_path.name} · 읽기 및 편집 가능")
             self._set_save_state("변경 없음")
@@ -281,18 +283,19 @@ class CyViewer(tk.Tk):
                     width=2,
                 )
         if self.selected_rect:
-            rect = self.selected_rect
-            # 단어 사이의 띄어쓰기까지 포함해, 드래그한 전체 범위를 선택 색으로 보여 준다.
-            self.canvas.create_rectangle(
-                left + rect.x0 * self.zoom,
-                top + rect.y0 * self.zoom,
-                left + rect.x1 * self.zoom,
-                top + rect.y1 * self.zoom,
-                fill="#60A5FA",
-                stipple="gray50",
-                outline="#2563EB",
-                width=1,
-            )
+            # 글자가 있는 줄만 선택한다. 같은 줄의 단어 사이 띄어쓰기는 포함하되,
+            # 문단 주변의 빈 공간이나 줄 사이의 빈 공간은 선택 색으로 칠하지 않는다.
+            for rect in self.selection_regions:
+                self.canvas.create_rectangle(
+                    left + rect.x0 * self.zoom,
+                    top + rect.y0 * self.zoom,
+                    left + rect.x1 * self.zoom,
+                    top + rect.y1 * self.zoom,
+                    fill="#60A5FA",
+                    stipple="gray50",
+                    outline="#2563EB",
+                    width=1,
+                )
         bookmark = "  ★ 책갈피" if self.page_number in self.bookmarks else ""
         selection = "  |  문구 선택됨: 왼쪽에서 표시 또는 수정" if self.selected_rect else ""
         dirty = "  |  저장 필요" if self.is_dirty else ""
@@ -311,6 +314,7 @@ class CyViewer(tk.Tk):
             return
         self.selection_start = (event.x, event.y)
         self.selected_rect = None
+        self.selection_regions = []
         self.selection_preview = None
         self._set_selection_feedback()
 
@@ -342,6 +346,12 @@ class CyViewer(tk.Tk):
         rect = rect & self.document[self.page_number].rect
         self.selected_rect = rect if rect.width > 3 and rect.height > 3 else None
         if self.selected_rect:
+            word_rects = self._selected_word_rects()
+            self.selection_regions = self._line_regions(word_rects)
+            if not word_rects:
+                self.selected_rect = None
+                self.selection_regions = []
+        if self.selected_rect:
             self._inspect_selection()
         else:
             self.selection_label.config(text="선택 검사")
@@ -369,6 +379,28 @@ class CyViewer(tk.Tk):
         if native_words:
             return native_words
         return [rect for rect, _ in self.ocr_words.get(self.page_number, []) if rect.intersects(self.selected_rect)]
+
+    def _line_regions(self, word_rects: list[pymupdf.Rect]) -> list[pymupdf.Rect]:
+        """단어를 줄별로 묶어, 줄 안의 띄어쓰기만 포함하는 선택 영역을 만든다."""
+        regions: list[pymupdf.Rect] = []
+        for rect in sorted(word_rects, key=lambda item: (item.y0, item.x0)):
+            if regions and rect.y0 <= regions[-1].y1 + 2 and rect.y1 >= regions[-1].y0 - 2:
+                current = regions[-1]
+                regions[-1] = pymupdf.Rect(
+                    min(current.x0, rect.x0), min(current.y0, rect.y0),
+                    max(current.x1, rect.x1), max(current.y1, rect.y1),
+                )
+            else:
+                regions.append(pymupdf.Rect(rect))
+        return regions
+
+    def _selection_bounds(self) -> pymupdf.Rect | None:
+        if not self.selection_regions:
+            return self.selected_rect
+        bounds = pymupdf.Rect(self.selection_regions[0])
+        for region in self.selection_regions[1:]:
+            bounds.include_rect(region)
+        return bounds
 
     def _ocr_data_path(self) -> Path:
         base = Path(getattr(sys, "_MEIPASS", Path(__file__).parent))
@@ -486,18 +518,22 @@ class CyViewer(tk.Tk):
         if not rect or not self.document:
             return
         page = self.document[self.page_number]
+        regions = self.selection_regions or [rect]
         if kind == "highlight":
-            annotation = page.add_rect_annot(rect)
-            annotation.set_colors(fill=(1, 0.92, 0))
-            annotation.set_opacity(0.38)
-            annotation.set_border(width=0)
-            annotation.update()
+            for region in regions:
+                annotation = page.add_rect_annot(region)
+                annotation.set_colors(fill=(1, 0.92, 0))
+                annotation.set_opacity(0.38)
+                annotation.set_border(width=0)
+                annotation.update()
         elif kind == "underline":
-            annotation = page.add_underline_annot(rect)
-            annotation.update()
+            for region in regions:
+                annotation = page.add_underline_annot(region)
+                annotation.update()
         else:
-            annotation = page.add_strikeout_annot(rect)
-            annotation.update()
+            for region in regions:
+                annotation = page.add_strikeout_annot(region)
+                annotation.update()
         self.selected_rect = None
         label = {"highlight": "형광펜", "underline": "밑줄", "strike": "취소선"}[kind]
         self._mark_dirty(f"{label} 표시를 적용했습니다.")
@@ -507,6 +543,7 @@ class CyViewer(tk.Tk):
         rect = self._require_selection()
         if not rect or not self.document:
             return
+        rect = self._selection_bounds() or rect
         page = self.document[self.page_number]
         page.add_redact_annot(rect, fill=(1, 1, 1))
         page.apply_redactions()
@@ -535,6 +572,7 @@ class CyViewer(tk.Tk):
         rect = self._require_selection()
         if not rect or not self.document:
             return
+        rect = self._selection_bounds() or rect
         page = self.document[self.page_number]
         font_path = Path("C:/Windows/Fonts/malgunbd.ttf")
         font_kwargs = {"fontname": "malgunbold", "fontfile": str(font_path)} if font_path.exists() else {"fontname": "hebo"}
