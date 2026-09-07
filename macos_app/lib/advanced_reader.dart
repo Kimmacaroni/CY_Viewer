@@ -775,6 +775,9 @@ class _AdvancedPdfReaderPageState extends State<AdvancedPdfReaderPage> {
                                 .copyTextSelection();
                             await _controller.textSelectionDelegate
                                 .clearTextSelection();
+                            if (mounted) {
+                              setState(() => _hasSelectedText = false);
+                            }
                           },
                           icon: const Icon(Icons.copy_outlined, size: 18),
                           label: const Text('복사'),

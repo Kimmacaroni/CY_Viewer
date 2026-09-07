@@ -4,6 +4,8 @@ import PDFKit
 import Vision
 
 class MainFlutterWindow: NSWindow {
+  private var securityScopedURLs: [URL] = []
+
   override func awakeFromNib() {
     let flutterViewController = FlutterViewController()
     let windowFrame = self.frame
@@ -33,7 +35,80 @@ class MainFlutterWindow: NSWindow {
       Self.recognizePdf(path: path, result: result)
     }
 
+    let fileAccessChannel = FlutterMethodChannel(
+      name: "com.kimmacaroni.cyviewer/file_access",
+      binaryMessenger: flutterViewController.engine.binaryMessenger)
+    fileAccessChannel.setMethodCallHandler { [weak self] call, result in
+      guard let self else {
+        result(FlutterError(
+          code: "window_closed",
+          message: "앱 창이 닫혀 파일 접근 권한을 처리할 수 없습니다.",
+          details: nil))
+        return
+      }
+      self.handleFileAccess(call: call, result: result)
+    }
+
     super.awakeFromNib()
+  }
+
+  deinit {
+    for url in securityScopedURLs {
+      url.stopAccessingSecurityScopedResource()
+    }
+  }
+
+  private func handleFileAccess(call: FlutterMethodCall, result: @escaping FlutterResult) {
+    guard let arguments = call.arguments as? [String: Any] else {
+      result(FlutterError(
+        code: "invalid_arguments",
+        message: "파일 접근 정보가 없습니다.",
+        details: nil))
+      return
+    }
+
+    do {
+      switch call.method {
+      case "createBookmark":
+        guard let path = arguments["path"] as? String else {
+          throw FileAccessError.invalidPath
+        }
+        let data = try URL(fileURLWithPath: path).bookmarkData(
+          options: .withSecurityScope,
+          includingResourceValuesForKeys: nil,
+          relativeTo: nil)
+        result(FlutterStandardTypedData(bytes: data))
+      case "resolveBookmark":
+        guard let typedData = arguments["bookmark"] as? FlutterStandardTypedData else {
+          throw FileAccessError.invalidBookmark
+        }
+        var isStale = false
+        let url = try URL(
+          resolvingBookmarkData: typedData.data,
+          options: [.withSecurityScope, .withoutUI],
+          relativeTo: nil,
+          bookmarkDataIsStale: &isStale)
+        if url.startAccessingSecurityScopedResource() {
+          securityScopedURLs.append(url)
+        }
+        var response: [String: Any] = ["path": url.path]
+        if isStale {
+          let refreshed = try url.bookmarkData(
+            options: .withSecurityScope,
+            includingResourceValuesForKeys: nil,
+            relativeTo: nil)
+          response["bookmark"] = FlutterStandardTypedData(bytes: refreshed)
+        }
+        result(response)
+      default:
+        result(FlutterMethodNotImplemented)
+      }
+    } catch {
+      result(FlutterError(
+        code: "file_access_failed",
+        message: "파일 접근 권한을 저장할 수 없습니다: \(error.localizedDescription)",
+        details: nil))
+    }
   }
 
   private static func recognizePdf(path: String, result: @escaping FlutterResult) {
@@ -110,6 +185,20 @@ class MainFlutterWindow: NSWindow {
             details: nil))
         }
       }
+    }
+  }
+}
+
+private enum FileAccessError: LocalizedError {
+  case invalidPath
+  case invalidBookmark
+
+  var errorDescription: String? {
+    switch self {
+    case .invalidPath:
+      return "파일 경로가 올바르지 않습니다."
+    case .invalidBookmark:
+      return "저장된 파일 접근 정보가 올바르지 않습니다."
     }
   }
 }

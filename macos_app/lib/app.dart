@@ -5,6 +5,7 @@ import 'dart:math' as math;
 import 'package:desktop_drop/desktop_drop.dart';
 import 'package:file_picker/file_picker.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:flutter_localizations/flutter_localizations.dart';
 import 'package:pdfrx/pdfrx.dart';
 import 'package:shared_preferences/shared_preferences.dart';
@@ -43,19 +44,27 @@ class SavedPdf {
     required this.openedAt,
     this.favorite = false,
     this.lastPage = 1,
+    this.bookmark,
   });
   final String path;
   final String name;
   final DateTime openedAt;
   final bool favorite;
   final int lastPage;
-  SavedPdf copyWith({DateTime? openedAt, bool? favorite, int? lastPage}) =>
+  final String? bookmark;
+  SavedPdf copyWith({
+    DateTime? openedAt,
+    bool? favorite,
+    int? lastPage,
+    String? bookmark,
+  }) =>
       SavedPdf(
         path: path,
         name: name,
         openedAt: openedAt ?? this.openedAt,
         favorite: favorite ?? this.favorite,
         lastPage: lastPage ?? this.lastPage,
+        bookmark: bookmark ?? this.bookmark,
       );
   Map<String, dynamic> toJson() => {
     'path': path,
@@ -63,6 +72,7 @@ class SavedPdf {
     'openedAt': openedAt.toIso8601String(),
     'favorite': favorite,
     'lastPage': lastPage,
+    if (bookmark != null) 'bookmark': bookmark,
   };
   factory SavedPdf.fromJson(Map<String, dynamic> map) => SavedPdf(
     path: map['path'] as String,
@@ -70,6 +80,7 @@ class SavedPdf {
     openedAt: DateTime.parse(map['openedAt'] as String),
     favorite: map['favorite'] as bool? ?? false,
     lastPage: math.max(map['lastPage'] as int? ?? 1, 1),
+    bookmark: map['bookmark'] as String?,
   );
 }
 
@@ -81,6 +92,9 @@ class LibraryPage extends StatefulWidget {
 
 class _LibraryPageState extends State<LibraryPage> {
   static const _key = 'personal_pdf_library_v1';
+  static const _fileAccessChannel = MethodChannel(
+    'com.kimmacaroni.cyviewer/file_access',
+  );
   List<SavedPdf> _items = [];
   bool _loading = true;
   bool _favoritesOnly = false;
@@ -115,6 +129,7 @@ class _LibraryPageState extends State<LibraryPage> {
       // 중단되지 않도록 문서함만 초기화한다.
       _items = [];
     }
+    _items = await Future.wait(_items.map(_restoreFileAccess));
     _items.removeWhere((item) => !File(item.path).existsSync());
     _items.sort((a, b) => b.openedAt.compareTo(a.openedAt));
     try {
@@ -128,6 +143,43 @@ class _LibraryPageState extends State<LibraryPage> {
 
   Future<void> _save() async => (await SharedPreferences.getInstance())
       .setString(_key, jsonEncode(_items.map((e) => e.toJson()).toList()));
+
+  Future<SavedPdf> _restoreFileAccess(SavedPdf item) async {
+    final bookmark = item.bookmark;
+    if (bookmark == null || bookmark.isEmpty) return item;
+    try {
+      final response = await _fileAccessChannel
+          .invokeMapMethod<String, dynamic>('resolveBookmark', {
+            'bookmark': base64Decode(bookmark),
+          });
+      final path = response?['path'] as String?;
+      final refreshedBookmark = response?['bookmark'];
+      return SavedPdf(
+        path: path ?? item.path,
+        name: item.name,
+        openedAt: item.openedAt,
+        favorite: item.favorite,
+        lastPage: item.lastPage,
+        bookmark: refreshedBookmark is Uint8List
+            ? base64Encode(refreshedBookmark)
+            : bookmark,
+      );
+    } on Object {
+      return item;
+    }
+  }
+
+  Future<String?> _createBookmark(String path) async {
+    try {
+      final bytes = await _fileAccessChannel.invokeMethod<Uint8List>(
+        'createBookmark',
+        {'path': path},
+      );
+      return bytes == null ? null : base64Encode(bytes);
+    } on Object {
+      return null;
+    }
+  }
 
   Future<void> _pick() async {
     try {
@@ -167,6 +219,8 @@ class _LibraryPageState extends State<LibraryPage> {
     final oldIndex = _items.indexWhere((e) => e.path == path);
     final favorite = oldIndex < 0 ? false : _items[oldIndex].favorite;
     final lastPage = oldIndex < 0 ? 1 : _items[oldIndex].lastPage;
+    final oldBookmark = oldIndex < 0 ? null : _items[oldIndex].bookmark;
+    final bookmark = await _createBookmark(path) ?? oldBookmark;
     _items.removeWhere((e) => e.path == path);
     final item = SavedPdf(
       path: path,
@@ -174,6 +228,7 @@ class _LibraryPageState extends State<LibraryPage> {
       openedAt: DateTime.now(),
       favorite: favorite,
       lastPage: lastPage,
+      bookmark: bookmark,
     );
     _items.insert(0, item);
     try {
