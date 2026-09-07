@@ -36,51 +36,78 @@ class CyViewer(tk.Tk):
         self._make_ui()
 
     def _make_ui(self) -> None:
-        header = tk.Frame(self, bg="#102a43", padx=16, pady=12)
+        style = ttk.Style(self)
+        style.theme_use("clam")
+        style.configure("Action.TButton", font=("Malgun Gothic", 10), padding=(10, 7))
+        style.configure("Primary.TButton", font=("Malgun Gothic", 10, "bold"), padding=(12, 8))
+
+        header = tk.Frame(self, bg="#0f172a", padx=24, pady=16)
         header.pack(fill="x")
         tk.Label(
             header,
-            text="CY뷰어",
+            text="CY뷰어  |  PDF 작업 공간",
             fg="white",
-            bg="#102a43",
+            bg="#0f172a",
             font=("Malgun Gothic", 18, "bold"),
         ).pack(side="left")
         self.file_label = tk.Label(
             header,
-            text="PDF 파일을 열어 주세요",
-            fg="#d9e2ec",
-            bg="#102a43",
+            text="문서를 열어 시작하세요",
+            fg="#94a3b8",
+            bg="#0f172a",
             font=("Malgun Gothic", 10),
         )
         self.file_label.pack(side="left", padx=18)
 
-        tools = tk.Frame(self, bg="#d9e2ec", padx=10, pady=8)
-        tools.pack(fill="x")
-        self._button(tools, "PDF 열기", self.open_pdf).pack(side="left", padx=3)
-        self._button(tools, "◀ 이전", self.previous_page).pack(side="left", padx=3)
-        self._button(tools, "다음 ▶", self.next_page).pack(side="left", padx=3)
-        self._button(tools, "− 축소", lambda: self.change_zoom(-0.2)).pack(side="left", padx=3)
-        self._button(tools, "+ 확대", lambda: self.change_zoom(0.2)).pack(side="left", padx=3)
-        self._button(tools, "페이지 이동", self.go_to_page).pack(side="left", padx=3)
-        self._button(tools, "☆ 책갈피", self.toggle_bookmark).pack(side="left", padx=3)
-        self._button(tools, "책갈피 목록", self.show_bookmarks).pack(side="left", padx=3)
-        self._button(tools, "형광펜", lambda: self.mark_selection("highlight")).pack(side="left", padx=3)
-        self._button(tools, "밑줄", lambda: self.mark_selection("underline")).pack(side="left", padx=3)
-        self._button(tools, "취소선", lambda: self.mark_selection("strike")).pack(side="left", padx=3)
-        self._button(tools, "굵게", self.bold_selection).pack(side="left", padx=3)
-        self._button(tools, "문구 수정", self.edit_selection).pack(side="left", padx=3)
-        self._button(tools, "다른 이름으로 저장", self.save_as).pack(side="left", padx=3)
+        workspace = tk.Frame(self, bg="#e2e8f0")
+        workspace.pack(fill="both", expand=True)
+        sidebar = tk.Frame(workspace, width=250, bg="#f8fafc", padx=16, pady=18)
+        sidebar.pack(side="left", fill="y")
+        sidebar.pack_propagate(False)
+        self._button(sidebar, "＋ PDF 열기", self.open_pdf, "Primary.TButton").pack(fill="x", pady=(0, 18))
+        self._side_title(sidebar, "문서 탐색")
+        self._button(sidebar, "◀  이전 페이지", self.previous_page).pack(fill="x", pady=2)
+        self._button(sidebar, "다음 페이지  ▶", self.next_page).pack(fill="x", pady=2)
+        self._button(sidebar, "페이지로 이동", self.go_to_page).pack(fill="x", pady=2)
+        self._button(sidebar, "☆  이 페이지 책갈피", self.toggle_bookmark).pack(fill="x", pady=2)
+        self._button(sidebar, "책갈피 목록", self.show_bookmarks).pack(fill="x", pady=2)
+        self._side_title(sidebar, "선택한 문구 편집")
+        self._button(sidebar, "형광펜 표시", lambda: self.mark_selection("highlight")).pack(fill="x", pady=2)
+        self._button(sidebar, "밑줄", lambda: self.mark_selection("underline")).pack(fill="x", pady=2)
+        self._button(sidebar, "취소선", lambda: self.mark_selection("strike")).pack(fill="x", pady=2)
+        self._button(sidebar, "굵게 처리", self.bold_selection).pack(fill="x", pady=2)
+        self._button(sidebar, "문구 수정", self.edit_selection).pack(fill="x", pady=2)
+        self._button(sidebar, "PDF로 저장", self.save_as, "Primary.TButton").pack(fill="x", pady=(14, 4))
+        self.selection_label = tk.Label(
+            sidebar,
+            text="사용 순서\n1. PDF 열기\n2. 문구를 드래그\n3. 왼쪽 기능 선택\n4. PDF로 저장",
+            justify="left",
+            anchor="w",
+            bg="#e0f2fe",
+            fg="#0c4a6e",
+            padx=12,
+            pady=12,
+            font=("Malgun Gothic", 9),
+        )
+        self.selection_label.pack(fill="x", pady=(16, 0))
 
-        search_box = tk.Frame(tools, bg="#d9e2ec")
+        content = tk.Frame(workspace, bg="#e2e8f0")
+        content.pack(side="left", fill="both", expand=True)
+        tools = tk.Frame(content, bg="#ffffff", padx=16, pady=10)
+        tools.pack(fill="x")
+        self._button(tools, "−", lambda: self.change_zoom(-0.2)).pack(side="left", padx=2)
+        self._button(tools, "+", lambda: self.change_zoom(0.2)).pack(side="left", padx=2)
+        tk.Label(tools, text="Ctrl + 휠로 확대/축소", bg="#ffffff", fg="#64748b", font=("Malgun Gothic", 9)).pack(side="left", padx=10)
+        search_box = tk.Frame(tools, bg="#ffffff")
         search_box.pack(side="right")
         self.search_entry = ttk.Entry(search_box, width=24)
         self.search_entry.pack(side="left", padx=(0, 4))
         self.search_entry.bind("<Return>", lambda _: self.find_next())
         self._button(search_box, "검색", self.find_next).pack(side="left", padx=3)
-        self.search_status = tk.Label(search_box, text="", bg="#d9e2ec")
+        self.search_status = tk.Label(search_box, text="", bg="#ffffff")
         self.search_status.pack(side="left", padx=5)
 
-        self.canvas = tk.Canvas(self, bg="#9aa5b1", highlightthickness=0)
+        self.canvas = tk.Canvas(content, bg="#94a3b8", highlightthickness=0)
         self.canvas.pack(fill="both", expand=True)
         self.canvas.bind("<Configure>", lambda _: self.draw_page())
         self.canvas.bind("<MouseWheel>", self._wheel_zoom)
@@ -89,19 +116,22 @@ class CyViewer(tk.Tk):
         self.canvas.bind("<ButtonRelease-1>", self.finish_selection)
 
         self.status = tk.Label(
-            self,
+            content,
             text="PDF 열기를 눌러 문서를 선택하세요.",
             anchor="w",
             padx=14,
             pady=7,
-            bg="#243b53",
+            bg="#0f172a",
             fg="white",
             font=("Malgun Gothic", 10),
         )
         self.status.pack(fill="x")
 
-    def _button(self, parent: tk.Widget, label: str, command) -> ttk.Button:
-        return ttk.Button(parent, text=label, command=command)
+    def _button(self, parent: tk.Widget, label: str, command, style: str = "Action.TButton") -> ttk.Button:
+        return ttk.Button(parent, text=label, command=command, style=style)
+
+    def _side_title(self, parent: tk.Widget, text: str) -> None:
+        tk.Label(parent, text=text, bg="#f8fafc", fg="#475569", font=("Malgun Gothic", 9, "bold")).pack(anchor="w", pady=(12, 5))
 
     def open_pdf(self) -> None:
         selected = filedialog.askopenfilename(
@@ -125,7 +155,25 @@ class CyViewer(tk.Tk):
             messagebox.showerror("CY뷰어", f"PDF를 열 수 없습니다.\n\n{error}")
 
     def draw_page(self) -> None:
-        if not self.document or not self.canvas.winfo_width():
+        if not self.canvas.winfo_width():
+            return
+        if not self.document:
+            self.canvas.delete("all")
+            width, height = self.canvas.winfo_width(), self.canvas.winfo_height()
+            self.canvas.create_text(
+                width // 2,
+                height // 2 - 20,
+                text="CY뷰어에 오신 것을 환영합니다",
+                fill="white",
+                font=("Malgun Gothic", 20, "bold"),
+            )
+            self.canvas.create_text(
+                width // 2,
+                height // 2 + 24,
+                text="왼쪽의 ‘PDF 열기’ 버튼을 눌러 문서를 선택하세요.",
+                fill="#e2e8f0",
+                font=("Malgun Gothic", 11),
+            )
             return
         page = self.document[self.page_number]
         pixmap = page.get_pixmap(matrix=pymupdf.Matrix(self.zoom, self.zoom), alpha=False)
@@ -193,6 +241,12 @@ class CyViewer(tk.Tk):
         rect = pymupdf.Rect(self._canvas_to_page(start_x, start_y), self._canvas_to_page(event.x, event.y))
         rect = rect & self.document[self.page_number].rect
         self.selected_rect = rect if rect.width > 3 and rect.height > 3 else None
+        if self.selected_rect:
+            words = self._selected_text()
+            preview = words[:45] + ("…" if len(words) > 45 else "")
+            self.selection_label.config(text=f"선택한 문구\n{preview}\n\n왼쪽에서 편집 기능을 선택하세요.")
+        else:
+            self.selection_label.config(text="문구를 드래그해 선택하면\n형광펜·밑줄·취소선·굵게·문구 수정이 가능합니다.")
         self.draw_page()
 
     def _selected_text(self) -> str:
