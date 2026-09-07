@@ -4,6 +4,7 @@ from __future__ import annotations
 
 import tkinter as tk
 import csv
+import ctypes
 import io
 import os
 import subprocess
@@ -13,7 +14,8 @@ from pathlib import Path
 from tkinter import filedialog, messagebox, simpledialog, ttk
 
 import pymupdf
-from PIL import Image, ImageDraw, ImageTk
+import win32ui
+from PIL import Image, ImageDraw, ImageTk, ImageWin
 from tkinterdnd2 import DND_FILES, TkinterDnD
 
 
@@ -805,15 +807,91 @@ class CyViewer(TkinterDnD.Tk):
         if not self.document:
             messagebox.showinfo("CY뷰어", "먼저 PDF를 열어 주세요.")
             return
+
+        class PrintDialog(ctypes.Structure):
+            _fields_ = [
+                ("lStructSize", ctypes.c_uint32),
+                ("hwndOwner", ctypes.c_void_p),
+                ("hDevMode", ctypes.c_void_p),
+                ("hDevNames", ctypes.c_void_p),
+                ("hDC", ctypes.c_void_p),
+                ("Flags", ctypes.c_uint32),
+                ("nFromPage", ctypes.c_uint16),
+                ("nToPage", ctypes.c_uint16),
+                ("nMinPage", ctypes.c_uint16),
+                ("nMaxPage", ctypes.c_uint16),
+                ("nCopies", ctypes.c_uint16),
+                ("hInstance", ctypes.c_void_p),
+                ("lCustData", ctypes.c_ssize_t),
+                ("lpfnPrintHook", ctypes.c_void_p),
+                ("lpfnSetupHook", ctypes.c_void_p),
+                ("lpPrintTemplateName", ctypes.c_wchar_p),
+                ("lpSetupTemplateName", ctypes.c_wchar_p),
+                ("hPrintTemplate", ctypes.c_void_p),
+                ("hSetupTemplate", ctypes.c_void_p),
+            ]
+
+        pd_return_dc = 0x00000100
+        pd_no_selection = 0x00000004
+        pd_page_nums = 0x00000002
+        pd_use_driver_copies = 0x00040000
+        pd_hide_print_to_file = 0x00100000
+        pd_disable_print_to_file = 0x00080000
+        dialog = PrintDialog()
+        dialog.lStructSize = ctypes.sizeof(PrintDialog)
+        dialog.hwndOwner = self.winfo_id()
+        dialog.Flags = pd_return_dc | pd_no_selection | pd_use_driver_copies | pd_hide_print_to_file | pd_disable_print_to_file
+        dialog.nFromPage = 1
+        dialog.nToPage = len(self.document)
+        dialog.nMinPage = 1
+        dialog.nMaxPage = len(self.document)
+        dialog.nCopies = 1
+
         try:
-            output = Path(tempfile.gettempdir()) / "CYViewer-print.pdf"
-            if output.exists():
-                output.unlink()
-            self.document.save(str(output))
-            os.startfile(str(output), "print")
-            self.status.config(text="인쇄 요청을 보냈습니다. Windows 프린터 설정을 확인해 주세요.")
+            print_dialog = ctypes.windll.comdlg32.PrintDlgW
+            print_dialog.argtypes = [ctypes.POINTER(PrintDialog)]
+            print_dialog.restype = ctypes.c_int
+            if not print_dialog(ctypes.byref(dialog)):
+                error = ctypes.windll.comdlg32.CommDlgExtendedError()
+                if error:
+                    raise RuntimeError(f"Windows 인쇄 대화상자 오류: {error}")
+                self.status.config(text="인쇄가 취소됐습니다.")
+                return
+
+            first_page = dialog.nFromPage if dialog.Flags & pd_page_nums else 1
+            last_page = dialog.nToPage if dialog.Flags & pd_page_nums else len(self.document)
+            printer_dc = win32ui.CreateDCFromHandle(int(dialog.hDC))
+            printer_dc.StartDoc(f"CY뷰어 - {self.document_path.name if self.document_path else 'PDF 문서'}")
+            try:
+                printable_width = printer_dc.GetDeviceCaps(8)
+                printable_height = printer_dc.GetDeviceCaps(10)
+                for page_number in range(first_page - 1, last_page):
+                    page = self.document[page_number]
+                    pixmap = page.get_pixmap(matrix=pymupdf.Matrix(2, 2), alpha=False)
+                    image = Image.frombytes("RGB", (pixmap.width, pixmap.height), pixmap.samples)
+                    scale = min(printable_width / image.width, printable_height / image.height)
+                    draw_width = int(image.width * scale)
+                    draw_height = int(image.height * scale)
+                    left = (printable_width - draw_width) // 2
+                    top = (printable_height - draw_height) // 2
+                    printer_dc.StartPage()
+                    ImageWin.Dib(image).draw(printer_dc.GetHandleOutput(), (left, top, left + draw_width, top + draw_height))
+                    printer_dc.EndPage()
+            except Exception:
+                printer_dc.AbortDoc()
+                raise
+            else:
+                printer_dc.EndDoc()
+                self.status.config(text=f"인쇄 완료 · {first_page}~{last_page}페이지")
+            finally:
+                printer_dc.DeleteDC()
         except Exception as error:
             messagebox.showerror("CY뷰어", f"인쇄를 시작할 수 없습니다.\n\n{error}")
+        finally:
+            if dialog.hDevMode:
+                ctypes.windll.kernel32.GlobalFree(dialog.hDevMode)
+            if dialog.hDevNames:
+                ctypes.windll.kernel32.GlobalFree(dialog.hDevNames)
 
     def previous_page(self) -> None:
         if self.document and self.page_number > 0:
