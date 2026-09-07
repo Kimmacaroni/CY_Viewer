@@ -363,25 +363,21 @@ class CyViewer(tk.Tk):
         self.draw_page()
 
     def _selected_text(self) -> str:
+        return " ".join(text for _, text in self._selected_word_items())
+
+    def _selected_word_items(self) -> list[tuple[pymupdf.Rect, str]]:
         if not self.document or not self.selected_rect:
-            return ""
+            return []
         words = self.document[self.page_number].get_text("words")
-        selected = [word[4] for word in words if pymupdf.Rect(word[:4]).intersects(self.selected_rect)]
+        selected = [(pymupdf.Rect(word[:4]), word[4]) for word in words if pymupdf.Rect(word[:4]).intersects(self.selected_rect)]
         if not selected:
-            selected = [text for rect, text in self.ocr_words.get(self.page_number, []) if rect.intersects(self.selected_rect)]
-        return " ".join(selected)
+            selected = [(rect, text) for rect, text in self.ocr_words.get(self.page_number, []) if rect.intersects(self.selected_rect)]
+        return selected
 
     def _selected_word_rects(self) -> list[pymupdf.Rect]:
         if not self.document or not self.selected_rect:
             return []
-        native_words = [
-            pymupdf.Rect(word[:4])
-            for word in self.document[self.page_number].get_text("words")
-            if pymupdf.Rect(word[:4]).intersects(self.selected_rect)
-        ]
-        if native_words:
-            return native_words
-        return [rect for rect, _ in self.ocr_words.get(self.page_number, []) if rect.intersects(self.selected_rect)]
+        return [rect for rect, _ in self._selected_word_items()]
 
     def _line_regions(self, word_rects: list[pymupdf.Rect]) -> list[pymupdf.Rect]:
         """단어를 줄별로 묶어, 줄 안의 띄어쓰기만 포함하는 선택 영역을 만든다."""
@@ -572,17 +568,25 @@ class CyViewer(tk.Tk):
             return
         rect = self._selection_bounds() or rect
         page = self.document[self.page_number]
-        page.add_redact_annot(rect, fill=(1, 1, 1))
-        page.apply_redactions()
         font_path = Path("C:/Windows/Fonts/malgunbd.ttf" if bold else "C:/Windows/Fonts/malgun.ttf")
         font_kwargs = {"fontname": "malgun", "fontfile": str(font_path)} if font_path.exists() else {"fontname": "helv"}
-        page.insert_textbox(
-            rect,
-            text,
-            fontsize=max(8, min(18, rect.height * 0.7)),
-            color=(0, 0, 0),
-            **font_kwargs,
-        )
+        target = pymupdf.Rect(rect.x0 - 2, rect.y0 - 3, page.rect.x1 - 8, min(page.rect.y1 - 8, rect.y1 + 42)) & page.rect
+        chosen_size: float | None = None
+        for size in range(max(6, min(16, int(rect.height * 0.7))), 3, -1):
+            trial = pymupdf.open(stream=self.document.tobytes(), filetype="pdf")
+            try:
+                result = trial[self.page_number].insert_textbox(target, text, fontsize=size, color=(0, 0, 0), **font_kwargs)
+            finally:
+                trial.close()
+            if result >= 0:
+                chosen_size = size
+                break
+        if chosen_size is None:
+            messagebox.showwarning("CY뷰어", "새 문구가 들어갈 공간이 부족합니다. 더 짧은 문구를 입력하거나 넓게 선택해 주세요.")
+            return
+        page.add_redact_annot(rect, fill=(1, 1, 1))
+        page.apply_redactions()
+        page.insert_textbox(target, text, fontsize=chosen_size, color=(0, 0, 0), **font_kwargs)
         self.selected_rect = None
         self._mark_dirty("문구를 변경했습니다." if not bold else "선택 문구를 굵게 처리했습니다.")
         self.draw_page()
@@ -603,17 +607,15 @@ class CyViewer(tk.Tk):
         page = self.document[self.page_number]
         font_path = Path("C:/Windows/Fonts/malgunbd.ttf")
         font_kwargs = {"fontname": "malgunbold", "fontfile": str(font_path)} if font_path.exists() else {"fontname": "hebo"}
-        safe_rect = pymupdf.Rect(rect.x0 - 1, rect.y0 - 3, rect.x1 + 1, rect.y1 + 4) & page.rect
-        result = page.insert_textbox(
-            safe_rect,
-            text,
-            fontsize=max(6, min(15, safe_rect.height * 0.62)),
-            color=(0, 0, 0),
-            **font_kwargs,
-        )
-        if result < 0:
-            messagebox.showwarning("CY뷰어", "선택 영역이 너무 좁아 굵게 표시할 수 없습니다. 더 넓게 선택해 주세요.")
-            return
+        for word_rect, word_text in self._selected_word_items():
+            fontsize = max(5, min(16, word_rect.height * 0.78))
+            page.insert_text(
+                pymupdf.Point(word_rect.x0, word_rect.y1 - max(1, word_rect.height * 0.12)),
+                word_text,
+                fontsize=fontsize,
+                color=(0, 0, 0),
+                **font_kwargs,
+            )
         self.selected_rect = None
         self._mark_dirty("선택 문구를 굵게 처리했습니다.")
         self.draw_page()
