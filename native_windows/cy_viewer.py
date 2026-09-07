@@ -10,6 +10,7 @@ import os
 import subprocess
 import sys
 import tempfile
+import uuid
 from pathlib import Path
 from tkinter import filedialog, messagebox, simpledialog, ttk
 
@@ -880,6 +881,45 @@ class CyViewer(TkinterDnD.Tk):
         if not self.document:
             messagebox.showinfo("CY뷰어", "먼저 PDF를 열어 주세요.")
             return
+
+        # Windows의 구형 PrintDlg는 문서 미리보기를 제공하지 않는다. 편집 중인
+        # 문서를 임시 PDF로 만든 뒤 Windows 기본 PDF 호스트의 인쇄 미리보기를
+        # 열면, 사용자가 확인한 인쇄 작업이 정상적으로 스풀러 대기열에 들어간다.
+        try:
+            edge_candidates = (
+                Path("C:/Program Files (x86)/Microsoft/Edge/Application/msedge.exe"),
+                Path("C:/Program Files/Microsoft/Edge/Application/msedge.exe"),
+            )
+            edge = next((path for path in edge_candidates if path.exists()), None)
+            if not edge:
+                raise RuntimeError("Windows PDF 인쇄 화면을 여는 Microsoft Edge를 찾을 수 없습니다.")
+
+            preview_directory = Path(tempfile.gettempdir()) / "CYViewer" / "print-preview"
+            preview_directory.mkdir(parents=True, exist_ok=True)
+            preview_path = preview_directory / f"CYViewer_print_{uuid.uuid4().hex}.pdf"
+            self.document.save(str(preview_path))
+            subprocess.Popen(
+                [str(edge), "--new-window", preview_path.as_uri()],
+                creationflags=getattr(subprocess, "CREATE_NO_WINDOW", 0),
+            )
+
+            # Edge가 PDF를 표시한 다음 Ctrl+P를 보내 Windows PDF 인쇄 미리보기를 연다.
+            # 별도 콘솔 창은 만들지 않는다.
+            preview_name = preview_path.stem.replace("'", "''")
+            script = (
+                "$shell=New-Object -ComObject WScript.Shell; "
+                "Start-Sleep -Milliseconds 1800; "
+                f"if(-not $shell.AppActivate('{preview_name}')){{$shell.AppActivate('Microsoft Edge')|Out-Null}}; "
+                "Start-Sleep -Milliseconds 250; $shell.SendKeys('^p')"
+            )
+            subprocess.Popen(
+                ["powershell.exe", "-NoProfile", "-NonInteractive", "-WindowStyle", "Hidden", "-Command", script],
+                creationflags=getattr(subprocess, "CREATE_NO_WINDOW", 0),
+            )
+            self.status.config(text="Windows 인쇄 미리보기를 여는 중입니다… 인쇄를 확정하면 대기열에 등록됩니다.")
+        except Exception as error:
+            messagebox.showerror("CY뷰어", f"Windows 인쇄 미리보기를 열 수 없습니다.\n\n{error}")
+        return
 
         preview = tk.Toplevel(self)
         preview.title("인쇄 미리보기 | CY뷰어")
