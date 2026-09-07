@@ -34,7 +34,7 @@ class RoundedButton(tk.Canvas):
     """Tk 기본 버튼 대신 사용하는 일관된 작업 버튼."""
 
     def __init__(self, parent: tk.Widget, text: str, command, variant: str = "secondary") -> None:
-        compact = text in {"+", "−"}
+        compact = text in {"+", "−", "☆"}
         self.height = 38 if compact else 42
         self.radius = 8
         self.command = command
@@ -152,7 +152,7 @@ class CyViewer(tk.Tk):
 
         workspace = tk.Frame(self, bg="#EEF3F8")
         workspace.pack(fill="both", expand=True)
-        sidebar = tk.Frame(workspace, width=300, bg="#F7F9FC", padx=20, pady=20)
+        sidebar = tk.Frame(workspace, width=278, bg="#F7F9FC", padx=16, pady=20)
         sidebar.pack(side="left", fill="y")
         sidebar.pack_propagate(False)
         self._button(sidebar, "＋  PDF 열기", self.open_pdf, "Primary.TButton").pack(fill="x", pady=(0, 20))
@@ -160,15 +160,16 @@ class CyViewer(tk.Tk):
         page_controls = tk.Frame(navigation, bg=COLORS["sidebar"])
         page_controls.pack(fill="x", pady=(0, 8))
         previous = self._button(page_controls, "◀ 이전", self.previous_page)
-        previous.configure(width=72)
-        previous.pack(side="left")
+        previous.configure(width=1)
+        previous.grid(row=0, column=0, sticky="ew")
         go_to = self._button(page_controls, "이동", self.go_to_page)
-        go_to.configure(width=72)
-        go_to.pack(side="left", padx=6)
+        go_to.configure(width=1)
+        go_to.grid(row=0, column=1, sticky="ew", padx=6)
         following = self._button(page_controls, "다음 ▶", self.next_page)
-        following.configure(width=72)
-        following.pack(side="left")
-        self._button(navigation, "☆  이 페이지 책갈피", self.toggle_bookmark).pack(fill="x", pady=(0, 8))
+        following.configure(width=1)
+        following.grid(row=0, column=2, sticky="ew")
+        for column in range(3):
+            page_controls.grid_columnconfigure(column, weight=1, uniform="page_navigation")
         self._button(navigation, "책갈피 목록", self.show_bookmarks).pack(fill="x", pady=(0, 8))
         self._button(navigation, "OCR", self.ocr_document).pack(fill="x")
         editing = self._section(sidebar, "02  선택 · 표시 · 수정")
@@ -206,6 +207,7 @@ class CyViewer(tk.Tk):
             padx=10, pady=4, font=("Malgun Gothic", 9, "bold"),
         )
         self.selection_state.pack(side="left", padx=(0, 12))
+        self._button(tools, "☆", self.toggle_bookmark).pack(side="left", padx=(0, 10))
         self._button(tools, "−", lambda: self.change_zoom(-0.2)).pack(side="left", padx=2)
         self._button(tools, "+", lambda: self.change_zoom(0.2)).pack(side="left", padx=2)
         tk.Label(tools, text="Ctrl + 휠: 확대/축소", bg=COLORS["surface"], fg=COLORS["muted"], font=("Malgun Gothic", 9)).pack(side="left", padx=10)
