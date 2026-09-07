@@ -13,7 +13,7 @@ from pathlib import Path
 from tkinter import filedialog, messagebox, simpledialog, ttk
 
 import pymupdf
-from PIL import Image, ImageTk
+from PIL import Image, ImageDraw, ImageTk
 
 
 COLORS = {
@@ -69,21 +69,12 @@ class RoundedButton(tk.Canvas):
         radius = min(self.radius, height // 2, width // 2)
         background, foreground = self._palette()
         outline = background if self.variant == "primary" else ("#C7D2E0" if not self.hovered else "#93C5FD")
-        # 채움과 외곽선을 분리해 모서리에 원형 자국이 남지 않는 라운드 버튼을 그린다.
-        self.create_rectangle(radius, 0, width - radius, height, fill=background, outline="")
-        self.create_rectangle(0, radius, width, height - radius, fill=background, outline="")
-        self.create_oval(0, 0, radius * 2, radius * 2, fill=background, outline="")
-        self.create_oval(width - radius * 2, 0, width, radius * 2, fill=background, outline="")
-        self.create_oval(0, height - radius * 2, radius * 2, height, fill=background, outline="")
-        self.create_oval(width - radius * 2, height - radius * 2, width, height, fill=background, outline="")
-        self.create_line(radius, 0, width - radius, 0, fill=outline)
-        self.create_line(width, radius, width, height - radius, fill=outline)
-        self.create_line(width - radius, height, radius, height, fill=outline)
-        self.create_line(0, height - radius, 0, radius, fill=outline)
-        self.create_arc(0, 0, radius * 2, radius * 2, start=90, extent=90, style="arc", outline=outline)
-        self.create_arc(width - radius * 2, 0, width, radius * 2, start=0, extent=90, style="arc", outline=outline)
-        self.create_arc(width - radius * 2, height - radius * 2, width, height, start=270, extent=90, style="arc", outline=outline)
-        self.create_arc(0, height - radius * 2, radius * 2, height, start=180, extent=90, style="arc", outline=outline)
+        surface = Image.new("RGBA", (width, height), (0, 0, 0, 0))
+        ImageDraw.Draw(surface).rounded_rectangle(
+            (0, 0, width - 1, height - 1), radius=radius, fill=background, outline=outline, width=1
+        )
+        self.surface_image = ImageTk.PhotoImage(surface)
+        self.create_image(0, 0, anchor="nw", image=self.surface_image)
         self.create_text(width // 2, height // 2, text=self.text, fill=foreground, font=("Malgun Gothic", 10, "bold" if self.variant == "primary" else "normal"))
 
     def _enter(self, _) -> None:
@@ -203,7 +194,7 @@ class CyViewer(tk.Tk):
         )
         self.selection_details.pack(fill="both", expand=True)
         self.selection_details.config(state="disabled")
-        self._set_selection_details("문구, 이미지 또는 빈 공간을\n드래그해 선택하면 이곳에서\n선택한 내용을 확인할 수 있어요.")
+        self._set_selection_details("문구를 드래그해 선택하면\n이곳에서 선택한 내용을\n확인할 수 있어요.")
 
         content = tk.Frame(workspace, bg="#EEF3F8")
         content.pack(side="left", fill="both", expand=True)
@@ -312,7 +303,7 @@ class CyViewer(tk.Tk):
             self.file_label.config(text=f"{self.document_path.name} · 읽기 및 편집 가능")
             self._set_save_state("변경 없음")
             self.selection_label.config(text="선택 검사")
-            self._set_selection_details("문구, 이미지 또는 빈 공간을\n드래그해 선택하면 이곳에서\n선택한 내용을 확인할 수 있어요.")
+            self._set_selection_details("문구를 드래그해 선택하면\n이곳에서 선택한 내용을\n확인할 수 있어요.")
             self._set_selection_feedback()
             self.draw_page()
         except Exception as error:
