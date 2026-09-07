@@ -31,12 +31,11 @@ COLORS = {
 
 
 class RoundedButton(tk.Canvas):
-    """Tk 기본 버튼 대신 사용하는 부드러운 모서리의 작업 버튼."""
+    """Tk 기본 버튼 대신 사용하는 일관된 작업 버튼."""
 
     def __init__(self, parent: tk.Widget, text: str, command, variant: str = "secondary") -> None:
         compact = text in {"+", "−"}
         self.height = 38 if compact else 42
-        self.radius = 10
         self.command = command
         self.text = text
         self.variant = variant
@@ -66,15 +65,9 @@ class RoundedButton(tk.Canvas):
     def _draw(self) -> None:
         self.delete("all")
         width, height = max(self.winfo_width(), 2), self.height
-        radius = min(self.radius, height // 2, width // 2)
         background, foreground = self._palette()
         outline = background if self.variant == "primary" else ("#C7D2E0" if not self.hovered else "#93C5FD")
-        self.create_rectangle(radius, 0, width - radius, height, fill=background, outline=outline)
-        self.create_rectangle(0, radius, width, height - radius, fill=background, outline=outline)
-        self.create_oval(0, 0, radius * 2, radius * 2, fill=background, outline=outline)
-        self.create_oval(width - radius * 2, 0, width, radius * 2, fill=background, outline=outline)
-        self.create_oval(0, height - radius * 2, radius * 2, height, fill=background, outline=outline)
-        self.create_oval(width - radius * 2, height - radius * 2, width, height, fill=background, outline=outline)
+        self.create_rectangle(0, 0, width, height, fill=background, outline=outline, width=1)
         self.create_text(width // 2, height // 2, text=self.text, fill=foreground, font=("Malgun Gothic", 10, "bold" if self.variant == "primary" else "normal"))
 
     def _enter(self, _) -> None:
@@ -159,13 +152,13 @@ class CyViewer(tk.Tk):
         navigation = self._section(sidebar, "01  문서 탐색")
         page_controls = tk.Frame(navigation, bg=COLORS["sidebar"])
         page_controls.pack(fill="x", pady=(0, 8))
-        previous = self._button(page_controls, "이전", self.previous_page)
+        previous = self._button(page_controls, "◀ 이전", self.previous_page)
         previous.configure(width=72)
         previous.pack(side="left")
         go_to = self._button(page_controls, "이동", self.go_to_page)
         go_to.configure(width=72)
         go_to.pack(side="left", padx=6)
-        following = self._button(page_controls, "다음", self.next_page)
+        following = self._button(page_controls, "다음 ▶", self.next_page)
         following.configure(width=72)
         following.pack(side="left")
         self._button(navigation, "☆  이 페이지 책갈피", self.toggle_bookmark).pack(fill="x", pady=2)
