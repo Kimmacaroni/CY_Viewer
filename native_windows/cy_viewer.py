@@ -97,12 +97,12 @@ class CyViewer(tk.Tk):
         self._button(navigation, "책갈피 목록", self.show_bookmarks).pack(fill="x", pady=2)
         self._button(navigation, "OCR · 현재 페이지 글자 인식", self.ocr_current_page).pack(fill="x", pady=(8, 2))
         editing = self._section(sidebar, "02  선택 · 표시 · 수정")
-        self._button(editing, "형광펜 표시", lambda: self.mark_selection("highlight")).pack(fill="x", pady=2)
-        self._button(editing, "밑줄", lambda: self.mark_selection("underline")).pack(fill="x", pady=2)
-        self._button(editing, "취소선", lambda: self.mark_selection("strike")).pack(fill="x", pady=2)
-        self._button(editing, "굵게 처리", self.bold_selection).pack(fill="x", pady=2)
-        self._button(editing, "문구 수정", self.edit_selection).pack(fill="x", pady=2)
-        self._button(editing, "선택 텍스트 복사", self.copy_selected_text).pack(fill="x", pady=2)
+        tk.Label(
+            editing,
+            text="문구를 드래그해 선택한 뒤\n마우스 오른쪽 버튼을 누르세요.\n\n형광펜 · 밑줄 · 취소선 · 굵게\n문구 수정 · 텍스트 복사를 제공합니다.",
+            justify="left", anchor="w", bg=COLORS["sidebar"], fg=COLORS["muted"],
+            font=("Malgun Gothic", 9),
+        ).pack(fill="x", pady=(0, 6))
         self._side_title(sidebar, "03  사본으로 저장")
         self._button(sidebar, "PDF로 저장", self.save_as, "Primary.TButton").pack(fill="x", pady=(14, 4))
         selection_card = tk.Frame(sidebar, bg=COLORS["blue_soft"], padx=10, pady=10)
@@ -150,6 +150,15 @@ class CyViewer(tk.Tk):
         self.canvas.bind("<ButtonPress-1>", self.start_selection)
         self.canvas.bind("<B1-Motion>", self.update_selection)
         self.canvas.bind("<ButtonRelease-1>", self.finish_selection)
+        self.canvas.bind("<Button-3>", self.show_context_menu)
+        self.context_menu = tk.Menu(self, tearoff=0, font=("Malgun Gothic", 10), bg=COLORS["surface"], fg=COLORS["ink"], activebackground=COLORS["blue_soft"], activeforeground=COLORS["ink"])
+        self.context_menu.add_command(label="형광펜", command=lambda: self.mark_selection("highlight"))
+        self.context_menu.add_command(label="밑줄", command=lambda: self.mark_selection("underline"))
+        self.context_menu.add_command(label="취소선", command=lambda: self.mark_selection("strike"))
+        self.context_menu.add_separator()
+        self.context_menu.add_command(label="굵게 처리", command=self.bold_selection)
+        self.context_menu.add_command(label="문구 수정", command=self.edit_selection)
+        self.context_menu.add_command(label="텍스트 복사", command=self.copy_selected_text)
 
         self.status = tk.Label(
             content,
@@ -478,18 +487,35 @@ class CyViewer(tk.Tk):
             return None
         return self.selected_rect
 
+    def show_context_menu(self, event) -> None:
+        if not self.document:
+            return
+        if not self.selected_rect or not self._selected_text():
+            self.status.config(text="먼저 문구를 드래그해 선택한 뒤 마우스 오른쪽 버튼을 누르세요.")
+            return
+        self.context_menu.tk_popup(event.x_root, event.y_root)
+
     def mark_selection(self, kind: str) -> None:
         rect = self._require_selection()
         if not rect or not self.document:
             return
         page = self.document[self.page_number]
+        word_rects = self._selected_word_rects() or [rect]
         if kind == "highlight":
-            annotation = page.add_highlight_annot(rect)
+            for word_rect in word_rects:
+                annotation = page.add_rect_annot(word_rect)
+                annotation.set_colors(fill=(1, 0.92, 0))
+                annotation.set_opacity(0.38)
+                annotation.set_border(width=0)
+                annotation.update()
         elif kind == "underline":
-            annotation = page.add_underline_annot(rect)
+            for word_rect in word_rects:
+                annotation = page.add_underline_annot(word_rect)
+                annotation.update()
         else:
-            annotation = page.add_strikeout_annot(rect)
-        annotation.update()
+            for word_rect in word_rects:
+                annotation = page.add_strikeout_annot(word_rect)
+                annotation.update()
         self.selected_rect = None
         label = {"highlight": "형광펜", "underline": "밑줄", "strike": "취소선"}[kind]
         self._mark_dirty(f"{label} 표시를 적용했습니다.")
@@ -520,8 +546,30 @@ class CyViewer(tk.Tk):
         if not text:
             self._require_selection()
             return
-        if messagebox.askyesno("굵게 처리", "선택 문구를 굵게 바꿉니다. 이 변경은 저장 전까지 되돌릴 수 없습니다. 계속할까요?", parent=self):
-            self._replace_selected_text(text, bold=True)
+        if messagebox.askyesno("굵게 처리", "원문은 지우지 않고 굵은 글자를 덧씌웁니다. 계속할까요?", parent=self):
+            self._apply_bold_overlay(text)
+
+    def _apply_bold_overlay(self, text: str) -> None:
+        rect = self._require_selection()
+        if not rect or not self.document:
+            return
+        page = self.document[self.page_number]
+        font_path = Path("C:/Windows/Fonts/malgunbd.ttf")
+        font_kwargs = {"fontname": "malgunbold", "fontfile": str(font_path)} if font_path.exists() else {"fontname": "hebo"}
+        safe_rect = pymupdf.Rect(rect.x0 - 1, rect.y0 - 3, rect.x1 + 1, rect.y1 + 4) & page.rect
+        result = page.insert_textbox(
+            safe_rect,
+            text,
+            fontsize=max(6, min(15, safe_rect.height * 0.62)),
+            color=(0, 0, 0),
+            **font_kwargs,
+        )
+        if result < 0:
+            messagebox.showwarning("CY뷰어", "선택 영역이 너무 좁아 굵게 표시할 수 없습니다. 더 넓게 선택해 주세요.")
+            return
+        self.selected_rect = None
+        self._mark_dirty("선택 문구를 굵게 처리했습니다.")
+        self.draw_page()
 
     def edit_selection(self) -> None:
         original = self._selected_text()
