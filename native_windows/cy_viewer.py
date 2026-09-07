@@ -586,7 +586,9 @@ class CyViewer(tk.Tk):
         rect = self._selection_bounds() or rect
         page = self.document[self.page_number]
         font_path = Path("C:/Windows/Fonts/malgunbd.ttf" if bold else "C:/Windows/Fonts/malgun.ttf")
-        font_kwargs = {"fontname": "malgun", "fontfile": str(font_path)} if font_path.exists() else {"fontname": "helv"}
+        # PDF 내부 글꼴 이름을 분리해야 굵은 글꼴이 일반 문구 수정에 재사용되지 않는다.
+        font_name = "cyviewerbold" if bold else "cyviewerregular"
+        font_kwargs = {"fontname": font_name, "fontfile": str(font_path)} if font_path.exists() else {"fontname": "hebo" if bold else "helv"}
         source_size = self._selected_font_size()
         target = pymupdf.Rect(
             rect.x0 - 1,
