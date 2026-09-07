@@ -115,6 +115,10 @@ class CyViewer(TkinterDnD.Tk):
         app_icon = bundled_path("assets/CYViewer.ico")
         if app_icon.exists():
             self.iconbitmap(default=str(app_icon))
+        app_icon_png = bundled_path("assets/cy_viewer_icon.png")
+        if app_icon_png.exists():
+            self._title_icon_image = ImageTk.PhotoImage(Image.open(app_icon_png))
+            self.iconphoto(True, self._title_icon_image)
         self.geometry("1280x820")
         self.minsize(780, 560)
         self.configure(bg=COLORS["canvas"])
@@ -143,8 +147,37 @@ class CyViewer(TkinterDnD.Tk):
         self.save_state = "새 문서 없음"
 
         self._make_ui()
+        self.after(300, self._apply_windows_title_icon)
         self.drop_target_register(DND_FILES)
         self.dnd_bind("<<Drop>>", self.drop_pdf)
+
+    def _apply_windows_title_icon(self) -> None:
+        """Windows 제목 표시줄이 Tk 기본 깃털로 되돌아가지 않게 앱 아이콘을 직접 지정합니다."""
+        if sys.platform != "win32":
+            return
+        user32 = ctypes.windll.user32
+        user32.GetAncestor.argtypes = [ctypes.c_void_p, ctypes.c_uint]
+        user32.GetAncestor.restype = ctypes.c_void_p
+        user32.SendMessageW.argtypes = [ctypes.c_void_p, ctypes.c_uint, ctypes.c_void_p, ctypes.c_void_p]
+        user32.SendMessageW.restype = ctypes.c_ssize_t
+        shell32 = ctypes.windll.shell32
+        shell32.ExtractIconExW.argtypes = [
+            ctypes.c_wchar_p,
+            ctypes.c_int,
+            ctypes.POINTER(ctypes.c_void_p),
+            ctypes.POINTER(ctypes.c_void_p),
+            ctypes.c_uint,
+        ]
+        shell32.ExtractIconExW.restype = ctypes.c_uint
+        large_icon = ctypes.c_void_p()
+        small_icon = ctypes.c_void_p()
+        extracted = shell32.ExtractIconExW(str(Path(sys.executable)), 0, ctypes.byref(large_icon), ctypes.byref(small_icon), 1)
+        if not extracted:
+            return
+        window_handle = user32.GetAncestor(self.winfo_id(), 2) or self.winfo_id()
+        user32.SendMessageW(window_handle, 0x0080, 0, small_icon.value or large_icon.value)
+        user32.SendMessageW(window_handle, 0x0080, 1, large_icon.value or small_icon.value)
+        self._windows_title_icon_handles = (large_icon, small_icon)
 
     def _make_ui(self) -> None:
         style = ttk.Style(self)

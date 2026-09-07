@@ -4,6 +4,7 @@ from PyInstaller.utils.hooks import collect_all
 datas = [
     ('native_windows/tessdata', 'tessdata'),
     ('personal_pdf_viewer/windows/runner/resources/app_icon.ico', 'assets'),
+    ('personal_pdf_viewer/assets/cy_viewer_icon.png', 'assets'),
 ]
 binaries = []
 hiddenimports = ['win32ui']
