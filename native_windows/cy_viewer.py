@@ -1006,7 +1006,10 @@ class CyViewer(TkinterDnD.Tk):
             printer_dc = win32ui.CreateDCFromHandle(int(dialog.hDC))
             document_name = f"CY뷰어 - {self.document_path.name if self.document_path else 'PDF 문서'}"
             job_id = printer_dc.StartDoc(document_name)
-            if not job_id or job_id <= 0:
+            # pywin32의 CDC.StartDoc는 프린터 드라이버에 따라 성공 시에도
+            # 작업 번호 대신 None을 반환한다. 음수/0이 명시적으로 반환된
+            # 경우만 실패이며, None은 정상으로 보고 페이지 전송을 계속한다.
+            if isinstance(job_id, int) and job_id <= 0:
                 raise RuntimeError("Windows 인쇄 대기열에 작업을 만들지 못했습니다.")
             try:
                 printable_width = printer_dc.GetDeviceCaps(8)
@@ -1022,18 +1025,21 @@ class CyViewer(TkinterDnD.Tk):
                     draw_height = int(image.height * scale)
                     left = (printable_width - draw_width) // 2
                     top = (printable_height - draw_height) // 2
-                    if printer_dc.StartPage() <= 0:
+                    start_page_result = printer_dc.StartPage()
+                    if isinstance(start_page_result, int) and start_page_result <= 0:
                         raise RuntimeError(f"{page_number + 1}페이지 인쇄 작업을 시작하지 못했습니다.")
                     ImageWin.Dib(image).draw(printer_dc.GetHandleOutput(), (left, top, left + draw_width, top + draw_height))
-                    if printer_dc.EndPage() <= 0:
+                    end_page_result = printer_dc.EndPage()
+                    if isinstance(end_page_result, int) and end_page_result <= 0:
                         raise RuntimeError(f"{page_number + 1}페이지를 인쇄 대기열에 보내지 못했습니다.")
             except Exception:
                 printer_dc.AbortDoc()
                 raise
             else:
                 printer_dc.EndDoc()
-                self.status.config(text=f"인쇄 대기열 전송 완료 · 작업 #{job_id} · {first_page}~{last_page}페이지")
-                messagebox.showinfo("CY뷰어", f"인쇄 작업을 Windows 대기열에 보냈습니다.\n\n작업 번호: {job_id}\n페이지: {first_page}~{last_page}")
+                job_text = f"작업 #{job_id} · " if isinstance(job_id, int) else ""
+                self.status.config(text=f"인쇄 대기열 전송 완료 · {job_text}{first_page}~{last_page}페이지")
+                messagebox.showinfo("CY뷰어", f"인쇄 작업을 Windows 대기열에 보냈습니다.\n\n{job_text}페이지: {first_page}~{last_page}")
                 return True
             finally:
                 printer_dc.DeleteDC()
