@@ -367,9 +367,11 @@ class CyViewer(TkinterDnD.Tk):
             self.canvas.create_text(
                 width // 2,
                 height // 2 - 10,
-                text="열기 또는 PDF를 여기로 끌어 놓기 → 읽기·검색 → 문구 드래그 → 표시 또는 수정 → 저장",
+                text="PDF 열기 또는 끌어놓기\n읽기·검색 → 문구 선택 → 편집 → 저장",
                 fill=COLORS["muted"],
                 font=("Malgun Gothic", 11),
+                justify="center",
+                width=420,
             )
             self.canvas.create_text(width // 2, height // 2 + 48, text="왼쪽의 ‘PDF 열기’ 버튼으로 시작하세요.", fill=COLORS["blue"], font=("Malgun Gothic", 10, "bold"))
             self.status.config(text="PDF 열기를 눌러 문서를 선택하세요.")
@@ -570,6 +572,7 @@ class CyViewer(TkinterDnD.Tk):
                 ],
                 capture_output=True,
                 check=False,
+                creationflags=getattr(subprocess, "CREATE_NO_WINDOW", 0),
             )
             if result.returncode != 0:
                 raise RuntimeError(self._decode_ocr_output(result.stderr).strip() or "OCR 엔진이 결과를 만들지 못했습니다.")
