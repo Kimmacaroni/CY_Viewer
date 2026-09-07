@@ -1,0 +1,11 @@
+<Window
+    x:Class="CYViewer.Print.MainWindow"
+    xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml">
+    <Grid Background="#0F172A">
+        <StackPanel HorizontalAlignment="Center" VerticalAlignment="Center" Spacing="12">
+            <ProgressRing x:Name="LoadingRing" IsActive="True" Width="32" Height="32"/>
+            <TextBlock x:Name="StatusText" Text="인쇄 미리보기를 준비하고 있습니다…" Foreground="White" FontSize="15"/>
+        </StackPanel>
+    </Grid>
+</Window>

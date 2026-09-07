@@ -95,3 +95,12 @@ C:\Users\ForYou\Documents\CYViewer
 
 - 저장소: <https://github.com/Kimmacaroni/CY_Viewer>
 - 기본 브랜치: `main`
+
+## Windows 시스템 인쇄 미리보기 (2026-09-07)
+
+- 기존 Win32 `PrintDlg`는 Windows 11 인쇄창 오른쪽 미리보기 영역에 문서를 공급할 수 없어 전용 WinUI 3 인쇄 모듈을 추가했다.
+- `windows_print` 모듈은 `Windows.Graphics.Printing.PrintManager`와 `Microsoft.UI.Xaml.Printing.PrintDocument`를 사용한다.
+- PDF의 전체 페이지를 `Windows.Data.Pdf`로 렌더링하고 `Paginate`, `GetPreviewPage`, `AddPages` 이벤트를 통해 시스템 인쇄창에 전달한다.
+- `cyviewer-print:` 프로토콜을 등록한 MSIX 구성요소가 편집 중인 CY뷰어 PDF를 받아 시스템 미리보기와 인쇄 대기열 전송을 담당한다.
+- Windows App Runtime 1.8과 로컬 서명된 `Kimmacaroni.CYViewer.Print` 패키지를 현재 PC에 설치했다.
+- 테스트 문서 3페이지가 Windows 시스템 인쇄창 오른쪽에서 실제로 표시되는 것을 화면 캡처로 확인했다.

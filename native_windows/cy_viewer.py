@@ -10,6 +10,8 @@ import os
 import subprocess
 import sys
 import tempfile
+import uuid
+from urllib.parse import quote
 from pathlib import Path
 from tkinter import filedialog, messagebox, simpledialog, ttk
 
@@ -877,6 +879,20 @@ class CyViewer(TkinterDnD.Tk):
             messagebox.showerror("CY뷰어", f"이미지로 저장할 수 없습니다.\n\n{error}")
 
     def print_document(self) -> None:
+        if not self.document:
+            messagebox.showinfo("CY뷰어", "먼저 PDF를 열어 주세요.")
+            return
+        try:
+            request_directory = Path(tempfile.gettempdir()) / "CYViewer" / "print"
+            request_directory.mkdir(parents=True, exist_ok=True)
+            request_path = request_directory / f"CYViewer_print_{uuid.uuid4().hex}.pdf"
+            self.document.save(str(request_path))
+            os.startfile(f"cyviewer-print:?path={quote(str(request_path), safe='')}")
+            self.status.config(text="Windows 인쇄 미리보기를 준비하고 있습니다…")
+        except Exception as error:
+            messagebox.showerror("CY뷰어", f"Windows 인쇄 미리보기를 열 수 없습니다.\n\n{error}")
+
+    def _legacy_print_preview(self) -> None:
         if not self.document:
             messagebox.showinfo("CY뷰어", "먼저 PDF를 열어 주세요.")
             return

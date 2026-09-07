@@ -3,3 +3,8 @@ personal_pdf_viewer/.dart_tool/
 personal_pdf_viewer/build/
 personal_pdf_viewer/.flutter-plugins
 personal_pdf_viewer/.flutter-plugins-dependencies
+.tools/
+windows_print/bin/
+windows_print/obj/
+windows_print/AppPackages*/
+windows_print/publish/
