@@ -445,8 +445,9 @@ class CyViewer(tk.Tk):
                 image.save(image_path)
                 result = subprocess.run(
                     [
-                        str(executable), str(image_path), "stdout", "-l", "kor+eng",
-                        "--oem", "3", "--psm", "6", "--tessdata-dir", str(data_path), "tsv",
+                        str(executable), "--tessdata-dir", str(data_path), str(image_path), "stdout",
+                        "-l", "kor+eng", "--oem", "3", "--psm", "6",
+                        "-c", "tessedit_create_tsv=1",
                     ],
                     capture_output=True,
                     check=False,
@@ -458,15 +459,15 @@ class CyViewer(tk.Tk):
                 image_path.unlink(missing_ok=True)
             words: list[tuple[pymupdf.Rect, str]] = []
             for item in data:
-                text = item["text"].strip()
-                confidence = float(item["conf"]) if item["conf"] != "-1" else -1
+                text = item.get("text", "").strip()
+                confidence = float(item.get("conf", "-1")) if item.get("conf", "-1") != "-1" else -1
                 if not text or confidence < 20:
                     continue
                 rect = pymupdf.Rect(
-                    float(item["left"]) / scale,
-                    float(item["top"]) / scale,
-                    (float(item["left"]) + float(item["width"])) / scale,
-                    (float(item["top"]) + float(item["height"])) / scale,
+                    float(item.get("left", 0)) / scale,
+                    float(item.get("top", 0)) / scale,
+                    (float(item.get("left", 0)) + float(item.get("width", 0))) / scale,
+                    (float(item.get("top", 0)) + float(item.get("height", 0))) / scale,
                 )
                 words.append((rect, text))
             self.ocr_words[self.page_number] = words
