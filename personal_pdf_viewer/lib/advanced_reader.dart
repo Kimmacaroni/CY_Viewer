@@ -4,7 +4,15 @@ import 'package:flutter/material.dart';
 import 'package:pdfrx/pdfrx.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
-enum _ReaderAction { bookmark, bookmarks, zoomOut, zoomIn, goToPage, help }
+enum _ReaderAction {
+  bookmark,
+  bookmarks,
+  zoomOut,
+  zoomIn,
+  goToPage,
+  clearMarks,
+  help,
+}
 
 enum _MarkType { highlight, underline, strike, bold }
 
@@ -40,6 +48,7 @@ class _AdvancedPdfReaderPageState extends State<AdvancedPdfReaderPage> {
   List<int> _bookmarks = [];
   bool _searching = false;
   final List<_TextMark> _marks = [];
+  bool _hasSelectedText = false;
 
   String get _bookmarkKey =>
       'pdf_bookmarks_${base64Url.encode(utf8.encode(widget.path))}';
@@ -149,26 +158,30 @@ class _AdvancedPdfReaderPageState extends State<AdvancedPdfReaderPage> {
     setState(() {});
   }
 
-  Future<void> _applyMark(
-    PdfViewerContextMenuBuilderParams params,
-    _MarkType type,
-  ) async {
-    final ranges = await params.textSelectionDelegate.getSelectedTextRanges();
-    if (ranges.isEmpty) return;
+  Future<void> _applyMark(_MarkType type) async {
+    final selection = _controller.textSelectionDelegate;
+    final ranges = await selection.getSelectedTextRanges();
+    if (ranges.isEmpty) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text('먼저 문서의 텍스트를 드래그해 선택해 주세요.')),
+        );
+      }
+      return;
+    }
     setState(
       () => _marks.addAll(ranges.map((range) => _TextMark(range, type))),
     );
-    await params.textSelectionDelegate.clearTextSelection();
-    params.dismissContextMenu();
+    await selection.clearTextSelection();
+    if (mounted) setState(() => _hasSelectedText = false);
     _controller.invalidate();
   }
 
-  Widget _markButton(String label, Color color, VoidCallback onPressed) =>
-      TextButton(
-        onPressed: onPressed,
-        style: TextButton.styleFrom(foregroundColor: color),
-        child: Text(label),
-      );
+  void _clearMarks() {
+    if (_marks.isEmpty) return;
+    setState(_marks.clear);
+    _controller.invalidate();
+  }
 
   void _paintMarks(Canvas canvas, Rect pageRect, PdfPage page) {
     for (final mark in _marks.where(
@@ -221,13 +234,15 @@ class _AdvancedPdfReaderPageState extends State<AdvancedPdfReaderPage> {
         await _controller.zoomUp();
       case _ReaderAction.goToPage:
         await _goToPage();
+      case _ReaderAction.clearMarks:
+        _clearMarks();
       case _ReaderAction.help:
         await showDialog<void>(
           context: context,
           builder: (context) => AlertDialog(
             title: const Text('CY뷰어 사용 방법'),
             content: const Text(
-              '• 돋보기: 문서 텍스트 검색\n• 기능 메뉴: 책갈피, 확대/축소, 페이지 이동\n• 마우스 휠: 문서 스크롤\n• Ctrl + 마우스 휠: 확대/축소\n• 우클릭 또는 길게 누르기: 텍스트 선택과 복사',
+              '• 돋보기: 문서 텍스트 검색\n• 기능 메뉴: 책갈피, 확대/축소, 페이지 이동\n• 마우스 휠: 문서 스크롤\n• Ctrl + 마우스 휠: 확대/축소\n• 텍스트 드래그 후 하단 도구막대: 복사·형광펜·밑줄·취소선·강조',
             ),
             actions: [
               TextButton(
@@ -380,6 +395,13 @@ class _AdvancedPdfReaderPageState extends State<AdvancedPdfReaderPage> {
                         title: Text('페이지 이동'),
                       ),
                     ),
+                    PopupMenuItem(
+                      value: _ReaderAction.clearMarks,
+                      child: ListTile(
+                        leading: Icon(Icons.layers_clear_outlined),
+                        title: Text('이 문서의 표시 지우기'),
+                      ),
+                    ),
                     PopupMenuDivider(),
                     PopupMenuItem(
                       value: _ReaderAction.help,
@@ -398,67 +420,17 @@ class _AdvancedPdfReaderPageState extends State<AdvancedPdfReaderPage> {
             widget.path,
             controller: _controller,
             params: PdfViewerParams(
-              buildContextMenu: (context, params) {
-                final canCopy =
-                    params.isTextSelectionEnabled &&
-                    params.textSelectionDelegate.isCopyAllowed &&
-                    params.textSelectionDelegate.hasSelectedText;
-                final canSelectAll =
-                    params.isTextSelectionEnabled &&
-                    !params.textSelectionDelegate.isSelectingAllText;
-                if (!canCopy && !canSelectAll) return null;
-                return Material(
-                  color: Theme.of(context).colorScheme.surfaceContainerHigh,
-                  elevation: 8,
-                  borderRadius: BorderRadius.circular(10),
-                  child: Padding(
-                    padding: const EdgeInsets.symmetric(
-                      horizontal: 4,
-                      vertical: 2,
-                    ),
-                    child: Row(
-                      mainAxisSize: MainAxisSize.min,
-                      children: [
-                        if (canCopy)
-                          TextButton.icon(
-                            onPressed: () {
-                              params.textSelectionDelegate.copyTextSelection();
-                              params.dismissContextMenu();
-                            },
-                            icon: const Icon(Icons.copy_outlined, size: 18),
-                            label: const Text('복사'),
-                          ),
-                        _markButton(
-                          '형광펜',
-                          Colors.amber,
-                          () => _applyMark(params, _MarkType.highlight),
-                        ),
-                        _markButton(
-                          '밑줄',
-                          Colors.blue,
-                          () => _applyMark(params, _MarkType.underline),
-                        ),
-                        _markButton(
-                          '취소선',
-                          Colors.red,
-                          () => _applyMark(params, _MarkType.strike),
-                        ),
-                        _markButton(
-                          '굵게',
-                          Colors.black,
-                          () => _applyMark(params, _MarkType.bold),
-                        ),
-                        if (canSelectAll)
-                          TextButton(
-                            onPressed: () =>
-                                params.textSelectionDelegate.selectAllText(),
-                            child: const Text('전체 선택'),
-                          ),
-                      ],
-                    ),
-                  ),
-                );
-              },
+              // pdfrx의 데스크톱 컨텍스트 메뉴는 일부 환경에서 선택 좌표가
+              // 비어 있을 때 예외를 냈다. 동작이 확실한 화면 하단 도구막대를 사용한다.
+              buildContextMenu: (_, _) => null,
+              textSelectionParams: PdfTextSelectionParams(
+                showContextMenuAutomatically: false,
+                onTextSelectionChange: (selection) {
+                  if (mounted && _hasSelectedText != selection.hasSelectedText) {
+                    setState(() => _hasSelectedText = selection.hasSelectedText);
+                  }
+                },
+              ),
               onViewerReady: (document, _) async {
                 setState(() => _pageCount = document.pages.length);
                 final initial = widget.initialPage.clamp(
@@ -485,6 +457,53 @@ class _AdvancedPdfReaderPageState extends State<AdvancedPdfReaderPage> {
               right: 16,
               bottom: 16,
               child: Chip(label: Text('$_currentPage / $_pageCount')),
+            ),
+          if (_hasSelectedText)
+            Positioned(
+              left: 12,
+              right: 12,
+              bottom: 12,
+              child: SafeArea(
+                top: false,
+                child: Material(
+                  color: Theme.of(context).colorScheme.surfaceContainerHigh,
+                  elevation: 8,
+                  borderRadius: BorderRadius.circular(14),
+                  child: SingleChildScrollView(
+                    scrollDirection: Axis.horizontal,
+                    padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 4),
+                    child: Row(
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        TextButton.icon(
+                          onPressed: () async {
+                            await _controller.textSelectionDelegate.copyTextSelection();
+                            await _controller.textSelectionDelegate.clearTextSelection();
+                          },
+                          icon: const Icon(Icons.copy_outlined, size: 18),
+                          label: const Text('복사'),
+                        ),
+                        TextButton(
+                          onPressed: () => _applyMark(_MarkType.highlight),
+                          child: const Text('형광펜'),
+                        ),
+                        TextButton(
+                          onPressed: () => _applyMark(_MarkType.underline),
+                          child: const Text('밑줄'),
+                        ),
+                        TextButton(
+                          onPressed: () => _applyMark(_MarkType.strike),
+                          child: const Text('취소선'),
+                        ),
+                        TextButton(
+                          onPressed: () => _applyMark(_MarkType.bold),
+                          child: const Text('강조'),
+                        ),
+                      ],
+                    ),
+                  ),
+                ),
+              ),
             ),
         ],
       ),
