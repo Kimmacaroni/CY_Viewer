@@ -36,6 +36,7 @@ class RoundedButton(tk.Canvas):
     def __init__(self, parent: tk.Widget, text: str, command, variant: str = "secondary") -> None:
         compact = text in {"+", "−"}
         self.height = 38 if compact else 42
+        self.radius = 8
         self.command = command
         self.text = text
         self.variant = variant
@@ -65,9 +66,24 @@ class RoundedButton(tk.Canvas):
     def _draw(self) -> None:
         self.delete("all")
         width, height = max(self.winfo_width(), 2), self.height
+        radius = min(self.radius, height // 2, width // 2)
         background, foreground = self._palette()
         outline = background if self.variant == "primary" else ("#C7D2E0" if not self.hovered else "#93C5FD")
-        self.create_rectangle(0, 0, width, height, fill=background, outline=outline, width=1)
+        # 채움과 외곽선을 분리해 모서리에 원형 자국이 남지 않는 라운드 버튼을 그린다.
+        self.create_rectangle(radius, 0, width - radius, height, fill=background, outline="")
+        self.create_rectangle(0, radius, width, height - radius, fill=background, outline="")
+        self.create_oval(0, 0, radius * 2, radius * 2, fill=background, outline="")
+        self.create_oval(width - radius * 2, 0, width, radius * 2, fill=background, outline="")
+        self.create_oval(0, height - radius * 2, radius * 2, height, fill=background, outline="")
+        self.create_oval(width - radius * 2, height - radius * 2, width, height, fill=background, outline="")
+        self.create_line(radius, 0, width - radius, 0, fill=outline)
+        self.create_line(width, radius, width, height - radius, fill=outline)
+        self.create_line(width - radius, height, radius, height, fill=outline)
+        self.create_line(0, height - radius, 0, radius, fill=outline)
+        self.create_arc(0, 0, radius * 2, radius * 2, start=90, extent=90, style="arc", outline=outline)
+        self.create_arc(width - radius * 2, 0, width, radius * 2, start=0, extent=90, style="arc", outline=outline)
+        self.create_arc(width - radius * 2, height - radius * 2, width, height, start=270, extent=90, style="arc", outline=outline)
+        self.create_arc(0, height - radius * 2, radius * 2, height, start=180, extent=90, style="arc", outline=outline)
         self.create_text(width // 2, height // 2, text=self.text, fill=foreground, font=("Malgun Gothic", 10, "bold" if self.variant == "primary" else "normal"))
 
     def _enter(self, _) -> None:
