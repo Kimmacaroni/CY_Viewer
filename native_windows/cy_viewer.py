@@ -99,18 +99,21 @@ class CyViewer(tk.Tk):
         self._button(editing, "문구 수정", self.edit_selection).pack(fill="x", pady=2)
         self._side_title(sidebar, "03  사본으로 저장")
         self._button(sidebar, "PDF로 저장", self.save_as, "Primary.TButton").pack(fill="x", pady=(14, 4))
+        selection_card = tk.Frame(sidebar, bg=COLORS["blue_soft"], padx=10, pady=10)
+        selection_card.pack(fill="both", expand=True, pady=(16, 0))
         self.selection_label = tk.Label(
-            sidebar,
-            text="선택한 문구가 없습니다.\n\n문서의 글자를 드래그하면\n표시와 문구 수정 기능을 쓸 수 있어요.",
-            justify="left",
-            anchor="w",
-            bg=COLORS["blue_soft"],
-            fg="#0C4A6E",
-            padx=12,
-            pady=12,
-            font=("Malgun Gothic", 9),
+            selection_card, text="선택 검사", justify="left", anchor="w",
+            bg=COLORS["blue_soft"], fg="#0C4A6E", font=("Malgun Gothic", 9, "bold"),
         )
-        self.selection_label.pack(fill="x", pady=(16, 0))
+        self.selection_label.pack(fill="x")
+        self.selection_details = tk.Text(
+            selection_card, height=8, wrap="word", relief="flat", bd=0,
+            bg=COLORS["blue_soft"], fg="#0C4A6E", font=("Malgun Gothic", 9),
+            highlightthickness=0, padx=0, pady=7,
+        )
+        self.selection_details.pack(fill="both", expand=True)
+        self.selection_details.config(state="disabled")
+        self._set_selection_details("문구, 이미지 또는 빈 공간을\n드래그해 선택하면 이곳에서\n선택한 내용을 확인할 수 있어요.")
 
         content = tk.Frame(workspace, bg=COLORS["canvas"])
         content.pack(side="left", fill="both", expand=True)
@@ -170,6 +173,12 @@ class CyViewer(tk.Tk):
         self._set_save_state("저장 필요", "#FEF3C7", "#92400E")
         self.status.config(text=message + "  |  오른쪽이 아닌 왼쪽 아래 ‘PDF로 저장’으로 사본을 보관하세요.")
 
+    def _set_selection_details(self, text: str) -> None:
+        self.selection_details.config(state="normal")
+        self.selection_details.delete("1.0", "end")
+        self.selection_details.insert("1.0", text)
+        self.selection_details.config(state="disabled")
+
     def open_pdf(self) -> None:
         selected = filedialog.askopenfilename(
             title="PDF 파일 선택", filetypes=[("PDF 문서", "*.pdf")]
@@ -190,7 +199,8 @@ class CyViewer(tk.Tk):
             self.is_dirty = False
             self.file_label.config(text=f"{self.document_path.name} · 읽기 및 편집 가능")
             self._set_save_state("변경 없음")
-            self.selection_label.config(text="선택한 문구가 없습니다.\n\n문서의 글자를 드래그하면\n표시와 문구 수정 기능을 쓸 수 있어요.")
+            self.selection_label.config(text="선택 검사")
+            self._set_selection_details("문구, 이미지 또는 빈 공간을\n드래그해 선택하면 이곳에서\n선택한 내용을 확인할 수 있어요.")
             self.draw_page()
         except Exception as error:
             messagebox.showerror("CY뷰어", f"PDF를 열 수 없습니다.\n\n{error}")
@@ -301,11 +311,10 @@ class CyViewer(tk.Tk):
         rect = rect & self.document[self.page_number].rect
         self.selected_rect = rect if rect.width > 3 and rect.height > 3 else None
         if self.selected_rect:
-            words = self._selected_text()
-            preview = words[:45] + ("…" if len(words) > 45 else "")
-            self.selection_label.config(text=f"선택한 문구\n{preview}\n\n왼쪽에서 편집 기능을 선택하세요.")
+            self._inspect_selection()
         else:
-            self.selection_label.config(text="문구를 드래그해 선택하면\n형광펜·밑줄·취소선·굵게·문구 수정이 가능합니다.")
+            self.selection_label.config(text="선택 검사")
+            self._set_selection_details("유효한 영역이 선택되지 않았습니다.\n문구, 이미지 또는 빈 공간을\n조금 더 넓게 드래그해 보세요.")
         self.draw_page()
 
     def _selected_text(self) -> str:
@@ -314,6 +323,37 @@ class CyViewer(tk.Tk):
         words = self.document[self.page_number].get_text("words")
         selected = [word[4] for word in words if pymupdf.Rect(word[:4]).intersects(self.selected_rect)]
         return " ".join(selected)
+
+    def _inspect_selection(self) -> None:
+        if not self.document or not self.selected_rect:
+            return
+        page = self.document[self.page_number]
+        text = self._selected_text()
+        image_count = 0
+        for block in page.get_text("dict").get("blocks", []):
+            if block.get("type") != 1:
+                continue
+            block_rect = pymupdf.Rect(block["bbox"])
+            if block_rect.intersects(self.selected_rect):
+                image_count += 1
+
+        parts: list[str] = []
+        if text:
+            parts.append("텍스트")
+        if image_count:
+            parts.append(f"이미지 {image_count}개")
+        if not parts:
+            parts.append("빈 공간")
+        self.selection_label.config(text="선택 검사 · " + " · ".join(parts))
+
+        details = [f"선택 종류: {', '.join(parts)}"]
+        if text:
+            details.extend(["", "선택한 텍스트", text, "", "텍스트는 형광펜·밑줄·취소선·굵게·문구 수정을 사용할 수 있습니다."])
+        elif image_count:
+            details.extend(["", "선택 영역에 이미지가 있습니다.", "현재 버전에서는 이미지를 확인할 수 있으며, 이미지 편집 기능은 준비 중입니다."])
+        else:
+            details.extend(["", "선택 영역에 텍스트나 이미지가 없습니다.", "빈 공간에는 표시·문구 수정 기능을 적용할 수 없습니다."])
+        self._set_selection_details("\n".join(details))
 
     def _require_selection(self) -> pymupdf.Rect | None:
         if not self.document or not self.selected_rect:
