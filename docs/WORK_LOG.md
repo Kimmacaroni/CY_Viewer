@@ -71,3 +71,96 @@
 - 후속 작업·결정권자: 독립 QA 검토자가 append-only 규칙, 상태 분리, 경로·비밀 패턴 검사 결과를 검토한다.
 - 최종 커밋: 이 블록을 포함한 커밋 SHA는 커밋 후 인계 보고에 명시한다(자기 참조 SHA를 같은 커밋에 기록할 수 없음).
 - 배포 근거: 사용자에게 push·릴리스·배포 지시를 받지 않아 미수행.
+
+## 2026-09-11 11:58 UTC — 기능별 구조·검증 환경 정리
+
+- 기록 종류: 작업 시작
+- 구현 상태: 진행 중
+- 독립 QA 상태: QA 대기
+- 배포 상태: 배포 미수행
+- 담당 주체: Hermes Agent (CY뷰어 코드 정리 담당)
+- 요청자·검토자: 사용자 / 독립 QA 검토자 대기
+- 브랜치 / worktree:  /
+- 참조 기록: 없음
+- 기준 커밋:
+- 목표·범위: 네 구현체를 유지한 채 기능 소유권과 실행 경계를 문서화하고, 참조 근거가 있는 생성형 더미만 제거하며, 비실행 구조 검증 진입점을 추가한다. 는 대규모 분할 없이 구조만 감사한다.
+- 대상 파일: , , Flutter 샘플/테스트/README 후보, , ,
+- 시작 확인: 은 기준 SHA 이며 추적 변경은 없고, Python 문법 검사로 생긴 미추적 만 있었다. 다른 worktree와 원격은 수정하지 않는다.
+- 검증 계획: 참조 검색, Python AST·문법 검사, Windows XAML/XML 파싱, 구조 검증 스크립트 자체 테스트, 가능한 Flutter 분석·테스트, 와 추적 파일/민감정보 검토를 수행한다.
+- 수행 내용: 시작 전 감사 진행 중.
+- 빌드·테스트 결과: 대기.
+- 플랫폼 QA: 실행 경로를 변경하지 않으며 Windows/macOS 실제 플랫폼 QA는 미실행 예정.
+- 보안 확인: 고객 문서·비밀정보를 사용하지 않는다.
+- 미검증·알려진 문제: 플랫폼별 기준 구현체와 Windows 인쇄 기준 경로는 제품 책임자 결정 전이다.
+- 후속 작업·결정권자: 감사 결과에 따라 갱신.
+- 최종 커밋: 대기.
+- 배포 근거: 사용자에게 push·릴리스·배포 지시를 받지 않아 미수행.
+
+
+## 2026-09-11 11:58 UTC — 시작 기록 셸 치환 오류 정정
+
+- 기록 종류: 정정 / 작업 시작
+- 구현 상태: 진행 중
+- 독립 QA 상태: QA 대기
+- 배포 상태: 배포 미수행
+- 담당 주체: Hermes Agent (CY뷰어 코드 정리 담당)
+- 요청자·검토자: 사용자 / 독립 QA 검토자 대기
+- 브랜치 / worktree: `refactor/feature-organization` / `$WORKTREE`
+- 참조 기록: `2026-09-11 11:58 UTC — 기능별 구조·검증 환경 정리` (커밋 전)
+- 기준 커밋: `145b9945293feff0733b719428720a81e13995f8`
+- 정정 사유: 시작 블록 추가 명령에서 Markdown 백틱이 셸 명령 치환되어 일부 필드가 누락되었다. append-only 원칙에 따라 원본 블록은 유지하고 이 블록으로 누락값을 정정한다.
+- 목표·범위: 네 구현체를 유지한 채 기능 소유권과 실행 경계를 문서화하고, 참조 근거가 있는 생성형 더미만 제거하며, 비실행 구조 검증 진입점을 추가한다. `native_windows/cy_viewer.py`는 대규모 분할 없이 구조만 감사한다.
+- 대상 파일: `docs/FEATURE_MAP.md`, `scripts/verify_structure.py`, Flutter 샘플/테스트/README 후보, `.gitignore`, `docs/HERMES_AGENT_HANDOFF_KO.md`, `docs/WORK_LOG.md`
+- 시작 확인: `refactor/feature-organization`은 기준 SHA `145b994`이며 추적 변경은 없고, Python 문법 검사로 생긴 미추적 `native_windows/__pycache__/`만 있었다. 다른 worktree와 원격은 수정하지 않는다.
+- 검증 계획: 참조 검색, Python AST·문법 검사, Windows XAML/XML 파싱, 구조 검증 스크립트 자체 테스트, 가능한 Flutter 분석·테스트, `git diff --check`와 추적 파일/민감정보 검토를 수행한다.
+- 수행 내용: 시작 전 감사 진행 중.
+- 빌드·테스트 결과: 대기.
+- 플랫폼 QA: 실행 경로를 변경하지 않으며 Windows/macOS 실제 플랫폼 QA는 미실행 예정.
+- 보안 확인: 고객 문서·비밀정보를 사용하지 않는다.
+- 미검증·알려진 문제: 플랫폼별 기준 구현체와 Windows 인쇄 기준 경로는 제품 책임자 결정 전이다.
+- 후속 작업·결정권자: 감사 결과에 따라 갱신.
+- 최종 커밋: 대기.
+- 배포 근거: 사용자에게 push·릴리스·배포 지시를 받지 않아 미수행.
+
+
+## 2026-09-11 12:03 UTC — 개인 경로·문서 검토 브랜치 보안 정정
+
+- 기록 종류: 정정
+- 구현 상태: 진행 중
+- 독립 QA 상태: QA 대기
+- 배포 상태: 배포 미수행
+- 담당 주체: Hermes Agent (CY뷰어 코드 정리 담당)
+- 요청자·검토자: 사용자 추가 QA 요구 / 독립 QA 검토자 대기
+- 브랜치 / worktree: `refactor/feature-organization` / `$WORKTREE`
+- 참조 기록: `2026-09-11 11:58 UTC — 시작 기록 셸 치환 오류 정정` (커밋 전)
+- 기준 커밋: `145b9945293feff0733b719428720a81e13995f8`
+- 정정 사유: `personal_pdf_viewer/README.md`의 개인 사용자명을 포함한 절대경로 예시와 문서 브랜치의 적용 경계가 보안·운영 검토에서 추가 지적되었다. 기존 기록은 재정렬하거나 수정하지 않고 이 블록을 추가한다.
+- 수행 내용: 개인 경로 예시를 중립적인 `C:\work\CYViewer`로 교체했다. `docs/ai-handoff` 계열은 `main` 직접 push 대상이 아닌 검토 후 병합 브랜치이며, 파생 작업도 독립 QA와 관리자 검토 전에는 `main`에 직접 push하지 않는다고 인수인계에 명시했다.
+- 빌드·테스트 결과: 공통 구조 검사와 단위 테스트 통과. 전체 검증은 구현 완료 블록에 기록한다.
+- 플랫폼 QA: 문서 정정 자체는 대상 아님. 앱 코드 변경 검증은 진행 중.
+- 보안 확인: 실제 개인 사용자명 예시를 제거했고 로컬 절대 worktree 경로는 기록하지 않았다.
+- 미검증·알려진 문제: 독립 QA는 아직 수행되지 않았다.
+- 후속 작업·결정권자: 독립 QA 검토자와 저장소 관리자가 검토 후 병합 여부를 결정한다.
+- 최종 커밋: 대기.
+- 배포 근거: push·릴리스·배포 미수행.
+
+
+## 2026-09-11 12:05 UTC — 기능별 구조·검증 환경 정리 구현 결과
+
+- 기록 종류: 구현 결과
+- 구현 상태: 완료
+- 독립 QA 상태: QA 대기
+- 배포 상태: 배포 미수행
+- 담당 주체: Hermes Agent (CY뷰어 코드 정리 담당)
+- 요청자·검토자: 사용자 / 독립 QA 검토자 대기
+- 브랜치 / worktree: `refactor/feature-organization` / `$WORKTREE`
+- 참조 기록: `2026-09-11 11:58 UTC — 시작 기록 셸 치환 오류 정정`, `2026-09-11 12:03 UTC — 개인 경로·문서 검토 브랜치 보안 정정` (커밋 전)
+- 기준 커밋: `145b9945293feff0733b719428720a81e13995f8`
+- 수행 내용: 네 구현체의 기능·진입점·버전 출처·검증 경계를 `docs/FEATURE_MAP.md`에 정리하고 구조 검사와 단위 테스트 진입점을 추가했다. 두 Flutter 앱에서 실제 탐색이 `AdvancedPdfReaderPage`만 사용함을 확인한 뒤 참조 0건인 생성형 단순 `PdfReaderPage` 정의와 그 정의에서만 쓰던 import를 각각 제거했다. README/사용자 가이드의 설치 버전 중복과 개인 사용자 경로를 중립화하고 Python 생성물을 ignore했다. `native_windows/cy_viewer.py`는 1,210줄 기능 경계를 감사했으나 실행 코드와 네 구현체는 분할·병합·삭제하지 않았다.
+- 빌드·테스트 결과: `python3 -B scripts/verify_structure.py` 통과(구현체 4개, Python AST, Windows XML/XAML, Flutter 진입점); JSON 모드 `ok: true`, 오류 0건; `python3 -B -m unittest discover -s tests -p 'test_*.py'` 2건 통과; `PYTHONDONTWRITEBYTECODE=1 python3 -m py_compile native_windows/cy_viewer.py scripts/verify_structure.py tests/test_verify_structure.py` 통과; Windows XAML/manifest 5개 XML 파싱 통과; 제거 전 HEAD의 `PdfReaderPage` 정의는 구현체별 1건, 작업 트리는 0건; `git diff --check` 통과.
+- 플랫폼 QA: Linux 정적 환경에서만 검증했다. Flutter/Dart, .NET, PyInstaller, Inno Setup, Xcode 도구가 없어 Flutter analyze/test/build, Windows 패키징·인쇄, macOS 빌드·실행은 미실행이다. 실행 경로를 변경하지 않는 미사용 코드·문서·검증 도구 변경이지만 독립 플랫폼 QA는 필요하다.
+- 보안 확인: 개인 사용자 경로를 제거하고 비밀정보·고객 PDF·실제 문서·빌드 산출물을 추가하지 않았다. 생성된 `__pycache__`는 삭제했고 ignore 규칙을 추가했다.
+- 미검증·알려진 문제: Windows 인쇄 기준 경로, `personal_pdf_viewer` 승격 여부, 배포 저장소 정책은 제품 책임자 결정 전이다. Flutter 분석/테스트는 도구가 있는 대상 플랫폼에서 재실행해야 한다.
+- 후속 작업·결정권자: 독립 QA 검토자는 각 Flutter 구현체에서 `flutter analyze && flutter test`를 실행하고, 저장소 관리자는 검토 브랜치의 병합 여부를 결정한다. 제품 책임자는 기준 구현체와 Windows 인쇄 소유권을 확정한다.
+- 최종 커밋: 이 블록을 포함한 커밋 SHA는 커밋 후 인계 보고에 명시한다(자기 참조 SHA를 같은 커밋에 기록할 수 없음).
+- 배포 근거: 사용자에게 push·릴리스·배포 지시를 받지 않아 미수행. `main` 직접 push도 수행하지 않는다.

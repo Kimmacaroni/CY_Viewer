@@ -19,9 +19,13 @@
 | `.github/workflows/build-macos.yml` | GitHub Actions | `macos_app` 분석·테스트·release 빌드 및 `CYViewer-macOS-v1.1.1.dmg` 아티팩트 생성 |
 | `docs/` | 운영/사용 문서 | 사용자 설명, 기존 대화 기록, 본 인수인계와 작업 로그 |
 
+기능별 수정 위치, 구현체별 버전 출처와 검증 명령은 [`FEATURE_MAP.md`](FEATURE_MAP.md)를 먼저 확인한다. `python scripts/verify_structure.py`는 네 구현체 보존, Python AST, Windows XAML/XML과 Flutter 진입점 경계를 실행 없이 확인한다.
+
 ## 2. 현재 main 상태와 주요 기능
 
 기준 `main`은 `9b1e74a`이며 마지막 변경은 macOS v1.1.1 패키지 워크플로 갱신이다. 저장소에는 Git 태그가 없다. 코드에 선언된 버전은 구현체별로 다르므로 단일한 저장소 버전으로 간주하면 안 된다.
+
+`4ba609a`, `145b994`를 포함한 `docs/ai-handoff` 계열은 `main` 직접 push용 브랜치가 아니라 검토 후 병합할 문서 검토 브랜치다. 이 계열에서 파생된 작업도 독립 QA와 저장소 관리자 검토 없이 `main`에 직접 push하지 않는다.
 
 ### Windows 네이티브 구현
 
@@ -51,6 +55,15 @@
 ## 3. 빌드·테스트 경로
 
 모든 명령은 해당 플랫폼의 전용 worktree에서 실행하고 결과를 `docs/WORK_LOG.md`에 기록한다. 고객 문서 대신 비민감 합성 PDF를 사용한다.
+
+저장소 공통 정적 구조 검증은 루트에서 다음과 같이 실행한다.
+
+```bash
+python scripts/verify_structure.py
+python -m unittest discover -s tests -p 'test_*.py'
+```
+
+이 검사는 실제 플랫폼 빌드·앱 실행·수동 QA를 대체하지 않는다.
 
 ### `native_windows`와 Windows 설치 프로그램
 
@@ -134,6 +147,7 @@ flutter build ios --release       # iOS 서명 설정 필요
 5. Windows 다운로드 저장소 정책이 문서 사이에서 충돌한다.
 6. Windows 인쇄에는 Python 내부의 레거시 흐름과 별도 WinUI 모듈이 함께 있어 지원 경로가 불명확하다.
 7. 자동 테스트가 Flutter 기본/위젯 테스트 중심이며 실제 PDF 편집, OCR, 인쇄, 샌드박스 권한을 충분히 검증하지 못한다.
+8. `native_windows/cy_viewer.py`는 1,210줄 단일 파일이다. 기능 경계는 `FEATURE_MAP.md`에 감사했지만 회귀 테스트 없이 대규모 분할하면 Tk 상태·이벤트·좌표 변환을 손상할 위험이 있어 분할하지 않았다.
 
 ### 기준 구현체 결정 필요
 

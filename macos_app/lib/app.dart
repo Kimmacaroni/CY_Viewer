@@ -7,7 +7,6 @@ import 'package:file_picker/file_picker.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_localizations/flutter_localizations.dart';
-import 'package:pdfrx/pdfrx.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 import 'advanced_reader.dart';
@@ -427,78 +426,6 @@ class _LibraryPageState extends State<LibraryPage> {
       ),
     );
   }
-}
-
-class PdfReaderPage extends StatefulWidget {
-  const PdfReaderPage({super.key, required this.item});
-  final SavedPdf item;
-  @override
-  State<PdfReaderPage> createState() => _PdfReaderPageState();
-}
-
-class _PdfReaderPageState extends State<PdfReaderPage> {
-  final _controller = PdfViewerController();
-  int _pages = 0;
-  Future<void> _pageDialog() async {
-    final input = TextEditingController();
-    final page = await showDialog<int>(
-      context: context,
-      builder: (context) => AlertDialog(
-        title: const Text('페이지로 이동'),
-        content: TextField(
-          controller: input,
-          autofocus: true,
-          keyboardType: TextInputType.number,
-          decoration: InputDecoration(hintText: '1~$_pages'),
-        ),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.pop(context),
-            child: const Text('취소'),
-          ),
-          FilledButton(
-            onPressed: () => Navigator.pop(context, int.tryParse(input.text)),
-            child: const Text('이동'),
-          ),
-        ],
-      ),
-    );
-    if (page != null && page >= 1 && page <= _pages) {
-      await _controller.goToPage(pageNumber: page);
-    }
-  }
-
-  @override
-  Widget build(BuildContext context) => Scaffold(
-    appBar: AppBar(
-      title: Text(widget.item.name, overflow: TextOverflow.ellipsis),
-      actions: [
-        IconButton(
-          tooltip: '축소',
-          onPressed: _controller.zoomDown,
-          icon: const Icon(Icons.zoom_out),
-        ),
-        IconButton(
-          tooltip: '확대',
-          onPressed: _controller.zoomUp,
-          icon: const Icon(Icons.zoom_in),
-        ),
-        IconButton(
-          tooltip: '페이지 이동',
-          onPressed: _pages == 0 ? null : _pageDialog,
-          icon: const Icon(Icons.find_in_page_outlined),
-        ),
-      ],
-    ),
-    body: PdfViewer.file(
-      widget.item.path,
-      controller: _controller,
-      params: PdfViewerParams(
-        onViewerReady: (document, _) =>
-            setState(() => _pages = document.pages.length),
-      ),
-    ),
-  );
 }
 
 String _date(DateTime date) =>
