@@ -164,3 +164,20 @@
 - 후속 작업·결정권자: 독립 QA 검토자는 각 Flutter 구현체에서 `flutter analyze && flutter test`를 실행하고, 저장소 관리자는 검토 브랜치의 병합 여부를 결정한다. 제품 책임자는 기준 구현체와 Windows 인쇄 소유권을 확정한다.
 - 최종 커밋: 이 블록을 포함한 커밋 SHA는 커밋 후 인계 보고에 명시한다(자기 참조 SHA를 같은 커밋에 기록할 수 없음).
 - 배포 근거: 사용자에게 push·릴리스·배포 지시를 받지 않아 미수행. `main` 직접 push도 수행하지 않는다.
+
+## 2026-09-11 12:22 UTC — 독립 QA·GitHub PR·서비스별 보고서 기록
+
+- 기록 종류: 독립 QA / push
+- 구현 상태: 완료
+- 독립 QA 상태: QA 통과(P1·확인된 기능 회귀 없음)
+- 배포 상태: 배포 미수행
+- 담당 주체: 형상관리 담당
+- 요청자·검토자: 사용자 / 독립 QA·보안 검토부
+- 브랜치 / worktree: `refactor/feature-organization` / `$WORKTREE`
+- 참조 기록: `2026-09-11 12:05 UTC — 기능별 구조·검증 환경 정리 구현 결과`
+- 수행 내용: 서비스별 보고서 `docs/REFACTOR_REPORT_2026-09-11_KO.md` 추가 및 검토 브랜치 GitHub 반영
+- Pull Request: <https://github.com/Kimmacaroni/CY_Viewer/pull/2>
+- 빌드·테스트 결과: 구조·단위·Python/XML/XAML 검사 통과, macOS GitHub Actions build 성공(5분 13초)
+- push: 검토 브랜치 반영 완료
+- 배포: 수행하지 않음
+- 후속 작업: 다른 플랫폼 검증 및 관리자 검토 후 병합 여부 결정
