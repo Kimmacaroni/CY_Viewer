@@ -63,6 +63,8 @@ class _AdvancedPdfReaderPageState extends State<AdvancedPdfReaderPage> {
   bool _busy = false;
   String _busyMessage = '';
   _ViewMode _viewMode = _ViewMode.scroll;
+  Uint8List? _pdfData;
+  Object? _pdfLoadError;
 
   String get _bookmarkKey =>
       'pdf_bookmarks_${base64Url.encode(utf8.encode(widget.path))}';
@@ -72,6 +74,78 @@ class _AdvancedPdfReaderPageState extends State<AdvancedPdfReaderPage> {
     super.initState();
     _currentPage = widget.initialPage;
     _loadBookmarks();
+    _loadPdfData();
+  }
+
+  Future<void> _loadPdfData() async {
+    if (mounted) {
+      setState(() {
+        _pdfData = null;
+        _pdfLoadError = null;
+      });
+    }
+    try {
+      final data = await File(widget.path).readAsBytes();
+      if (data.isEmpty) throw const FormatException('빈 PDF 파일입니다.');
+      if (!mounted) return;
+      setState(() => _pdfData = data);
+    } on Object catch (error) {
+      if (!mounted) return;
+      setState(() => _pdfLoadError = error);
+    }
+  }
+
+  Widget _buildPdfLoadingState() {
+    final error = _pdfLoadError;
+    if (error == null) {
+      return const Center(child: CircularProgressIndicator());
+    }
+    return Center(
+      child: Card(
+        margin: const EdgeInsets.all(32),
+        child: Padding(
+          padding: const EdgeInsets.all(24),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Icon(
+                Icons.error_outline,
+                size: 48,
+                color: Theme.of(context).colorScheme.error,
+              ),
+              const SizedBox(height: 16),
+              Text(
+                'PDF를 읽을 수 없습니다',
+                style: Theme.of(context).textTheme.titleLarge,
+              ),
+              const SizedBox(height: 8),
+              const Text(
+                '파일 접근 권한이 만료되었을 수 있습니다. 다시 시도하거나 문서함에서 PDF를 다시 선택해 주세요.',
+                textAlign: TextAlign.center,
+              ),
+              const SizedBox(height: 20),
+              Wrap(
+                spacing: 12,
+                runSpacing: 8,
+                alignment: WrapAlignment.center,
+                children: [
+                  OutlinedButton.icon(
+                    onPressed: _loadPdfData,
+                    icon: const Icon(Icons.refresh),
+                    label: const Text('다시 시도'),
+                  ),
+                  FilledButton.icon(
+                    onPressed: () => Navigator.of(context).pop(_currentPage),
+                    icon: const Icon(Icons.arrow_back),
+                    label: const Text('문서함으로 돌아가기'),
+                  ),
+                ],
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
   }
 
   Future<void> _loadBookmarks() async {
@@ -639,155 +713,159 @@ class _AdvancedPdfReaderPageState extends State<AdvancedPdfReaderPage> {
       ),
       body: Stack(
         children: [
-          PdfViewer.file(
-            widget.path,
-            key: ValueKey(_viewMode),
-            controller: _controller,
-            params: PdfViewerParams(
-              errorBannerBuilder: (context, error, _, _) {
-                debugPrint('PDF 열기 실패: $error');
-                return Center(
-                  child: Card(
-                    margin: const EdgeInsets.all(32),
-                    child: Padding(
-                      padding: const EdgeInsets.all(24),
-                      child: Column(
-                        mainAxisSize: MainAxisSize.min,
-                        children: [
-                          Icon(
-                            Icons.error_outline,
-                            size: 48,
-                            color: Theme.of(context).colorScheme.error,
-                          ),
-                          const SizedBox(height: 16),
-                          Text(
-                            'PDF를 열 수 없습니다',
-                            style: Theme.of(context).textTheme.titleLarge,
-                          ),
-                          const SizedBox(height: 8),
-                          const Text(
-                            '파일이 이동되었거나 접근 권한이 변경되었을 수 있습니다. '
-                            '문서함으로 돌아가 PDF를 다시 선택해 주세요.',
-                            textAlign: TextAlign.center,
-                          ),
-                          const SizedBox(height: 20),
-                          FilledButton.icon(
-                            onPressed: () =>
-                                Navigator.of(context).pop(_currentPage),
-                            icon: const Icon(Icons.arrow_back),
-                            label: const Text('문서함으로 돌아가기'),
-                          ),
-                        ],
+          if (_pdfData == null)
+            _buildPdfLoadingState()
+          else
+            PdfViewer.data(
+              _pdfData!,
+              sourceName: '${widget.path}:${_pdfData!.length}',
+              key: ValueKey(_viewMode),
+              controller: _controller,
+              params: PdfViewerParams(
+                errorBannerBuilder: (context, error, _, _) {
+                  debugPrint('PDF 열기 실패: $error');
+                  return Center(
+                    child: Card(
+                      margin: const EdgeInsets.all(32),
+                      child: Padding(
+                        padding: const EdgeInsets.all(24),
+                        child: Column(
+                          mainAxisSize: MainAxisSize.min,
+                          children: [
+                            Icon(
+                              Icons.error_outline,
+                              size: 48,
+                              color: Theme.of(context).colorScheme.error,
+                            ),
+                            const SizedBox(height: 16),
+                            Text(
+                              'PDF를 열 수 없습니다',
+                              style: Theme.of(context).textTheme.titleLarge,
+                            ),
+                            const SizedBox(height: 8),
+                            const Text(
+                              '파일이 이동되었거나 접근 권한이 변경되었을 수 있습니다. '
+                              '문서함으로 돌아가 PDF를 다시 선택해 주세요.',
+                              textAlign: TextAlign.center,
+                            ),
+                            const SizedBox(height: 20),
+                            FilledButton.icon(
+                              onPressed: () =>
+                                  Navigator.of(context).pop(_currentPage),
+                              icon: const Icon(Icons.arrow_back),
+                              label: const Text('문서함으로 돌아가기'),
+                            ),
+                          ],
+                        ),
                       ),
                     ),
-                  ),
-                );
-              },
-              // pdfrx의 데스크톱 컨텍스트 메뉴는 일부 환경에서 선택 좌표가
-              // 비어 있을 때 예외를 냈다. 동작이 확실한 화면 하단 도구막대를 사용한다.
-              buildContextMenu: (_, _) => null,
-              textSelectionParams: PdfTextSelectionParams(
-                showContextMenuAutomatically: false,
-                onTextSelectionChange: (selection) {
-                  if (mounted &&
-                      _hasSelectedText != selection.hasSelectedText) {
-                    setState(
-                      () => _hasSelectedText = selection.hasSelectedText,
-                    );
+                  );
+                },
+                // pdfrx의 데스크톱 컨텍스트 메뉴는 일부 환경에서 선택 좌표가
+                // 비어 있을 때 예외를 냈다. 동작이 확실한 화면 하단 도구막대를 사용한다.
+                buildContextMenu: (_, _) => null,
+                textSelectionParams: PdfTextSelectionParams(
+                  showContextMenuAutomatically: false,
+                  onTextSelectionChange: (selection) {
+                    if (mounted &&
+                        _hasSelectedText != selection.hasSelectedText) {
+                      setState(
+                        () => _hasSelectedText = selection.hasSelectedText,
+                      );
+                    }
+                  },
+                ),
+                onViewerReady: (document, _) async {
+                  if (!mounted) return;
+                  final pageCount = document.pages.length;
+                  _searcher?.dispose();
+                  final searcher = PdfTextSearcher(_controller);
+                  setState(() {
+                    _searcher = searcher;
+                    _searching = false;
+                    _pageCount = pageCount;
+                    _bookmarks.removeWhere((page) => page > pageCount);
+                  });
+                  if (pageCount == 0) {
+                    _showMessage('페이지가 없는 PDF 문서입니다.');
+                    return;
+                  }
+                  final initial = widget.initialPage.clamp(1, pageCount);
+                  if (initial > 1) {
+                    await _controller.goToPage(pageNumber: initial);
                   }
                 },
-              ),
-              onViewerReady: (document, _) async {
-                if (!mounted) return;
-                final pageCount = document.pages.length;
-                _searcher?.dispose();
-                final searcher = PdfTextSearcher(_controller);
-                setState(() {
-                  _searcher = searcher;
-                  _searching = false;
-                  _pageCount = pageCount;
-                  _bookmarks.removeWhere((page) => page > pageCount);
-                });
-                if (pageCount == 0) {
-                  _showMessage('페이지가 없는 PDF 문서입니다.');
-                  return;
-                }
-                final initial = widget.initialPage.clamp(1, pageCount);
-                if (initial > 1) {
-                  await _controller.goToPage(pageNumber: initial);
-                }
-              },
-              onPageChanged: (page) {
-                if (mounted && page != null) {
-                  setState(() => _currentPage = page);
-                }
-              },
-              pagePaintCallbacks: [
-                _paintMarks,
-                if (_searcher != null) _searcher!.pageTextMatchPaintCallback,
-              ],
-              layoutPages: _viewMode == _ViewMode.scroll
-                  ? null
-                  : (pages, params) {
-                      if (_viewMode == _ViewMode.horizontal) {
-                        final height = pages.fold<double>(
+                onPageChanged: (page) {
+                  if (mounted && page != null) {
+                    setState(() => _currentPage = page);
+                  }
+                },
+                pagePaintCallbacks: [
+                  _paintMarks,
+                  if (_searcher != null) _searcher!.pageTextMatchPaintCallback,
+                ],
+                layoutPages: _viewMode == _ViewMode.scroll
+                    ? null
+                    : (pages, params) {
+                        if (_viewMode == _ViewMode.horizontal) {
+                          final height = pages.fold<double>(
+                            0,
+                            (value, page) => math.max(value, page.height),
+                          );
+                          final layouts = <Rect>[];
+                          var x = params.margin;
+                          for (final page in pages) {
+                            layouts.add(
+                              Rect.fromLTWH(
+                                x,
+                                params.margin + (height - page.height) / 2,
+                                page.width,
+                                page.height,
+                              ),
+                            );
+                            x += page.width + params.margin;
+                          }
+                          return PdfPageLayout(
+                            pageLayouts: layouts,
+                            documentSize: Size(x, height + params.margin * 2),
+                          );
+                        }
+                        final width = pages.fold<double>(
                           0,
-                          (value, page) => math.max(value, page.height),
+                          (value, page) => math.max(value, page.width),
                         );
                         final layouts = <Rect>[];
-                        var x = params.margin;
-                        for (final page in pages) {
+                        var y = params.margin;
+                        for (var index = 0; index < pages.length; index++) {
+                          final page = pages[index];
+                          final position = index + 1;
+                          final isLeft = position.isEven;
+                          final otherIndex = isLeft ? index - 1 : index + 1;
+                          final rowHeight =
+                              otherIndex >= 0 && otherIndex < pages.length
+                              ? math.max(page.height, pages[otherIndex].height)
+                              : page.height;
                           layouts.add(
                             Rect.fromLTWH(
-                              x,
-                              params.margin + (height - page.height) / 2,
+                              isLeft
+                                  ? params.margin * 2 + width
+                                  : params.margin + width - page.width,
+                              y + (rowHeight - page.height) / 2,
                               page.width,
                               page.height,
                             ),
                           );
-                          x += page.width + params.margin;
+                          if (isLeft || index == pages.length - 1) {
+                            y += rowHeight + params.margin;
+                          }
                         }
                         return PdfPageLayout(
                           pageLayouts: layouts,
-                          documentSize: Size(x, height + params.margin * 2),
+                          documentSize: Size(width * 2 + params.margin * 3, y),
                         );
-                      }
-                      final width = pages.fold<double>(
-                        0,
-                        (value, page) => math.max(value, page.width),
-                      );
-                      final layouts = <Rect>[];
-                      var y = params.margin;
-                      for (var index = 0; index < pages.length; index++) {
-                        final page = pages[index];
-                        final position = index + 1;
-                        final isLeft = position.isEven;
-                        final otherIndex = isLeft ? index - 1 : index + 1;
-                        final rowHeight =
-                            otherIndex >= 0 && otherIndex < pages.length
-                            ? math.max(page.height, pages[otherIndex].height)
-                            : page.height;
-                        layouts.add(
-                          Rect.fromLTWH(
-                            isLeft
-                                ? params.margin * 2 + width
-                                : params.margin + width - page.width,
-                            y + (rowHeight - page.height) / 2,
-                            page.width,
-                            page.height,
-                          ),
-                        );
-                        if (isLeft || index == pages.length - 1) {
-                          y += rowHeight + params.margin;
-                        }
-                      }
-                      return PdfPageLayout(
-                        pageLayouts: layouts,
-                        documentSize: Size(width * 2 + params.margin * 3, y),
-                      );
-                    },
+                      },
+              ),
             ),
-          ),
           if (_pageCount > 0)
             Positioned(
               right: 16,

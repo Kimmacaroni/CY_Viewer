@@ -20,6 +20,7 @@ class PersonalPdfApp extends StatelessWidget {
   Widget build(BuildContext context) => MaterialApp(
     title: 'CY뷰어',
     debugShowCheckedModeBanner: false,
+    locale: const Locale('ko'),
     localizationsDelegates: GlobalMaterialLocalizations.delegates,
     supportedLocales: const [Locale('ko'), Locale('en')],
     theme: ThemeData(

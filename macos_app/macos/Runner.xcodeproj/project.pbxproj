@@ -261,10 +261,10 @@
 			};
 			buildConfigurationList = 33CC10E82044A3C60003C045 /* Build configuration list for PBXProject "Runner" */;
 			compatibilityVersion = "Xcode 9.3";
-			developmentRegion = en;
+			developmentRegion = ko;
 			hasScannedForEncodings = 0;
 			knownRegions = (
-				en,
+				ko,
 				Base,
 			);
 			mainGroup = 33CC10E42044A3C60003C045;
