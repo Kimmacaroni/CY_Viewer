@@ -5,6 +5,7 @@ import Vision
 
 class MainFlutterWindow: NSWindow {
   private var securityScopedURLs: [URL] = []
+  private var fileAccessChannel: FlutterMethodChannel?
 
   override func awakeFromNib() {
     let flutterViewController = FlutterViewController()
@@ -38,6 +39,7 @@ class MainFlutterWindow: NSWindow {
     let fileAccessChannel = FlutterMethodChannel(
       name: "com.kimmacaroni.cyviewer/file_access",
       binaryMessenger: flutterViewController.engine.binaryMessenger)
+    self.fileAccessChannel = fileAccessChannel
     fileAccessChannel.setMethodCallHandler { [weak self] call, result in
       guard let self else {
         result(FlutterError(
@@ -48,6 +50,7 @@ class MainFlutterWindow: NSWindow {
       }
       self.handleFileAccess(call: call, result: result)
     }
+    IncomingFileCoordinator.shared.attach(channel: fileAccessChannel)
 
     super.awakeFromNib()
   }
@@ -59,17 +62,14 @@ class MainFlutterWindow: NSWindow {
   }
 
   private func handleFileAccess(call: FlutterMethodCall, result: @escaping FlutterResult) {
-    guard let arguments = call.arguments as? [String: Any] else {
-      result(FlutterError(
-        code: "invalid_arguments",
-        message: "파일 접근 정보가 없습니다.",
-        details: nil))
-      return
-    }
-
     do {
       switch call.method {
+      case "takePendingFiles":
+        result(IncomingFileCoordinator.shared.takePendingPaths())
       case "createBookmark":
+        guard let arguments = call.arguments as? [String: Any] else {
+          throw FileAccessError.invalidArguments
+        }
         guard let path = arguments["path"] as? String else {
           throw FileAccessError.invalidPath
         }
@@ -79,6 +79,9 @@ class MainFlutterWindow: NSWindow {
           relativeTo: nil)
         result(FlutterStandardTypedData(bytes: data))
       case "resolveBookmark":
+        guard let arguments = call.arguments as? [String: Any] else {
+          throw FileAccessError.invalidArguments
+        }
         guard let typedData = arguments["bookmark"] as? FlutterStandardTypedData else {
           throw FileAccessError.invalidBookmark
         }
@@ -190,11 +193,14 @@ class MainFlutterWindow: NSWindow {
 }
 
 private enum FileAccessError: LocalizedError {
+  case invalidArguments
   case invalidPath
   case invalidBookmark
 
   var errorDescription: String? {
     switch self {
+    case .invalidArguments:
+      return "파일 접근 정보가 없습니다."
     case .invalidPath:
       return "파일 경로가 올바르지 않습니다."
     case .invalidBookmark:

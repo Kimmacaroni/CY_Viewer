@@ -1,3 +1,4 @@
+import 'dart:async';
 import 'dart:convert';
 import 'dart:io';
 import 'dart:math' as math;
@@ -57,15 +58,14 @@ class SavedPdf {
     bool? favorite,
     int? lastPage,
     String? bookmark,
-  }) =>
-      SavedPdf(
-        path: path,
-        name: name,
-        openedAt: openedAt ?? this.openedAt,
-        favorite: favorite ?? this.favorite,
-        lastPage: lastPage ?? this.lastPage,
-        bookmark: bookmark ?? this.bookmark,
-      );
+  }) => SavedPdf(
+    path: path,
+    name: name,
+    openedAt: openedAt ?? this.openedAt,
+    favorite: favorite ?? this.favorite,
+    lastPage: lastPage ?? this.lastPage,
+    bookmark: bookmark ?? this.bookmark,
+  );
   Map<String, dynamic> toJson() => {
     'path': path,
     'name': name,
@@ -99,11 +99,69 @@ class _LibraryPageState extends State<LibraryPage> {
   bool _loading = true;
   bool _favoritesOnly = false;
   bool _dragging = false;
+  late final Future<void> _initialLoad;
+  late final Future<void> _firstFrame;
 
   @override
   void initState() {
     super.initState();
-    _load();
+    _fileAccessChannel.setMethodCallHandler(_handleFileAccessCall);
+    _firstFrame = WidgetsBinding.instance.endOfFrame;
+    _initialLoad = _load();
+    _receivePendingFiles();
+  }
+
+  @override
+  void dispose() {
+    _fileAccessChannel.setMethodCallHandler(null);
+    super.dispose();
+  }
+
+  Future<dynamic> _handleFileAccessCall(MethodCall call) async {
+    if (call.method != 'openFiles') return null;
+    final paths = (call.arguments as List?)?.whereType<String>().toList() ?? [];
+    await _waitUntilReady();
+    await _openIncomingFiles(paths);
+    return true;
+  }
+
+  Future<void> _waitUntilReady() async {
+    await _initialLoad;
+    await _firstFrame;
+  }
+
+  Future<void> _receivePendingFiles() async {
+    try {
+      final paths =
+          await _fileAccessChannel.invokeListMethod<String>(
+            'takePendingFiles',
+          ) ??
+          const [];
+      await _waitUntilReady();
+      await _openIncomingFiles(paths);
+    } on MissingPluginException {
+      // macOS 외 플랫폼이나 테스트 환경에서는 Finder 파일 열기 연동이 없다.
+    } on Object catch (error) {
+      _showMessage('Finder에서 전달한 PDF를 열 수 없습니다: $error');
+    }
+  }
+
+  Future<void> _openIncomingFiles(List<String> paths) async {
+    final pdfPaths = paths
+        .where((path) => path.toLowerCase().endsWith('.pdf'))
+        .toList();
+    if (pdfPaths.isEmpty || !mounted) return;
+
+    // 여러 PDF가 동시에 전달되면 모두 문서함에 추가하고 첫 파일을 연다.
+    for (final path in pdfPaths.skip(1).toList().reversed) {
+      await _addAndOpen(
+        path,
+        path.split(Platform.pathSeparator).last,
+        open: false,
+      );
+    }
+    final firstPath = pdfPaths.first;
+    await _addAndOpen(firstPath, firstPath.split(Platform.pathSeparator).last);
   }
 
   Future<void> _load() async {
@@ -201,7 +259,7 @@ class _LibraryPageState extends State<LibraryPage> {
         .showSnackBar(SnackBar(content: Text(message)));
   }
 
-  Future<void> _addAndOpen(String path, String name) async {
+  Future<void> _addAndOpen(String path, String name, {bool open = true}) async {
     if (!path.toLowerCase().endsWith('.pdf')) {
       if (mounted) {
         ScaffoldMessenger.of(context)
@@ -238,7 +296,9 @@ class _LibraryPageState extends State<LibraryPage> {
     }
     if (!mounted) return;
     setState(() {});
-    await _open(item);
+    // Finder 열기 요청에 대한 native 응답을 리더 화면이 닫힐 때까지
+    // 붙잡지 않도록 화면 전환은 별도 작업으로 시작한다.
+    if (open) unawaited(_open(item));
   }
 
   Future<void> _open(SavedPdf item) async {
