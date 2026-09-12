@@ -47,11 +47,11 @@ jobs:
           mkdir -p build/dmg
           cp -R "build/macos/Build/Products/Release/CYViewer.app" build/dmg/
           ln -s /Applications build/dmg/Applications
-          hdiutil create -volname "CY뷰어" -srcfolder build/dmg -ov -format UDZO "build/CYViewer-macOS-v1.1.2.dmg"
+          hdiutil create -volname "CY뷰어" -srcfolder build/dmg -ov -format UDZO "build/CYViewer-macOS-v1.1.3.dmg"
 
       - name: Upload macOS package
         uses: actions/upload-artifact@v4
         with:
-          name: CYViewer-macOS-v1.1.2
-          path: macos_app/build/CYViewer-macOS-v1.1.2.dmg
+          name: CYViewer-macOS-v1.1.3
+          path: macos_app/build/CYViewer-macOS-v1.1.3.dmg
           if-no-files-found: error
