@@ -27,7 +27,7 @@ flutter pub get
 flutter run -d windows
 ```
 
-Windows 빌드 도구가 한글 경로를 처리하지 못하는 경우에는 영문 경로(예: `C:\Users\ForYou\Documents\CYViewer`)에 프로젝트를 두고 빌드하세요.
+Windows 빌드 도구가 한글 경로를 처리하지 못하는 경우에는 사용자 이름이 들어가지 않는 영문 작업 경로(예: `C:\work\CYViewer`)에 프로젝트를 두고 빌드하세요.
 
 ## 개발 환경별 준비물
 

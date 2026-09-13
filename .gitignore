@@ -1,4 +1,6 @@
 .flutter-sdk/
+__pycache__/
+*.py[cod]
 personal_pdf_viewer/.dart_tool/
 personal_pdf_viewer/build/
 personal_pdf_viewer/.flutter-plugins
