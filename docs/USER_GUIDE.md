@@ -2,7 +2,7 @@
 
 ## 설치와 실행
 
-1. [최신 릴리스](https://github.com/Kimmacaroni/CY_Viewer/releases/latest)를 엽니다.
+1. [Windows 릴리스](https://github.com/Kimmacaroni/CY_Viewer/releases/tag/v1.0.0)를 엽니다.
 2. `CYViewer-Setup-v1.0.0.exe`를 다운로드하고 실행합니다.
 3. 설치 위치 화면에서 기본 경로를 사용하거나 `찾아보기`로 원하는 폴더를 지정합니다.
 4. 추가 작업 화면에서 `바탕화면에 바로가기 만들기`를 선택하거나 해제합니다.

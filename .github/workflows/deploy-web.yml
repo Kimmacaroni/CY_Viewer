@@ -1,0 +1,62 @@
+name: 웹앱 빌드 및 배포
+
+on:
+  workflow_dispatch:
+  pull_request:
+    paths:
+      - "macos_app/**"
+      - ".github/workflows/deploy-web.yml"
+  push:
+    branches: [main]
+    paths:
+      - "macos_app/**"
+      - ".github/workflows/deploy-web.yml"
+
+permissions:
+  contents: read
+
+concurrency:
+  group: pages-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    defaults:
+      run:
+        working-directory: macos_app
+    steps:
+      - uses: actions/checkout@v4
+      - uses: subosito/flutter-action@v2
+        with:
+          channel: stable
+          cache: true
+      - name: Resolve packages
+        run: flutter pub get
+      - name: Analyze
+        run: flutter analyze
+      - name: Test
+        run: flutter test
+      - name: Build web app
+        env:
+          REPOSITORY_NAME: ${{ github.event.repository.name }}
+        run: flutter build web --release --target lib/web_main.dart --base-href "/${REPOSITORY_NAME}/"
+      - uses: actions/upload-pages-artifact@v3
+        with:
+          path: macos_app/build/web
+
+  deploy:
+    if: github.ref == 'refs/heads/main' && github.event_name != 'pull_request'
+    needs: build
+    runs-on: ubuntu-latest
+    permissions:
+      pages: write
+      id-token: write
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    steps:
+      - uses: actions/configure-pages@v5
+      - uses: actions/deploy-pages@v4
+        id: deployment
