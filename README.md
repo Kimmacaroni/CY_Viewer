@@ -6,6 +6,11 @@ PDF를 읽고, 찾고, 표시하고, 저장하고, 인쇄할 수 있는 개인�
 
 [Windows용 CY뷰어 최신 버전 다운로드](https://github.com/Kimmacaroni/CY_Viewer/releases/latest)
 
+[아이폰용 CY뷰어 웹앱 열기](https://kimmacaroni.github.io/CY_Viewer_Download/)
+
+아이폰에서는 Safari로 웹앱을 연 뒤 `공유` → `홈 화면에 추가`를 선택하면
+CY뷰어 아이콘으로 실행할 수 있습니다. 개발자 모드나 유선 연결은 필요하지 않습니다.
+
 Windows 10·11 64비트 환경을 지원합니다. Release에서 `CYViewer-Setup-v1.0.0.exe`를 내려받아 설치하세요. 설치 마법사에서 설치 위치와 바탕화면 바로가기 생성 여부를 선택할 수 있습니다.
 
 ## 주요 기능
