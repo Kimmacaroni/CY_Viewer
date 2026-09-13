@@ -72,18 +72,7 @@ class _WebLibraryPageState extends State<_WebLibraryPage> {
       if (file == null) {
         return;
       }
-      final bytes = file.bytes;
-      if (bytes.isEmpty) {
-        throw const FormatException('선택한 PDF를 읽지 못했습니다.');
-      }
-      if (!mounted) {
-        return;
-      }
-      await Navigator.of(context).push<void>(
-        MaterialPageRoute(
-          builder: (_) => _WebReaderPage(name: file.name, bytes: bytes),
-        ),
-      );
+      await _openPickedPdf(file);
     } on Object catch (error) {
       if (mounted) {
         setState(() => _error = 'PDF를 열 수 없습니다. 다시 선택해 주세요. ($error)');
@@ -93,6 +82,32 @@ class _WebLibraryPageState extends State<_WebLibraryPage> {
         setState(() => _opening = false);
       }
     }
+  }
+
+  Future<void> _openPickedPdf(PickedWebPdf file) async {
+    if (file.bytes.isEmpty) {
+      _handlePickError(const FormatException('선택한 PDF를 읽지 못했습니다.'));
+      return;
+    }
+    if (!mounted) return;
+    setState(() {
+      _opening = true;
+      _error = null;
+    });
+    await Navigator.of(context).push<void>(
+      MaterialPageRoute(
+        builder: (_) => _WebReaderPage(name: file.name, bytes: file.bytes),
+      ),
+    );
+    if (mounted) setState(() => _opening = false);
+  }
+
+  void _handlePickError(Object error) {
+    if (!mounted) return;
+    setState(() {
+      _opening = false;
+      _error = 'PDF를 열 수 없습니다. 다시 선택해 주세요. ($error)';
+    });
   }
 
   @override
@@ -153,15 +168,31 @@ class _WebLibraryPageState extends State<_WebLibraryPage> {
                     textAlign: TextAlign.center,
                   ),
                   const SizedBox(height: 24),
-                  FilledButton.icon(
-                    onPressed: _opening ? null : _pickPdf,
-                    icon: _opening
-                        ? const SizedBox.square(
-                            dimension: 18,
-                            child: CircularProgressIndicator(strokeWidth: 2),
-                          )
-                        : const Icon(Icons.folder_open),
-                    label: Text(_opening ? 'PDF 여는 중…' : 'PDF 선택'),
+                  SizedBox(
+                    width: 160,
+                    height: 48,
+                    child: Stack(
+                      fit: StackFit.expand,
+                      children: [
+                        FilledButton.icon(
+                          onPressed: _opening ? null : _pickPdf,
+                          icon: _opening
+                              ? const SizedBox.square(
+                                  dimension: 18,
+                                  child: CircularProgressIndicator(
+                                    strokeWidth: 2,
+                                  ),
+                                )
+                              : const Icon(Icons.folder_open),
+                          label: Text(_opening ? 'PDF 여는 중…' : 'PDF 선택'),
+                        ),
+                        if (!_opening)
+                          WebPdfPickRegion(
+                            onPicked: _openPickedPdf,
+                            onError: _handlePickError,
+                          ),
+                      ],
+                    ),
                   ),
                   if (_error != null) ...[
                     const SizedBox(height: 20),

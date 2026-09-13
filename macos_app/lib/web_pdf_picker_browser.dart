@@ -1,7 +1,9 @@
 import 'dart:async';
 import 'dart:js_interop';
 import 'dart:typed_data';
+import 'dart:ui_web' as ui_web;
 
+import 'package:flutter/widgets.dart';
 import 'package:web/web.dart';
 
 class PickedWebPdf {
@@ -73,6 +75,73 @@ Future<PickedWebPdf?> pickWebPdf() async {
   // 반드시 사용자의 탭 이벤트 안에서 동기적으로 호출해야 Safari가 허용한다.
   input.click();
   return completer.future;
+}
+
+/// 투명한 실제 HTML 파일 입력을 Flutter 버튼 위에 올려 Safari의 직접 탭을 받는다.
+class WebPdfPickRegion extends StatefulWidget {
+  const WebPdfPickRegion({
+    super.key,
+    required this.onPicked,
+    required this.onError,
+  });
+
+  final ValueChanged<PickedWebPdf> onPicked;
+  final ValueChanged<Object> onError;
+
+  @override
+  State<WebPdfPickRegion> createState() => _WebPdfPickRegionState();
+}
+
+class _WebPdfPickRegionState extends State<WebPdfPickRegion> {
+  static int _nextId = 0;
+  late final String _viewType;
+  late final HTMLInputElement _input;
+  late final JSFunction _changeListener;
+
+  @override
+  void initState() {
+    super.initState();
+    _viewType = 'cy-pdf-input-${_nextId++}';
+    _input = HTMLInputElement()
+      ..type = 'file'
+      ..accept = 'application/pdf,.pdf'
+      ..multiple = false
+      ..setAttribute('aria-label', 'PDF 선택');
+    _input.style
+      ..width = '100%'
+      ..height = '100%'
+      ..opacity = '0'
+      ..cursor = 'pointer';
+    _changeListener = _handleChange.toJS;
+    _input.addEventListener('change', _changeListener);
+    ui_web.platformViewRegistry.registerViewFactory(_viewType, (_) => _input);
+  }
+
+  void _handleChange(Event _) {
+    unawaited(_processSelection());
+  }
+
+  Future<void> _processSelection() async {
+    try {
+      final file = _input.files?.item(0);
+      if (file == null) return;
+      final bytes = await _readFile(file);
+      widget.onPicked(PickedWebPdf(name: file.name, bytes: bytes));
+    } on Object catch (error) {
+      widget.onError(error);
+    } finally {
+      _input.value = '';
+    }
+  }
+
+  @override
+  void dispose() {
+    _input.removeEventListener('change', _changeListener);
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) => HtmlElementView(viewType: _viewType);
 }
 
 Future<Uint8List> _readFile(File file) {
