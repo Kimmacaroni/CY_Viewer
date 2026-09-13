@@ -8,10 +8,12 @@ import 'package:file_picker/file_picker.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_localizations/flutter_localizations.dart';
+import 'package:path_provider/path_provider.dart';
 import 'package:pdfrx/pdfrx.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 import 'advanced_reader.dart';
+import 'app_commands.dart';
 
 class PersonalPdfApp extends StatelessWidget {
   const PersonalPdfApp({super.key});
@@ -102,10 +104,12 @@ class _LibraryPageState extends State<LibraryPage> {
   bool _dragging = false;
   late final Future<void> _initialLoad;
   late final Future<void> _firstFrame;
+  late final Map<String, AppCommandCallback> _commandHandlers;
 
   @override
   void initState() {
     super.initState();
+    _commandHandlers = AppCommandDispatcher.register({'open': _pick});
     _fileAccessChannel.setMethodCallHandler(_handleFileAccessCall);
     _firstFrame = WidgetsBinding.instance.endOfFrame;
     _initialLoad = _load();
@@ -114,6 +118,7 @@ class _LibraryPageState extends State<LibraryPage> {
 
   @override
   void dispose() {
+    AppCommandDispatcher.unregister(_commandHandlers);
     _fileAccessChannel.setMethodCallHandler(null);
     super.dispose();
   }
@@ -141,9 +146,9 @@ class _LibraryPageState extends State<LibraryPage> {
       await _waitUntilReady();
       await _openIncomingFiles(paths);
     } on MissingPluginException {
-      // macOS 외 플랫폼이나 테스트 환경에서는 Finder 파일 열기 연동이 없다.
+      // 네이티브 파일 열기 연동이 없는 플랫폼이나 테스트 환경이다.
     } on Object catch (error) {
-      _showMessage('Finder에서 전달한 PDF를 열 수 없습니다: $error');
+      _showMessage('외부에서 전달한 PDF를 열 수 없습니다: $error');
     }
   }
 
@@ -248,10 +253,27 @@ class _LibraryPageState extends State<LibraryPage> {
       );
       final file = files.isEmpty ? null : files.first;
       if (file?.path == null) return;
-      await _addAndOpen(file!.path!, file.name);
+      final path = await _persistIosFile(file!.path!, file.name);
+      await _addAndOpen(path, file.name);
     } on Object catch (error) {
       _showMessage('파일 선택 창을 열 수 없습니다: $error');
     }
+  }
+
+  Future<String> _persistIosFile(String sourcePath, String name) async {
+    if (!Platform.isIOS) return sourcePath;
+    final source = File(sourcePath);
+    final documents = await getApplicationDocumentsDirectory();
+    final directory = Directory(
+      '${documents.path}${Platform.pathSeparator}CYViewer 문서',
+    );
+    await directory.create(recursive: true);
+    final safeName = name.replaceAll(RegExp(r'[/\\:]'), '_');
+    final destination = File(
+      '${directory.path}${Platform.pathSeparator}'
+      '${DateTime.now().millisecondsSinceEpoch}-$safeName',
+    );
+    return (await source.copy(destination.path)).path;
   }
 
   void _showMessage(String message) {

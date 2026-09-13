@@ -66,6 +66,34 @@
                         </items>
                     </menu>
                 </menuItem>
+                <menuItem title="파일" id="CYV-file-menu">
+                    <modifierMask key="keyEquivalentModifierMask"/>
+                    <menu key="submenu" title="파일" id="CYV-file-submenu">
+                        <items>
+                            <menuItem title="PDF 열기…" keyEquivalent="o" id="CYV-open-pdf">
+                                <connections>
+                                    <action selector="openPdf:" target="QvC-M9-y7g" id="CYV-open-action"/>
+                                </connections>
+                            </menuItem>
+                            <menuItem title="PDF 복사본 저장…" keyEquivalent="s" id="CYV-save-pdf">
+                                <connections>
+                                    <action selector="savePdfCopy:" target="QvC-M9-y7g" id="CYV-save-action"/>
+                                </connections>
+                            </menuItem>
+                            <menuItem isSeparatorItem="YES" id="CYV-file-separator"/>
+                            <menuItem title="인쇄…" keyEquivalent="p" id="CYV-print-pdf">
+                                <connections>
+                                    <action selector="printPdf:" target="QvC-M9-y7g" id="CYV-print-action"/>
+                                </connections>
+                            </menuItem>
+                            <menuItem title="창 닫기" keyEquivalent="w" id="CYV-close-window">
+                                <connections>
+                                    <action selector="performClose:" target="-1" id="CYV-close-action"/>
+                                </connections>
+                            </menuItem>
+                        </items>
+                    </menu>
+                </menuItem>
                 <menuItem title="편집" id="5QF-Oa-p0T">
                     <modifierMask key="keyEquivalentModifierMask"/>
                     <menu key="submenu" title="편집" id="W48-6f-4Dl">
@@ -120,7 +148,7 @@
                                     <items>
                                         <menuItem title="찾기…" tag="1" keyEquivalent="f" id="Xz5-n4-O0W">
                                             <connections>
-                                                <action selector="performFindPanelAction:" target="-1" id="cD7-Qs-BN4"/>
+                                                <action selector="findInPdf:" target="QvC-M9-y7g" id="cD7-Qs-BN4"/>
                                             </connections>
                                         </menuItem>
                                         <menuItem title="찾아서 바꾸기…" tag="12" keyEquivalent="f" id="YEy-JH-Tfz">
@@ -131,12 +159,12 @@
                                         </menuItem>
                                         <menuItem title="다음 찾기" tag="2" keyEquivalent="g" id="q09-fT-Sye">
                                             <connections>
-                                                <action selector="performFindPanelAction:" target="-1" id="NDo-RZ-v9R"/>
+                                                <action selector="findNextInPdf:" target="QvC-M9-y7g" id="NDo-RZ-v9R"/>
                                             </connections>
                                         </menuItem>
                                         <menuItem title="이전 찾기" tag="3" keyEquivalent="G" id="OwM-mh-QMV">
                                             <connections>
-                                                <action selector="performFindPanelAction:" target="-1" id="HOh-sY-3ay"/>
+                                                <action selector="findPreviousInPdf:" target="QvC-M9-y7g" id="HOh-sY-3ay"/>
                                             </connections>
                                         </menuItem>
                                         <menuItem title="선택 부분으로 찾기" tag="7" keyEquivalent="e" id="buJ-ug-pKt">
@@ -289,6 +317,22 @@
                     <modifierMask key="keyEquivalentModifierMask"/>
                     <menu key="submenu" title="보기" id="HyV-fh-RgO">
                         <items>
+                            <menuItem title="확대" keyEquivalent="+" id="CYV-zoom-in">
+                                <connections>
+                                    <action selector="zoomInPdf:" target="QvC-M9-y7g" id="CYV-zoom-in-action"/>
+                                </connections>
+                            </menuItem>
+                            <menuItem title="축소" keyEquivalent="-" id="CYV-zoom-out">
+                                <connections>
+                                    <action selector="zoomOutPdf:" target="QvC-M9-y7g" id="CYV-zoom-out-action"/>
+                                </connections>
+                            </menuItem>
+                            <menuItem title="실제 크기" keyEquivalent="0" id="CYV-actual-size">
+                                <connections>
+                                    <action selector="showActualSizePdf:" target="QvC-M9-y7g" id="CYV-actual-size-action"/>
+                                </connections>
+                            </menuItem>
+                            <menuItem isSeparatorItem="YES" id="CYV-view-separator"/>
                             <menuItem title="전체 화면 시작" keyEquivalent="f" id="4J7-dP-txa">
                                 <modifierMask key="keyEquivalentModifierMask" control="YES" command="YES"/>
                                 <connections>

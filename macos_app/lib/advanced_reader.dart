@@ -1,3 +1,4 @@
+import 'dart:async';
 import 'dart:convert';
 import 'dart:io';
 import 'dart:math' as math;
@@ -9,6 +10,8 @@ import 'package:image/image.dart' as image_lib;
 import 'package:pdfrx/pdfrx.dart';
 import 'package:printing/printing.dart';
 import 'package:shared_preferences/shared_preferences.dart';
+
+import 'app_commands.dart';
 
 enum _ReaderAction {
   bookmark,
@@ -65,6 +68,7 @@ class _AdvancedPdfReaderPageState extends State<AdvancedPdfReaderPage> {
   _ViewMode _viewMode = _ViewMode.scroll;
   Uint8List? _pdfData;
   Object? _pdfLoadError;
+  late final Map<String, AppCommandCallback> _commandHandlers;
 
   String get _bookmarkKey =>
       'pdf_bookmarks_${base64Url.encode(utf8.encode(widget.path))}';
@@ -72,6 +76,18 @@ class _AdvancedPdfReaderPageState extends State<AdvancedPdfReaderPage> {
   @override
   void initState() {
     super.initState();
+    _commandHandlers = AppCommandDispatcher.register({
+      'find': _showSearch,
+      'findNext': () => _searcher?.goToNextMatch(),
+      'findPrevious': () => _searcher?.goToPrevMatch(),
+      'zoomIn': _controller.zoomUp,
+      'zoomOut': _controller.zoomDown,
+      'actualSize': _showActualSize,
+      'print': _printDocument,
+      'saveCopy': () => _export(_ExportFormat.pdf),
+      'bookmark': _toggleBookmark,
+      'goToPage': _goToPage,
+    });
     _currentPage = widget.initialPage;
     _loadBookmarks();
     _loadPdfData();
@@ -264,6 +280,22 @@ class _AdvancedPdfReaderPageState extends State<AdvancedPdfReaderPage> {
   void _startSearch(String text) {
     _searcher?.startTextSearch(text, searchImmediately: true);
     if (mounted) setState(() {});
+  }
+
+  void _showSearch() {
+    if (!mounted || _searcher == null) return;
+    setState(() => _searching = true);
+  }
+
+  void _hideSearch() {
+    _searcher?.resetTextSearch();
+    _searchInput.clear();
+    if (mounted) setState(() => _searching = false);
+  }
+
+  Future<void> _showActualSize() async {
+    if (_pageCount == 0) return;
+    await _controller.setZoom(_controller.centerPosition, 1);
   }
 
   Future<void> _applyMark(_MarkType type) async {
@@ -487,8 +519,10 @@ class _AdvancedPdfReaderPageState extends State<AdvancedPdfReaderPage> {
           context: context,
           builder: (context) => AlertDialog(
             title: const Text('CY뷰어 사용 방법'),
-            content: const Text(
-              '• 돋보기: 문서 텍스트 검색\n• 기능 메뉴: 책갈피, 확대/축소, 페이지 이동\n• 마우스 휠: 문서 스크롤\n• Ctrl + 마우스 휠: 확대/축소\n• 텍스트 드래그 후 하단 도구막대: 복사·형광펜·밑줄·취소선·강조',
+            content: Text(
+              Platform.isMacOS
+                  ? '• ⌘O: PDF 열기\n• ⌘F: 문서 검색\n• ⌘G / ⇧⌘G: 다음·이전 검색 결과\n• ⌘+ / ⌘- / ⌘0: 확대·축소·실제 크기\n• ⌘S: PDF 복사본 저장\n• ⌘P: 인쇄\n• 텍스트 드래그 후 하단 도구막대: 복사·형광펜·밑줄·취소선·강조'
+                  : '• 돋보기: 문서 텍스트 검색\n• 문서 도구: 책갈피, 확대·축소, 페이지 이동, 인쇄, OCR, 저장\n• 화면을 두 손가락으로 확대·축소\n• 텍스트를 길게 누르거나 드래그한 뒤 하단 도구막대에서 복사·형광펜·밑줄·취소선·강조',
             ),
             actions: [
               TextButton(
@@ -501,459 +535,614 @@ class _AdvancedPdfReaderPageState extends State<AdvancedPdfReaderPage> {
     }
   }
 
+  Future<void> _showMobileTools() async {
+    Future<void> run(FutureOr<void> Function() action) async {
+      Navigator.pop(context);
+      await action();
+    }
+
+    await showModalBottomSheet<void>(
+      context: context,
+      isScrollControlled: true,
+      showDragHandle: true,
+      builder: (sheetContext) => SafeArea(
+        child: SizedBox(
+          height: MediaQuery.sizeOf(sheetContext).height * 0.78,
+          child: ListView(
+            padding: const EdgeInsets.fromLTRB(12, 0, 12, 24),
+            children: [
+              const ListTile(
+                title: Text('문서 도구'),
+                subtitle: Text('macOS와 동일한 기능을 사용할 수 있습니다.'),
+              ),
+              ListTile(
+                leading: const Icon(Icons.bookmarks_outlined),
+                title: const Text('책갈피 목록'),
+                onTap: () => run(_showBookmarks),
+              ),
+              ListTile(
+                leading: const Icon(Icons.find_in_page_outlined),
+                title: const Text('페이지로 이동'),
+                onTap: _pageCount == 0 ? null : () => run(_goToPage),
+              ),
+              const Divider(),
+              Padding(
+                padding: const EdgeInsets.symmetric(
+                  horizontal: 16,
+                  vertical: 8,
+                ),
+                child: SegmentedButton<_ViewMode>(
+                  segments: const [
+                    ButtonSegment(
+                      value: _ViewMode.scroll,
+                      icon: Icon(Icons.view_day_outlined),
+                      label: Text('세로'),
+                    ),
+                    ButtonSegment(
+                      value: _ViewMode.horizontal,
+                      icon: Icon(Icons.view_carousel_outlined),
+                      label: Text('가로'),
+                    ),
+                    ButtonSegment(
+                      value: _ViewMode.facing,
+                      icon: Icon(Icons.menu_book_outlined),
+                      label: Text('두 쪽'),
+                    ),
+                  ],
+                  selected: {_viewMode},
+                  onSelectionChanged: (selection) {
+                    setState(() => _viewMode = selection.first);
+                    Navigator.pop(sheetContext);
+                  },
+                ),
+              ),
+              ListTile(
+                leading: const Icon(Icons.zoom_in),
+                title: const Text('확대'),
+                onTap: () => run(_controller.zoomUp),
+              ),
+              ListTile(
+                leading: const Icon(Icons.zoom_out),
+                title: const Text('축소'),
+                onTap: () => run(_controller.zoomDown),
+              ),
+              ListTile(
+                leading: const Icon(Icons.center_focus_strong),
+                title: const Text('실제 크기'),
+                onTap: () => run(_showActualSize),
+              ),
+              const Divider(),
+              ListTile(
+                leading: const Icon(Icons.print_outlined),
+                title: const Text('인쇄'),
+                onTap: () => run(_printDocument),
+              ),
+              ListTile(
+                leading: const Icon(Icons.document_scanner_outlined),
+                title: const Text('문서 전체 OCR'),
+                onTap: _busy ? null : () => run(_runOcr),
+              ),
+              ListTile(
+                leading: const Icon(Icons.picture_as_pdf_outlined),
+                title: const Text('PDF 복사본 저장'),
+                onTap: () => run(() => _export(_ExportFormat.pdf)),
+              ),
+              ListTile(
+                leading: const Icon(Icons.image_outlined),
+                title: const Text('PNG로 저장'),
+                onTap: () => run(() => _export(_ExportFormat.png)),
+              ),
+              ListTile(
+                leading: const Icon(Icons.photo_outlined),
+                title: const Text('JPG로 저장'),
+                onTap: () => run(() => _export(_ExportFormat.jpg)),
+              ),
+              const Divider(),
+              ListTile(
+                leading: const Icon(Icons.layers_clear_outlined),
+                title: const Text('이 문서의 표시 지우기'),
+                onTap: () => run(_clearMarks),
+              ),
+              ListTile(
+                leading: const Icon(Icons.help_outline),
+                title: const Text('사용 방법'),
+                onTap: () => run(() => _selectAction(_ReaderAction.help)),
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+
   @override
   void dispose() {
+    AppCommandDispatcher.unregister(_commandHandlers);
     _searchInput.dispose();
     _searcher?.dispose();
     super.dispose();
   }
 
   @override
-  Widget build(BuildContext context) => PopScope(
-    canPop: false,
-    onPopInvokedWithResult: (didPop, _) {
-      if (!didPop) Navigator.of(context).pop(_currentPage);
-    },
-    child: Scaffold(
-      appBar: AppBar(
-        title: _searching && _searcher != null
-            ? TextField(
-                controller: _searchInput,
-                autofocus: true,
-                decoration: const InputDecoration(
-                  hintText: '문서에서 검색',
-                  border: InputBorder.none,
-                ),
-                onChanged: _startSearch,
-              )
-            : Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                mainAxisSize: MainAxisSize.min,
-                children: [
-                  const Text(
-                    'CY뷰어',
-                    style: TextStyle(fontSize: 12, fontWeight: FontWeight.w700),
+  Widget build(BuildContext context) {
+    final compact = MediaQuery.sizeOf(context).width < 720;
+    return PopScope(
+      canPop: false,
+      onPopInvokedWithResult: (didPop, _) {
+        if (!didPop) Navigator.of(context).pop(_currentPage);
+      },
+      child: Scaffold(
+        appBar: AppBar(
+          title: _searching && _searcher != null
+              ? TextField(
+                  controller: _searchInput,
+                  autofocus: true,
+                  decoration: const InputDecoration(
+                    hintText: '문서에서 검색',
+                    border: InputBorder.none,
                   ),
-                  Text(widget.name, overflow: TextOverflow.ellipsis),
-                ],
-              ),
-        actions: _searching && _searcher != null
-            ? [
-                AnimatedBuilder(
-                  animation: _searcher!,
-                  builder: (context, child) => Text(
-                    '${_searcher!.currentIndex == null ? 0 : _searcher!.currentIndex! + 1}/${_searcher!.matches.length}',
-                  ),
-                ),
-                IconButton(
-                  tooltip: '이전 결과',
-                  onPressed: _searcher!.goToPrevMatch,
-                  icon: const Icon(Icons.keyboard_arrow_up),
-                ),
-                IconButton(
-                  tooltip: '다음 결과',
-                  onPressed: _searcher!.goToNextMatch,
-                  icon: const Icon(Icons.keyboard_arrow_down),
-                ),
-                IconButton(
-                  tooltip: '검색 닫기',
-                  onPressed: () {
-                    _searcher?.resetTextSearch();
-                    _searchInput.clear();
-                    setState(() => _searching = false);
-                  },
-                  icon: const Icon(Icons.close),
-                ),
-              ]
-            : [
-                IconButton(
-                  tooltip: '검색',
-                  onPressed: _searcher == null
-                      ? null
-                      : () => setState(() => _searching = true),
-                  icon: const Icon(Icons.search),
-                ),
-                IconButton(
-                  tooltip: _bookmarks.contains(_currentPage)
-                      ? '책갈피 삭제'
-                      : '이 페이지 책갈피',
-                  onPressed: _toggleBookmark,
-                  icon: Icon(
-                    _bookmarks.contains(_currentPage)
-                        ? Icons.bookmark
-                        : Icons.bookmark_border,
-                  ),
-                ),
-                IconButton(
-                  tooltip: '책갈피 목록',
-                  onPressed: _showBookmarks,
-                  icon: const Icon(Icons.bookmarks_outlined),
-                ),
-                IconButton(
-                  tooltip: '축소',
-                  onPressed: _controller.zoomDown,
-                  icon: const Icon(Icons.zoom_out),
-                ),
-                IconButton(
-                  tooltip: '확대',
-                  onPressed: _controller.zoomUp,
-                  icon: const Icon(Icons.zoom_in),
-                ),
-                IconButton(
-                  tooltip: '페이지 이동',
-                  onPressed: _pageCount == 0 ? null : _goToPage,
-                  icon: const Icon(Icons.find_in_page_outlined),
-                ),
-                IconButton(
-                  tooltip: '인쇄',
-                  onPressed: _printDocument,
-                  icon: const Icon(Icons.print_outlined),
-                ),
-                PopupMenuButton<_ViewMode>(
-                  tooltip: '보기 방식',
-                  initialValue: _viewMode,
-                  onSelected: (mode) => setState(() => _viewMode = mode),
-                  icon: const Icon(Icons.view_carousel_outlined),
-                  itemBuilder: (context) => const [
-                    PopupMenuItem(
-                      value: _ViewMode.scroll,
-                      child: Text('세로 스크롤'),
+                  onChanged: _startSearch,
+                )
+              : Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    const Text(
+                      'CY뷰어',
+                      style: TextStyle(
+                        fontSize: 12,
+                        fontWeight: FontWeight.w700,
+                      ),
                     ),
-                    PopupMenuItem(
-                      value: _ViewMode.horizontal,
-                      child: Text('가로 스크롤'),
-                    ),
-                    PopupMenuItem(
-                      value: _ViewMode.facing,
-                      child: Text('두 페이지 보기'),
-                    ),
+                    Text(widget.name, overflow: TextOverflow.ellipsis),
                   ],
                 ),
-                IconButton(
-                  tooltip: '문서 전체 OCR',
-                  onPressed: _busy ? null : _runOcr,
-                  icon: const Icon(Icons.document_scanner_outlined),
-                ),
-                PopupMenuButton<_ExportFormat>(
-                  tooltip: '다른 형식으로 저장',
-                  onSelected: _export,
-                  icon: const Icon(Icons.save_alt_outlined),
-                  itemBuilder: (context) => const [
-                    PopupMenuItem(
-                      value: _ExportFormat.pdf,
-                      child: Text('PDF로 저장'),
-                    ),
-                    PopupMenuItem(
-                      value: _ExportFormat.png,
-                      child: Text('PNG로 저장'),
-                    ),
-                    PopupMenuItem(
-                      value: _ExportFormat.jpg,
-                      child: Text('JPG로 저장'),
-                    ),
-                  ],
-                ),
-                PopupMenuButton<_ReaderAction>(
-                  tooltip: '기능 메뉴',
-                  onSelected: _selectAction,
-                  itemBuilder: (context) => const [
-                    PopupMenuItem(
-                      value: _ReaderAction.bookmark,
-                      child: ListTile(
-                        leading: Icon(Icons.bookmark_border),
-                        title: Text('이 페이지 책갈피'),
+          actions: _searching && _searcher != null
+              ? [
+                  if (!compact)
+                    AnimatedBuilder(
+                      animation: _searcher!,
+                      builder: (context, child) => Text(
+                        '${_searcher!.currentIndex == null ? 0 : _searcher!.currentIndex! + 1}/${_searcher!.matches.length}',
                       ),
                     ),
-                    PopupMenuItem(
-                      value: _ReaderAction.bookmarks,
-                      child: ListTile(
-                        leading: Icon(Icons.bookmarks_outlined),
-                        title: Text('책갈피 목록'),
-                      ),
+                  IconButton(
+                    tooltip: '이전 결과',
+                    onPressed: _searcher!.goToPrevMatch,
+                    icon: const Icon(Icons.keyboard_arrow_up),
+                  ),
+                  IconButton(
+                    tooltip: '다음 결과',
+                    onPressed: _searcher!.goToNextMatch,
+                    icon: const Icon(Icons.keyboard_arrow_down),
+                  ),
+                  IconButton(
+                    tooltip: '검색 닫기',
+                    onPressed: _hideSearch,
+                    icon: const Icon(Icons.close),
+                  ),
+                ]
+              : compact
+              ? [
+                  IconButton(
+                    tooltip: '검색',
+                    onPressed: _searcher == null ? null : _showSearch,
+                    icon: const Icon(Icons.search),
+                  ),
+                  IconButton(
+                    tooltip: _bookmarks.contains(_currentPage)
+                        ? '책갈피 삭제'
+                        : '이 페이지 책갈피',
+                    onPressed: _toggleBookmark,
+                    icon: Icon(
+                      _bookmarks.contains(_currentPage)
+                          ? Icons.bookmark
+                          : Icons.bookmark_border,
                     ),
-                    PopupMenuItem(
-                      value: _ReaderAction.zoomIn,
-                      child: ListTile(
-                        leading: Icon(Icons.zoom_in),
-                        title: Text('확대'),
-                      ),
+                  ),
+                  IconButton(
+                    tooltip: '문서 도구',
+                    onPressed: _showMobileTools,
+                    icon: const Icon(Icons.more_horiz),
+                  ),
+                ]
+              : [
+                  IconButton(
+                    tooltip: '검색',
+                    onPressed: _searcher == null ? null : _showSearch,
+                    icon: const Icon(Icons.search),
+                  ),
+                  IconButton(
+                    tooltip: _bookmarks.contains(_currentPage)
+                        ? '책갈피 삭제'
+                        : '이 페이지 책갈피',
+                    onPressed: _toggleBookmark,
+                    icon: Icon(
+                      _bookmarks.contains(_currentPage)
+                          ? Icons.bookmark
+                          : Icons.bookmark_border,
                     ),
-                    PopupMenuItem(
-                      value: _ReaderAction.zoomOut,
-                      child: ListTile(
-                        leading: Icon(Icons.zoom_out),
-                        title: Text('축소'),
+                  ),
+                  IconButton(
+                    tooltip: '책갈피 목록',
+                    onPressed: _showBookmarks,
+                    icon: const Icon(Icons.bookmarks_outlined),
+                  ),
+                  IconButton(
+                    tooltip: '축소',
+                    onPressed: _controller.zoomDown,
+                    icon: const Icon(Icons.zoom_out),
+                  ),
+                  IconButton(
+                    tooltip: '확대',
+                    onPressed: _controller.zoomUp,
+                    icon: const Icon(Icons.zoom_in),
+                  ),
+                  IconButton(
+                    tooltip: '페이지 이동',
+                    onPressed: _pageCount == 0 ? null : _goToPage,
+                    icon: const Icon(Icons.find_in_page_outlined),
+                  ),
+                  IconButton(
+                    tooltip: '인쇄',
+                    onPressed: _printDocument,
+                    icon: const Icon(Icons.print_outlined),
+                  ),
+                  PopupMenuButton<_ViewMode>(
+                    tooltip: '보기 방식',
+                    initialValue: _viewMode,
+                    onSelected: (mode) => setState(() => _viewMode = mode),
+                    icon: const Icon(Icons.view_carousel_outlined),
+                    itemBuilder: (context) => const [
+                      PopupMenuItem(
+                        value: _ViewMode.scroll,
+                        child: Text('세로 스크롤'),
                       ),
-                    ),
-                    PopupMenuItem(
-                      value: _ReaderAction.goToPage,
-                      child: ListTile(
-                        leading: Icon(Icons.find_in_page_outlined),
-                        title: Text('페이지 이동'),
+                      PopupMenuItem(
+                        value: _ViewMode.horizontal,
+                        child: Text('가로 스크롤'),
                       ),
-                    ),
-                    PopupMenuItem(
-                      value: _ReaderAction.clearMarks,
-                      child: ListTile(
-                        leading: Icon(Icons.layers_clear_outlined),
-                        title: Text('이 문서의 표시 지우기'),
+                      PopupMenuItem(
+                        value: _ViewMode.facing,
+                        child: Text('두 페이지 보기'),
                       ),
-                    ),
-                    PopupMenuDivider(),
-                    PopupMenuItem(
-                      value: _ReaderAction.help,
-                      child: ListTile(
-                        leading: Icon(Icons.help_outline),
-                        title: Text('사용 방법'),
+                    ],
+                  ),
+                  IconButton(
+                    tooltip: '문서 전체 OCR',
+                    onPressed: _busy ? null : _runOcr,
+                    icon: const Icon(Icons.document_scanner_outlined),
+                  ),
+                  PopupMenuButton<_ExportFormat>(
+                    tooltip: '다른 형식으로 저장',
+                    onSelected: _export,
+                    icon: const Icon(Icons.save_alt_outlined),
+                    itemBuilder: (context) => const [
+                      PopupMenuItem(
+                        value: _ExportFormat.pdf,
+                        child: Text('PDF로 저장'),
                       ),
-                    ),
-                  ],
-                ),
-              ],
-      ),
-      body: Stack(
-        children: [
-          if (_pdfData == null)
-            _buildPdfLoadingState()
-          else
-            PdfViewer.data(
-              _pdfData!,
-              sourceName: '${widget.path}:${_pdfData!.length}',
-              key: ValueKey(_viewMode),
-              controller: _controller,
-              params: PdfViewerParams(
-                errorBannerBuilder: (context, error, _, _) {
-                  debugPrint('PDF 열기 실패: $error');
-                  return Center(
-                    child: Card(
-                      margin: const EdgeInsets.all(32),
-                      child: Padding(
-                        padding: const EdgeInsets.all(24),
-                        child: Column(
-                          mainAxisSize: MainAxisSize.min,
-                          children: [
-                            Icon(
-                              Icons.error_outline,
-                              size: 48,
-                              color: Theme.of(context).colorScheme.error,
-                            ),
-                            const SizedBox(height: 16),
-                            Text(
-                              'PDF를 열 수 없습니다',
-                              style: Theme.of(context).textTheme.titleLarge,
-                            ),
-                            const SizedBox(height: 8),
-                            const Text(
-                              '파일이 이동되었거나 접근 권한이 변경되었을 수 있습니다. '
-                              '문서함으로 돌아가 PDF를 다시 선택해 주세요.',
-                              textAlign: TextAlign.center,
-                            ),
-                            const SizedBox(height: 20),
-                            FilledButton.icon(
-                              onPressed: () =>
-                                  Navigator.of(context).pop(_currentPage),
-                              icon: const Icon(Icons.arrow_back),
-                              label: const Text('문서함으로 돌아가기'),
-                            ),
-                          ],
+                      PopupMenuItem(
+                        value: _ExportFormat.png,
+                        child: Text('PNG로 저장'),
+                      ),
+                      PopupMenuItem(
+                        value: _ExportFormat.jpg,
+                        child: Text('JPG로 저장'),
+                      ),
+                    ],
+                  ),
+                  PopupMenuButton<_ReaderAction>(
+                    tooltip: '기능 메뉴',
+                    onSelected: _selectAction,
+                    itemBuilder: (context) => const [
+                      PopupMenuItem(
+                        value: _ReaderAction.bookmark,
+                        child: ListTile(
+                          leading: Icon(Icons.bookmark_border),
+                          title: Text('이 페이지 책갈피'),
                         ),
                       ),
-                    ),
-                  );
-                },
-                // pdfrx의 데스크톱 컨텍스트 메뉴는 일부 환경에서 선택 좌표가
-                // 비어 있을 때 예외를 냈다. 동작이 확실한 화면 하단 도구막대를 사용한다.
-                buildContextMenu: (_, _) => null,
-                textSelectionParams: PdfTextSelectionParams(
-                  showContextMenuAutomatically: false,
-                  onTextSelectionChange: (selection) {
-                    if (mounted &&
-                        _hasSelectedText != selection.hasSelectedText) {
-                      setState(
-                        () => _hasSelectedText = selection.hasSelectedText,
-                      );
+                      PopupMenuItem(
+                        value: _ReaderAction.bookmarks,
+                        child: ListTile(
+                          leading: Icon(Icons.bookmarks_outlined),
+                          title: Text('책갈피 목록'),
+                        ),
+                      ),
+                      PopupMenuItem(
+                        value: _ReaderAction.zoomIn,
+                        child: ListTile(
+                          leading: Icon(Icons.zoom_in),
+                          title: Text('확대'),
+                        ),
+                      ),
+                      PopupMenuItem(
+                        value: _ReaderAction.zoomOut,
+                        child: ListTile(
+                          leading: Icon(Icons.zoom_out),
+                          title: Text('축소'),
+                        ),
+                      ),
+                      PopupMenuItem(
+                        value: _ReaderAction.goToPage,
+                        child: ListTile(
+                          leading: Icon(Icons.find_in_page_outlined),
+                          title: Text('페이지 이동'),
+                        ),
+                      ),
+                      PopupMenuItem(
+                        value: _ReaderAction.clearMarks,
+                        child: ListTile(
+                          leading: Icon(Icons.layers_clear_outlined),
+                          title: Text('이 문서의 표시 지우기'),
+                        ),
+                      ),
+                      PopupMenuDivider(),
+                      PopupMenuItem(
+                        value: _ReaderAction.help,
+                        child: ListTile(
+                          leading: Icon(Icons.help_outline),
+                          title: Text('사용 방법'),
+                        ),
+                      ),
+                    ],
+                  ),
+                ],
+        ),
+        body: Stack(
+          children: [
+            if (_pdfData == null)
+              _buildPdfLoadingState()
+            else
+              PdfViewer.data(
+                _pdfData!,
+                sourceName: '${widget.path}:${_pdfData!.length}',
+                key: ValueKey(_viewMode),
+                controller: _controller,
+                params: PdfViewerParams(
+                  errorBannerBuilder: (context, error, _, _) {
+                    debugPrint('PDF 열기 실패: $error');
+                    return Center(
+                      child: Card(
+                        margin: const EdgeInsets.all(32),
+                        child: Padding(
+                          padding: const EdgeInsets.all(24),
+                          child: Column(
+                            mainAxisSize: MainAxisSize.min,
+                            children: [
+                              Icon(
+                                Icons.error_outline,
+                                size: 48,
+                                color: Theme.of(context).colorScheme.error,
+                              ),
+                              const SizedBox(height: 16),
+                              Text(
+                                'PDF를 열 수 없습니다',
+                                style: Theme.of(context).textTheme.titleLarge,
+                              ),
+                              const SizedBox(height: 8),
+                              const Text(
+                                '파일이 이동되었거나 접근 권한이 변경되었을 수 있습니다. '
+                                '문서함으로 돌아가 PDF를 다시 선택해 주세요.',
+                                textAlign: TextAlign.center,
+                              ),
+                              const SizedBox(height: 20),
+                              FilledButton.icon(
+                                onPressed: () =>
+                                    Navigator.of(context).pop(_currentPage),
+                                icon: const Icon(Icons.arrow_back),
+                                label: const Text('문서함으로 돌아가기'),
+                              ),
+                            ],
+                          ),
+                        ),
+                      ),
+                    );
+                  },
+                  // pdfrx의 데스크톱 컨텍스트 메뉴는 일부 환경에서 선택 좌표가
+                  // 비어 있을 때 예외를 냈다. 동작이 확실한 화면 하단 도구막대를 사용한다.
+                  buildContextMenu: (_, _) => null,
+                  textSelectionParams: PdfTextSelectionParams(
+                    showContextMenuAutomatically: false,
+                    onTextSelectionChange: (selection) {
+                      if (mounted &&
+                          _hasSelectedText != selection.hasSelectedText) {
+                        setState(
+                          () => _hasSelectedText = selection.hasSelectedText,
+                        );
+                      }
+                    },
+                  ),
+                  onViewerReady: (document, _) async {
+                    if (!mounted) return;
+                    final pageCount = document.pages.length;
+                    _searcher?.dispose();
+                    final searcher = PdfTextSearcher(_controller);
+                    setState(() {
+                      _searcher = searcher;
+                      _searching = false;
+                      _pageCount = pageCount;
+                      _bookmarks.removeWhere((page) => page > pageCount);
+                    });
+                    if (pageCount == 0) {
+                      _showMessage('페이지가 없는 PDF 문서입니다.');
+                      return;
+                    }
+                    final initial = widget.initialPage.clamp(1, pageCount);
+                    if (initial > 1) {
+                      await _controller.goToPage(pageNumber: initial);
                     }
                   },
-                ),
-                onViewerReady: (document, _) async {
-                  if (!mounted) return;
-                  final pageCount = document.pages.length;
-                  _searcher?.dispose();
-                  final searcher = PdfTextSearcher(_controller);
-                  setState(() {
-                    _searcher = searcher;
-                    _searching = false;
-                    _pageCount = pageCount;
-                    _bookmarks.removeWhere((page) => page > pageCount);
-                  });
-                  if (pageCount == 0) {
-                    _showMessage('페이지가 없는 PDF 문서입니다.');
-                    return;
-                  }
-                  final initial = widget.initialPage.clamp(1, pageCount);
-                  if (initial > 1) {
-                    await _controller.goToPage(pageNumber: initial);
-                  }
-                },
-                onPageChanged: (page) {
-                  if (mounted && page != null) {
-                    setState(() => _currentPage = page);
-                  }
-                },
-                pagePaintCallbacks: [
-                  _paintMarks,
-                  if (_searcher != null) _searcher!.pageTextMatchPaintCallback,
-                ],
-                layoutPages: _viewMode == _ViewMode.scroll
-                    ? null
-                    : (pages, params) {
-                        if (_viewMode == _ViewMode.horizontal) {
-                          final height = pages.fold<double>(
+                  onPageChanged: (page) {
+                    if (mounted && page != null) {
+                      setState(() => _currentPage = page);
+                    }
+                  },
+                  pagePaintCallbacks: [
+                    _paintMarks,
+                    if (_searcher != null)
+                      _searcher!.pageTextMatchPaintCallback,
+                  ],
+                  layoutPages: _viewMode == _ViewMode.scroll
+                      ? null
+                      : (pages, params) {
+                          if (_viewMode == _ViewMode.horizontal) {
+                            final height = pages.fold<double>(
+                              0,
+                              (value, page) => math.max(value, page.height),
+                            );
+                            final layouts = <Rect>[];
+                            var x = params.margin;
+                            for (final page in pages) {
+                              layouts.add(
+                                Rect.fromLTWH(
+                                  x,
+                                  params.margin + (height - page.height) / 2,
+                                  page.width,
+                                  page.height,
+                                ),
+                              );
+                              x += page.width + params.margin;
+                            }
+                            return PdfPageLayout(
+                              pageLayouts: layouts,
+                              documentSize: Size(x, height + params.margin * 2),
+                            );
+                          }
+                          final width = pages.fold<double>(
                             0,
-                            (value, page) => math.max(value, page.height),
+                            (value, page) => math.max(value, page.width),
                           );
                           final layouts = <Rect>[];
-                          var x = params.margin;
-                          for (final page in pages) {
+                          var y = params.margin;
+                          for (var index = 0; index < pages.length; index++) {
+                            final page = pages[index];
+                            final position = index + 1;
+                            final isLeft = position.isEven;
+                            final otherIndex = isLeft ? index - 1 : index + 1;
+                            final rowHeight =
+                                otherIndex >= 0 && otherIndex < pages.length
+                                ? math.max(
+                                    page.height,
+                                    pages[otherIndex].height,
+                                  )
+                                : page.height;
                             layouts.add(
                               Rect.fromLTWH(
-                                x,
-                                params.margin + (height - page.height) / 2,
+                                isLeft
+                                    ? params.margin * 2 + width
+                                    : params.margin + width - page.width,
+                                y + (rowHeight - page.height) / 2,
                                 page.width,
                                 page.height,
                               ),
                             );
-                            x += page.width + params.margin;
+                            if (isLeft || index == pages.length - 1) {
+                              y += rowHeight + params.margin;
+                            }
                           }
                           return PdfPageLayout(
                             pageLayouts: layouts,
-                            documentSize: Size(x, height + params.margin * 2),
-                          );
-                        }
-                        final width = pages.fold<double>(
-                          0,
-                          (value, page) => math.max(value, page.width),
-                        );
-                        final layouts = <Rect>[];
-                        var y = params.margin;
-                        for (var index = 0; index < pages.length; index++) {
-                          final page = pages[index];
-                          final position = index + 1;
-                          final isLeft = position.isEven;
-                          final otherIndex = isLeft ? index - 1 : index + 1;
-                          final rowHeight =
-                              otherIndex >= 0 && otherIndex < pages.length
-                              ? math.max(page.height, pages[otherIndex].height)
-                              : page.height;
-                          layouts.add(
-                            Rect.fromLTWH(
-                              isLeft
-                                  ? params.margin * 2 + width
-                                  : params.margin + width - page.width,
-                              y + (rowHeight - page.height) / 2,
-                              page.width,
-                              page.height,
+                            documentSize: Size(
+                              width * 2 + params.margin * 3,
+                              y,
                             ),
                           );
-                          if (isLeft || index == pages.length - 1) {
-                            y += rowHeight + params.margin;
-                          }
-                        }
-                        return PdfPageLayout(
-                          pageLayouts: layouts,
-                          documentSize: Size(width * 2 + params.margin * 3, y),
-                        );
-                      },
-              ),
-            ),
-          if (_pageCount > 0)
-            Positioned(
-              right: 16,
-              bottom: 16,
-              child: Chip(label: Text('$_currentPage / $_pageCount')),
-            ),
-          if (_hasSelectedText)
-            Positioned(
-              left: 12,
-              right: 12,
-              bottom: 12,
-              child: SafeArea(
-                top: false,
-                child: Material(
-                  color: Theme.of(context).colorScheme.surfaceContainerHigh,
-                  elevation: 8,
-                  borderRadius: BorderRadius.circular(14),
-                  child: SingleChildScrollView(
-                    scrollDirection: Axis.horizontal,
-                    padding: const EdgeInsets.symmetric(
-                      horizontal: 6,
-                      vertical: 4,
-                    ),
-                    child: Row(
-                      mainAxisSize: MainAxisSize.min,
-                      children: [
-                        TextButton.icon(
-                          onPressed: () async {
-                            await _controller.textSelectionDelegate
-                                .copyTextSelection();
-                            await _controller.textSelectionDelegate
-                                .clearTextSelection();
-                            if (mounted) {
-                              setState(() => _hasSelectedText = false);
-                            }
-                          },
-                          icon: const Icon(Icons.copy_outlined, size: 18),
-                          label: const Text('복사'),
-                        ),
-                        TextButton(
-                          onPressed: () => _applyMark(_MarkType.highlight),
-                          child: const Text('형광펜'),
-                        ),
-                        TextButton(
-                          onPressed: () => _applyMark(_MarkType.underline),
-                          child: const Text('밑줄'),
-                        ),
-                        TextButton(
-                          onPressed: () => _applyMark(_MarkType.strike),
-                          child: const Text('취소선'),
-                        ),
-                        TextButton(
-                          onPressed: () => _applyMark(_MarkType.bold),
-                          child: const Text('강조'),
-                        ),
-                      ],
-                    ),
-                  ),
+                        },
                 ),
               ),
-            ),
-          if (_busy)
-            Positioned.fill(
-              child: ColoredBox(
-                color: Colors.black.withAlpha(55),
-                child: Center(
-                  child: Card(
-                    child: Padding(
-                      padding: const EdgeInsets.all(24),
+            if (_pageCount > 0)
+              Positioned(
+                right: 16,
+                bottom: 16,
+                child: Chip(label: Text('$_currentPage / $_pageCount')),
+              ),
+            if (_hasSelectedText)
+              Positioned(
+                left: 12,
+                right: 12,
+                bottom: 12,
+                child: SafeArea(
+                  top: false,
+                  child: Material(
+                    color: Theme.of(context).colorScheme.surfaceContainerHigh,
+                    elevation: 8,
+                    borderRadius: BorderRadius.circular(14),
+                    child: SingleChildScrollView(
+                      scrollDirection: Axis.horizontal,
+                      padding: const EdgeInsets.symmetric(
+                        horizontal: 6,
+                        vertical: 4,
+                      ),
                       child: Row(
                         mainAxisSize: MainAxisSize.min,
                         children: [
-                          const SizedBox(
-                            width: 22,
-                            height: 22,
-                            child: CircularProgressIndicator(strokeWidth: 2.5),
+                          TextButton.icon(
+                            onPressed: () async {
+                              await _controller.textSelectionDelegate
+                                  .copyTextSelection();
+                              await _controller.textSelectionDelegate
+                                  .clearTextSelection();
+                              if (mounted) {
+                                setState(() => _hasSelectedText = false);
+                              }
+                            },
+                            icon: const Icon(Icons.copy_outlined, size: 18),
+                            label: const Text('복사'),
                           ),
-                          const SizedBox(width: 16),
-                          Text(_busyMessage),
+                          TextButton(
+                            onPressed: () => _applyMark(_MarkType.highlight),
+                            child: const Text('형광펜'),
+                          ),
+                          TextButton(
+                            onPressed: () => _applyMark(_MarkType.underline),
+                            child: const Text('밑줄'),
+                          ),
+                          TextButton(
+                            onPressed: () => _applyMark(_MarkType.strike),
+                            child: const Text('취소선'),
+                          ),
+                          TextButton(
+                            onPressed: () => _applyMark(_MarkType.bold),
+                            child: const Text('강조'),
+                          ),
                         ],
                       ),
                     ),
                   ),
                 ),
               ),
-            ),
-        ],
+            if (_busy)
+              Positioned.fill(
+                child: ColoredBox(
+                  color: Colors.black.withAlpha(55),
+                  child: Center(
+                    child: Card(
+                      child: Padding(
+                        padding: const EdgeInsets.all(24),
+                        child: Row(
+                          mainAxisSize: MainAxisSize.min,
+                          children: [
+                            const SizedBox(
+                              width: 22,
+                              height: 22,
+                              child: CircularProgressIndicator(
+                                strokeWidth: 2.5,
+                              ),
+                            ),
+                            const SizedBox(width: 16),
+                            Text(_busyMessage),
+                          ],
+                        ),
+                      ),
+                    ),
+                  ),
+                ),
+              ),
+          ],
+        ),
       ),
-    ),
-  );
+    );
+  }
 }

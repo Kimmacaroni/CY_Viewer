@@ -6,6 +6,7 @@ import Vision
 class MainFlutterWindow: NSWindow {
   private var securityScopedURLs: [URL] = []
   private var fileAccessChannel: FlutterMethodChannel?
+  private var commandChannel: FlutterMethodChannel?
 
   override func awakeFromNib() {
     let flutterViewController = FlutterViewController()
@@ -14,6 +15,10 @@ class MainFlutterWindow: NSWindow {
     self.setFrame(windowFrame, display: true)
 
     RegisterGeneratedPlugins(registry: flutterViewController)
+
+    commandChannel = FlutterMethodChannel(
+      name: "com.kimmacaroni.cyviewer/commands",
+      binaryMessenger: flutterViewController.engine.binaryMessenger)
 
     let ocrChannel = FlutterMethodChannel(
       name: "com.kimmacaroni.cyviewer/ocr",
@@ -54,6 +59,22 @@ class MainFlutterWindow: NSWindow {
 
     super.awakeFromNib()
   }
+
+  private func sendCommand(_ command: String) {
+    commandChannel?.invokeMethod(command, arguments: nil)
+  }
+
+  @objc func openPdf(_ sender: Any?) { sendCommand("open") }
+  @objc func savePdfCopy(_ sender: Any?) { sendCommand("saveCopy") }
+  @objc func printPdf(_ sender: Any?) { sendCommand("print") }
+  @objc func findInPdf(_ sender: Any?) { sendCommand("find") }
+  @objc func findNextInPdf(_ sender: Any?) { sendCommand("findNext") }
+  @objc func findPreviousInPdf(_ sender: Any?) { sendCommand("findPrevious") }
+  @objc func zoomInPdf(_ sender: Any?) { sendCommand("zoomIn") }
+  @objc func zoomOutPdf(_ sender: Any?) { sendCommand("zoomOut") }
+  @objc func showActualSizePdf(_ sender: Any?) { sendCommand("actualSize") }
+  @objc func togglePdfBookmark(_ sender: Any?) { sendCommand("bookmark") }
+  @objc func goToPdfPage(_ sender: Any?) { sendCommand("goToPage") }
 
   deinit {
     for url in securityScopedURLs {
