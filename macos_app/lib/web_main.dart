@@ -3,12 +3,13 @@ import 'dart:convert';
 import 'dart:math' as math;
 import 'dart:typed_data';
 
-import 'package:file_picker/file_picker.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_localizations/flutter_localizations.dart';
 import 'package:pdfrx/pdfrx.dart';
 import 'package:printing/printing.dart';
 import 'package:shared_preferences/shared_preferences.dart';
+
+import 'web_pdf_picker.dart';
 
 void main() => runApp(const CyViewerWebApp());
 
@@ -67,15 +68,11 @@ class _WebLibraryPageState extends State<_WebLibraryPage> {
       _error = null;
     });
     try {
-      final result = await FilePicker.pickFiles(
-        type: FileType.custom,
-        allowedExtensions: const ['pdf'],
-      );
-      if (result.isEmpty) {
+      final file = await pickWebPdf();
+      if (file == null) {
         return;
       }
-      final file = result.single;
-      final bytes = await file.readAsBytes();
+      final bytes = file.bytes;
       if (bytes.isEmpty) {
         throw const FormatException('선택한 PDF를 읽지 못했습니다.');
       }
