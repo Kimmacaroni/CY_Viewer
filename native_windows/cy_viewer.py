@@ -31,7 +31,7 @@ COLORS = {
     "blue_soft": "#EAF1FF",
     "green": "#15803D",
     "red": "#DC2626",
-    "sidebar": "#F8FAFC",
+    "sidebar": "#FFFFFF",
 }
 
 
@@ -46,7 +46,7 @@ class RoundedButton(tk.Canvas):
 
     def __init__(self, parent: tk.Widget, text: str, command, variant: str = "secondary") -> None:
         compact = text in {"+", "−", "☆"}
-        self.height = 44
+        self.height = 48 if variant == "primary" else 44
         self.radius = 10
         self.command = command
         self.text = text
@@ -56,7 +56,7 @@ class RoundedButton(tk.Canvas):
         super().__init__(
             parent,
             height=self.height,
-            width=42 if compact else 220,
+            width=44 if compact else 220,
             bg=parent.cget("bg"),
             highlightthickness=0,
             bd=0,
@@ -223,7 +223,7 @@ class CyViewer(TkinterDnD.Tk):
         self.save_badge = tk.Label(header, text=self.save_state, fg=COLORS["muted"], bg=COLORS["canvas"], padx=10, pady=4, font=("Malgun Gothic", 9, "bold"))
         self.save_badge.grid(row=0, column=2, sticky="e")
 
-        workspace = tk.Frame(self, bg=COLORS["canvas"])
+        workspace = self.workspace = tk.Frame(self, bg=COLORS["canvas"])
         workspace.pack(fill="both", expand=True)
         rail = tk.Frame(workspace, width=252, bg=COLORS["sidebar"])
         rail.pack(side="left", fill="y")
@@ -372,6 +372,53 @@ class CyViewer(TkinterDnD.Tk):
             font=("Malgun Gothic", 10),
         )
         self.status.pack(fill="x", padx=16, pady=(0, 16))
+        self._make_welcome()
+
+    def _make_welcome(self) -> None:
+        # 파일이 없을 때는 실행할 수 없는 리더 도구 대신 공통 시작 화면을 보여준다.
+        self.workspace.pack_forget()
+        self.save_badge.grid_remove()
+        self.welcome = tk.Frame(self, bg=COLORS["canvas"])
+        self.welcome.pack(fill="both", expand=True)
+        layout = tk.Frame(self.welcome, bg=COLORS["canvas"], padx=32, pady=32)
+        layout.place(relx=.5, rely=.5, anchor="center", relwidth=.94)
+        layout.grid_columnconfigure(0, weight=1, uniform="welcome")
+        layout.grid_columnconfigure(1, weight=1, uniform="welcome")
+        intro = tk.Frame(layout, bg=COLORS["canvas"])
+        intro.grid(row=0, column=0, sticky="ew", padx=(0, 28))
+        def label(parent, text, size=11, bold=False, color=None, background=None):
+            widget = tk.Label(parent, text=text, justify="left", anchor="w",
+                bg=background or COLORS["canvas"], fg=color or COLORS["ink"],
+                font=("Malgun Gothic", size, "bold" if bold else "normal"))
+            widget.pack(fill="x", pady=(0, 12))
+            parent.bind("<Configure>", lambda event, item=widget: item.configure(wraplength=max(120, event.width - 16)), add="+")
+            return widget
+        label(intro, "문서 작업 공간", bold=True, color=COLORS["blue"])
+        label(intro, "문서를 열고,\n바로 읽으세요.", 24, True)
+        label(intro, "PDF를 선택하거나 이 창에 끌어놓으세요.", color=COLORS["muted"])
+        for title, detail in [
+            ("찾고 읽기", "문서 검색 · 확대 · 보기 방식 변경"),
+            ("중요한 페이지 남기기", "책갈피로 필요한 곳을 빠르게 찾기"),
+            ("표시하고 저장하기", "텍스트 표시 · OCR · PDF와 이미지 저장"),
+        ]:
+            label(intro, title, 11, True)
+            label(intro, detail, 10, color=COLORS["muted"])
+        panel = tk.Frame(layout, bg=COLORS["surface"], padx=28, pady=28,
+            highlightbackground=COLORS["line"], highlightthickness=1)
+        panel.grid(row=0, column=1, sticky="ew", padx=(28, 0))
+        label(panel, "PDF", 24, True, COLORS["blue"], COLORS["surface"])
+        label(panel, "어떤 문서를 읽을까요?", 17, True, background=COLORS["surface"])
+        label(panel, "이 기기에 있는 PDF 파일을 선택하세요.", color=COLORS["muted"], background=COLORS["surface"])
+        self._button(panel, "＋  PDF 열기", self.open_pdf, "Primary.TButton").pack(fill="x", pady=(12, 24))
+        tk.Frame(panel, bg=COLORS["line"], height=1).pack(fill="x", pady=(0, 16))
+        label(panel, "문서는 이 기기에서만 처리합니다.", 10, color=COLORS["muted"], background=COLORS["surface"])
+        # 자식 위에서도 파일을 놓을 수 있도록 같은 파일 열기 동작을 연결한다.
+        def register_drop(widget):
+            widget.drop_target_register(DND_FILES)
+            widget.dnd_bind("<<Drop>>", self.drop_pdf)
+            for child in widget.winfo_children():
+                register_drop(child)
+        register_drop(self.welcome)
 
     def _button(self, parent: tk.Widget, label: str, command, style: str = "Action.TButton") -> RoundedButton:
         return RoundedButton(parent, label, command, "primary" if style == "Primary.TButton" else "secondary")
@@ -429,9 +476,10 @@ class CyViewer(TkinterDnD.Tk):
 
     def load_pdf(self, selected: Path) -> None:
         try:
+            opened_document = pymupdf.open(str(selected))
             if self.document:
                 self.document.close()
-            self.document = pymupdf.open(str(selected))
+            self.document = opened_document
             self.document_path = selected
             self.page_number = 0
             self.zoom = 1.2
@@ -448,6 +496,9 @@ class CyViewer(TkinterDnD.Tk):
             self.selection_label.config(text="선택한 내용")
             self._set_selection_details("문구를 드래그해 선택하면\n이곳에서 선택한 내용을\n확인할 수 있어요.")
             self._set_selection_feedback()
+            self.welcome.pack_forget()
+            self.workspace.pack(fill="both", expand=True)
+            self.save_badge.grid()
             self.draw_page()
         except Exception as error:
             messagebox.showerror("CY뷰어", f"PDF를 열 수 없습니다.\n\n{error}")

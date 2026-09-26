@@ -104,6 +104,7 @@ abstract final class CyDesign {
       ),
       outlinedButtonTheme: OutlinedButtonThemeData(
         style: OutlinedButton.styleFrom(
+          foregroundColor: scheme.onSurface,
           minimumSize: const Size(44, 44),
           shape: shape,
           side: BorderSide(color: scheme.outlineVariant),
@@ -201,10 +202,7 @@ class CyDocumentWelcome extends StatelessWidget {
               ),
             ),
             const SizedBox(height: 16),
-            Text(
-              web ? '문서를 열고,\n바로 읽으세요.' : '첫 PDF를 열어 보세요',
-              style: theme.textTheme.headlineMedium,
-            ),
+            Text('문서를 열고,\n바로 읽으세요.', style: theme.textTheme.headlineMedium),
             const SizedBox(height: 12),
             Text(
               web
@@ -337,4 +335,110 @@ class _Feature extends StatelessWidget {
       ),
     ],
   );
+}
+
+/// 데스크톱의 탐색·편집·저장 순서를 모든 Flutter 리더에서 공유한다.
+class CyReaderWorkspace extends StatelessWidget {
+  const CyReaderWorkspace({
+    super.key,
+    required this.child,
+    required this.onOpen,
+    required this.onSearch,
+    required this.onPage,
+    required this.onBookmark,
+    required this.onTools,
+    required this.onSave,
+    required this.onPrint,
+    required this.onZoomIn,
+    required this.onZoomOut,
+    this.editing,
+    this.exports,
+  });
+  final Widget child;
+  final VoidCallback onOpen,
+      onBookmark,
+      onTools,
+      onSave,
+      onPrint,
+      onZoomIn,
+      onZoomOut;
+  final VoidCallback? onSearch, onPage;
+  final Widget? editing, exports;
+
+  static bool isWide(BuildContext context) =>
+      MediaQuery.sizeOf(context).width >= 1100 &&
+      MediaQuery.textScalerOf(context).scale(14) <= 20;
+
+  @override
+  Widget build(BuildContext context) {
+    if (!isWide(context)) return child;
+    final theme = Theme.of(context);
+    Widget section(String title, List<Widget> children) => Column(
+      crossAxisAlignment: CrossAxisAlignment.stretch,
+      children: [
+        const SizedBox(height: 24),
+        Text(title, style: theme.textTheme.labelLarge),
+        const SizedBox(height: 8),
+        ...children,
+      ],
+    );
+    Widget action(String label, IconData icon, VoidCallback? callback) =>
+        Padding(
+          padding: const EdgeInsets.only(bottom: 8),
+          child: OutlinedButton.icon(
+            onPressed: callback,
+            icon: Icon(icon, size: 18),
+            label: Text(label),
+          ),
+        );
+    return Row(
+      children: [
+        Container(
+          width: 252,
+          decoration: BoxDecoration(
+            color: theme.colorScheme.surface,
+            border: Border(
+              right: BorderSide(color: theme.colorScheme.outlineVariant),
+            ),
+          ),
+          child: ListView(
+            padding: const EdgeInsets.all(16),
+            children: [
+              FilledButton.icon(
+                onPressed: onOpen,
+                icon: const Icon(Icons.add),
+                label: const Text('PDF 열기'),
+              ),
+              section('01  문서 탐색', [
+                action('문서 검색', Icons.search, onSearch),
+                action('페이지 이동', Icons.find_in_page_outlined, onPage),
+                action('이 페이지 책갈피', Icons.bookmark_border, onBookmark),
+                Row(
+                  children: [
+                    Expanded(child: action('축소', Icons.remove, onZoomOut)),
+                    const SizedBox(width: 8),
+                    Expanded(child: action('확대', Icons.add, onZoomIn)),
+                  ],
+                ),
+                action('보기 방식 · 책갈피 목록', Icons.tune, onTools),
+              ]),
+              section('02  선택·편집', [
+                editing ??
+                    Text(
+                      '문구를 드래그해 선택하고 복사하세요.',
+                      style: theme.textTheme.bodySmall,
+                    ),
+              ]),
+              section('03  저장·내보내기', [
+                action('PDF로 저장', Icons.save_alt, onSave),
+                ?exports,
+                action('인쇄', Icons.print_outlined, onPrint),
+              ]),
+            ],
+          ),
+        ),
+        Expanded(child: child),
+      ],
+    );
+  }
 }
