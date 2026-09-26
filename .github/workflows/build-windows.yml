@@ -1,0 +1,78 @@
+name: Windows build
+on:
+  workflow_dispatch:
+  pull_request:
+    paths: ['native_windows/**', 'installer/**', 'CYViewer.spec', '.github/workflows/build-windows.yml']
+  push:
+    branches: [main]
+    tags: ['windows-v*']
+    paths: ['native_windows/**', 'installer/**', 'CYViewer.spec', '.github/workflows/build-windows.yml']
+permissions:
+  contents: read
+jobs:
+  build:
+    runs-on: windows-latest
+    timeout-minutes: 20
+    outputs:
+      version: ${{ steps.version.outputs.version }}
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - name: Install dependencies
+        run: python -m pip install pyinstaller pymupdf pillow pywin32 tkinterdnd2
+      - name: Smoke test
+        run: python native_windows/tests/smoke.py
+      - name: Read installer version
+        id: version
+        env:
+          RELEASE_REF: ${{ github.ref }}
+          RELEASE_TAG: ${{ github.ref_name }}
+        run: |
+          $version = [regex]::Match((Get-Content installer/CYViewer.iss -Raw), 'MyAppVersion "([0-9.]+)"').Groups[1].Value
+          if (-not $version) { throw '설치 버전이 없습니다.' }
+          if ($env:RELEASE_REF.StartsWith('refs/tags/') -and $env:RELEASE_TAG -ne "windows-v$version") { throw '태그와 설치 버전이 다릅니다.' }
+          "version=$version" >> $env:GITHUB_OUTPUT
+      - name: Build executable and installer
+        run: |
+          python -m PyInstaller --noconfirm --distpath dist_titleicon4 CYViewer.spec
+          if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
+          & "${env:ProgramFiles(x86)}\Inno Setup 6\ISCC.exe" installer/CYViewer.iss
+          if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
+          python -m pip freeze > release/build-dependencies.txt
+      - name: Checksums
+        env:
+          PACKAGE_VERSION: ${{ steps.version.outputs.version }}
+        run: |
+          $file = "CYViewer-Setup-v$env:PACKAGE_VERSION.exe"
+          $hash = (Get-FileHash "release/$file" -Algorithm SHA256).Hash.ToLower()
+          "$hash  $file" | Set-Content "release/SHA256SUMS-Windows-v$env:PACKAGE_VERSION.txt" -Encoding ascii
+      - uses: actions/upload-artifact@v4
+        with:
+          name: CYViewer-Windows-v${{ steps.version.outputs.version }}
+          path: release/*
+          if-no-files-found: error
+  release:
+    if: startsWith(github.ref, 'refs/tags/windows-v')
+    needs: build
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    steps:
+      - uses: actions/download-artifact@v4
+        with:
+          name: CYViewer-Windows-v${{ needs.build.outputs.version }}
+          path: packages
+      - name: Publish Windows installer
+        env:
+          GH_TOKEN: ${{ github.token }}
+          GH_REPO: ${{ github.repository }}
+          RELEASE_TAG: ${{ github.ref_name }}
+          PACKAGE_VERSION: ${{ needs.build.outputs.version }}
+        run: |
+          cat > notes.md <<'EOF'
+          Mac·웹앱과 시작 화면, 색상, 버튼, 문서 탐색·편집·저장 흐름을 통일했습니다.
+          Windows 10·11 64비트용 설치 파일입니다. SHA-256과 빌드 의존성 목록을 함께 제공합니다.
+          EOF
+          gh release create "$RELEASE_TAG" packages/* --verify-tag --title "CY뷰어 Windows v${PACKAGE_VERSION}" --notes-file notes.md --latest=false
