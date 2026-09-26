@@ -8,8 +8,8 @@ PDF를 읽고, 찾고, 표시하고, 저장하고, 인쇄할 수 있는 개인�
 
 | 사용 환경 | 다운로드 및 실행 |
 | --- | --- |
-| Windows 10·11 64비트 | [Windows 설치 파일 v1.0.0](https://github.com/Kimmacaroni/CY_Viewer/releases/download/v1.0.0/CYViewer-Setup-v1.0.0.exe) |
-| macOS | [macOS 설치 파일과 전체 릴리스](https://github.com/Kimmacaroni/CY_Viewer/releases) |
+| Windows 10·11 64비트 | [Windows 설치 파일 v1.1.0](https://github.com/Kimmacaroni/CY_Viewer/releases/download/windows-v1.1.0/CYViewer-Setup-v1.1.0.exe) |
+| macOS | [macOS 설치 파일 v1.4.0](https://github.com/Kimmacaroni/CY_Viewer/releases/download/macos-v1.4.0/CYViewer-macOS-v1.4.0.dmg) |
 | iPhone·iPad·웹 | [CY뷰어 웹앱 열기](https://kimmacaroni.github.io/CY_Viewer/) |
 
 아이폰에서는 Safari로 웹앱을 연 뒤 `공유` → `홈 화면에 추가`를 선택하면
