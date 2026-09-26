@@ -22,6 +22,8 @@ jobs:
           python-version: '3.12'
       - name: Install dependencies
         run: python -m pip install pyinstaller pymupdf pillow pywin32 tkinterdnd2
+      - name: Test updater validation
+        run: python -m unittest discover -s native_windows/tests -p "test_*.py"
       - name: Smoke test
         run: python native_windows/tests/smoke.py
       - name: Read installer version
@@ -41,6 +43,8 @@ jobs:
           & "${env:ProgramFiles(x86)}\Inno Setup 6\ISCC.exe" installer/CYViewer.iss
           if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
           python -m pip freeze > release/build-dependencies.txt
+      - name: Test installer
+        run: ./native_windows/tests/install_smoke.ps1
       - name: Checksums
         env:
           PACKAGE_VERSION: ${{ steps.version.outputs.version }}
@@ -72,7 +76,8 @@ jobs:
           PACKAGE_VERSION: ${{ needs.build.outputs.version }}
         run: |
           cat > notes.md <<'EOF'
-          Mac·웹앱과 시작 화면, 색상, 버튼, 문서 탐색·편집·저장 흐름을 통일했습니다.
+          배포 사이트와 앱 내 새 버전 알림, 다운로드·SHA-256 검증, 종료 후 업데이트 설치·재실행 기능을 추가했습니다.
+          이전 버전 사용자는 이 설치 파일을 한 번 직접 설치해 주세요.
           Windows 10·11 64비트용 설치 파일입니다. SHA-256과 빌드 의존성 목록을 함께 제공합니다.
           EOF
           gh release create "$RELEASE_TAG" packages/* --verify-tag --title "CY뷰어 Windows v${PACKAGE_VERSION}" --notes-file notes.md --latest=false

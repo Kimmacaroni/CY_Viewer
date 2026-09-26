@@ -522,6 +522,25 @@ class _LibraryPageState extends State<LibraryPage> {
       appBar: AppBar(
         title: const CyBrand(),
         actions: [
+          if (Platform.isMacOS)
+            IconButton(
+              tooltip: '업데이트 확인',
+              icon: const Icon(Icons.system_update_alt),
+              onPressed: () async {
+                try {
+                  await const MethodChannel('com.kimmacaroni.cyviewer/updates')
+                      .invokeMethod<void>('check');
+                } on PlatformException catch (_) {
+                  if (context.mounted) {
+                    ScaffoldMessenger.of(context).showSnackBar(
+                      const SnackBar(
+                        content: Text('업데이트를 확인하지 못했습니다. 다시 시도해 주세요.'),
+                      ),
+                    );
+                  }
+                }
+              },
+            ),
           if (_items.isNotEmpty)
             Padding(
               padding: const EdgeInsets.only(right: 16),

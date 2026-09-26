@@ -5,11 +5,15 @@ on:
   pull_request:
     paths:
       - "macos_app/**"
+      - "site/**"
+      - "tests/downloads.test.cjs"
       - ".github/workflows/deploy-web.yml"
   push:
     branches: [main]
     paths:
       - "macos_app/**"
+      - "site/**"
+      - "tests/downloads.test.cjs"
       - ".github/workflows/deploy-web.yml"
 
 permissions:
@@ -32,6 +36,9 @@ jobs:
         with:
           channel: stable
           cache: true
+      - name: Test download site
+        working-directory: .
+        run: node --test tests/downloads.test.cjs
       - name: Resolve packages
         run: flutter pub get
       - name: Analyze
@@ -42,6 +49,8 @@ jobs:
         env:
           REPOSITORY_NAME: ${{ github.event.repository.name }}
         run: flutter build web --release --target lib/web_main.dart --base-href "/${REPOSITORY_NAME}/"
+      - name: Include download site
+        run: cp -R ../site/download build/web/download
       - uses: actions/upload-pages-artifact@v3
         with:
           path: macos_app/build/web
