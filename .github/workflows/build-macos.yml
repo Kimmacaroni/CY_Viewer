@@ -5,12 +5,14 @@ on:
   pull_request:
     paths:
       - "macos_app/**"
+      - "tests/check_mac_updater.py"
       - ".github/workflows/build-macos.yml"
   push:
     branches: [main]
     tags: ["macos-v*"]
     paths:
       - "macos_app/**"
+      - "tests/check_mac_updater.py"
       - ".github/workflows/build-macos.yml"
 
 permissions:
@@ -36,6 +38,9 @@ jobs:
           channel: stable
           cache: true
 
+      - name: Test update release validation
+        working-directory: .
+        run: python3 tests/check_mac_updater.py
       - name: Resolve packages
         run: flutter pub get
 
@@ -103,6 +108,8 @@ jobs:
           PACKAGE_VERSION: ${{ needs.build.outputs.version }}
         run: |
           cat > notes.md <<'EOF'
+          배포 사이트와 앱 내 업데이트 알림·다운로드·검증 기능을 추가했습니다. Mac은 DMG를 연 뒤 Applications로 직접 옮겨 교체합니다.
+
           macOS용 CY뷰어 설치 파일입니다. DMG를 열고 CYViewer.app을 Applications 폴더로 옮겨 주세요.
 
           이 패키지는 Apple Developer 서명·공증 전 배포본입니다.
