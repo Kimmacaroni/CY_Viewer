@@ -9,3 +9,6 @@ windows_print/obj/
 windows_print/AppPackages*/
 windows_print/publish/
 release/
+
+__pycache__/
+*.pyc

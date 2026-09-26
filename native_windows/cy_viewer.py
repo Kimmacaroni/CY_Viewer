@@ -19,6 +19,7 @@ import pymupdf
 import win32ui
 from PIL import Image, ImageDraw, ImageTk, ImageWin
 from tkinterdnd2 import DND_FILES, TkinterDnD
+from updater import UpdateController
 
 
 COLORS = {
@@ -222,6 +223,10 @@ class CyViewer(TkinterDnD.Tk):
         header.grid_columnconfigure(1, weight=1)
         self.save_badge = tk.Label(header, text=self.save_state, fg=COLORS["muted"], bg=COLORS["canvas"], padx=10, pady=4, font=("Malgun Gothic", 9, "bold"))
         self.save_badge.grid(row=0, column=2, sticky="e")
+        update_button = self._button(header, "업데이트 확인", lambda: self.updater.check())
+        update_button.configure(width=148)
+        update_button.grid(row=0, column=3, padx=(12, 0))
+        self.updater = UpdateController(self, update_button)
 
         workspace = self.workspace = tk.Frame(self, bg=COLORS["canvas"])
         workspace.pack(fill="both", expand=True)
