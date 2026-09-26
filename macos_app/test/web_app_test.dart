@@ -7,7 +7,7 @@ void main() {
     await tester.pumpAndSettle();
 
     expect(find.text('CY뷰어'), findsOneWidget);
-    expect(find.text('아이폰에서 PDF를 열어 보세요'), findsOneWidget);
-    expect(find.text('PDF 선택'), findsOneWidget);
+    expect(find.text('어떤 문서를 읽을까요?'), findsOneWidget);
+    expect(find.text('PDF 열기'), findsOneWidget);
   });
 }
