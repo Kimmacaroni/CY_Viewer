@@ -10,6 +10,7 @@ import 'package:printing/printing.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 import 'web_pdf_picker.dart';
+import 'cy_design.dart';
 
 void main() => runApp(const CyViewerWebApp());
 
@@ -23,31 +24,11 @@ class CyViewerWebApp extends StatelessWidget {
     locale: const Locale('ko'),
     supportedLocales: const [Locale('ko')],
     localizationsDelegates: GlobalMaterialLocalizations.delegates,
-    theme: _theme(Brightness.light),
-    darkTheme: _theme(Brightness.dark),
+    theme: CyDesign.theme(Brightness.light),
+    darkTheme: CyDesign.theme(Brightness.dark),
     themeMode: ThemeMode.system,
     home: const _WebLibraryPage(),
   );
-
-  static ThemeData _theme(Brightness brightness) {
-    final scheme = ColorScheme.fromSeed(
-      seedColor: const Color(0xff2563eb),
-      brightness: brightness,
-    );
-    return ThemeData(
-      colorScheme: scheme,
-      scaffoldBackgroundColor: brightness == Brightness.light
-          ? const Color(0xffe2e8f0)
-          : null,
-      cardTheme: const CardThemeData(
-        margin: EdgeInsets.zero,
-        shape: RoundedRectangleBorder(
-          borderRadius: BorderRadius.all(Radius.circular(8)),
-        ),
-      ),
-      useMaterial3: true,
-    );
-  }
 }
 
 class _WebLibraryPage extends StatefulWidget {
@@ -113,9 +94,7 @@ class _WebLibraryPageState extends State<_WebLibraryPage> {
   @override
   Widget build(BuildContext context) => Scaffold(
     appBar: AppBar(
-      backgroundColor: const Color(0xff0f172a),
-      foregroundColor: Colors.white,
-      title: const Text('CY뷰어'),
+      title: const CyBrand(),
       actions: [
         IconButton(
           tooltip: '설치 방법',
@@ -139,38 +118,22 @@ class _WebLibraryPageState extends State<_WebLibraryPage> {
         ),
       ],
     ),
-    body: Center(
-      child: SingleChildScrollView(
-        padding: const EdgeInsets.all(24),
-        child: SizedBox(
-          width: math.min(MediaQuery.sizeOf(context).width - 48, 520),
-          child: Card(
-            child: Padding(
-              padding: const EdgeInsets.all(32),
-              child: Column(
-                mainAxisSize: MainAxisSize.min,
-                children: [
-                  Icon(
-                    Icons.picture_as_pdf_outlined,
-                    size: 72,
-                    color: Theme.of(context).colorScheme.primary,
-                  ),
-                  const SizedBox(height: 20),
-                  Text(
-                    '아이폰에서 PDF를 열어 보세요',
-                    style: Theme.of(context).textTheme.headlineSmall,
-                    textAlign: TextAlign.center,
-                  ),
-                  const SizedBox(height: 12),
-                  const Text(
-                    '문서는 서버로 전송되지 않고 이 기기에서만 열립니다. '
-                    '웹앱을 닫으면 PDF 원본은 저장되지 않습니다.',
-                    textAlign: TextAlign.center,
-                  ),
-                  const SizedBox(height: 24),
-                  SizedBox(
-                    width: 160,
-                    height: 48,
+    body: SafeArea(
+      child: Center(
+        child: SingleChildScrollView(
+          padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 40),
+          child: ConstrainedBox(
+            constraints: const BoxConstraints(maxWidth: 1000),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.stretch,
+              children: [
+                CyDocumentWelcome(
+                  web: true,
+                  action: SizedBox(
+                    height: math.max(
+                      52,
+                      MediaQuery.textScalerOf(context).scale(16) + 28,
+                    ),
                     child: Stack(
                       fit: StackFit.expand,
                       children: [
@@ -183,7 +146,10 @@ class _WebLibraryPageState extends State<_WebLibraryPage> {
                                     strokeWidth: 2,
                                   ),
                                 )
-                              : const Icon(Icons.folder_open),
+                              : const Icon(
+                                  Icons.folder_open_outlined,
+                                  size: 20,
+                                ),
                           label: Text(_opening ? 'PDF 여는 중…' : 'PDF 선택'),
                         ),
                         if (!_opening)
@@ -194,25 +160,27 @@ class _WebLibraryPageState extends State<_WebLibraryPage> {
                       ],
                     ),
                   ),
-                  if (_error != null) ...[
-                    const SizedBox(height: 20),
-                    Semantics(
-                      liveRegion: true,
-                      child: Container(
-                        padding: const EdgeInsets.all(12),
-                        decoration: BoxDecoration(
-                          color: const Color(0xffdc2626).withAlpha(22),
-                          borderRadius: BorderRadius.circular(8),
-                        ),
-                        child: Text(
-                          _error!,
-                          style: const TextStyle(color: Color(0xffdc2626)),
+                ),
+                if (_error != null) ...[
+                  const SizedBox(height: 24),
+                  Semantics(
+                    liveRegion: true,
+                    child: Container(
+                      padding: const EdgeInsets.all(16),
+                      decoration: BoxDecoration(
+                        color: Theme.of(context).colorScheme.errorContainer,
+                        borderRadius: BorderRadius.circular(10),
+                      ),
+                      child: Text(
+                        _error!,
+                        style: TextStyle(
+                          color: Theme.of(context).colorScheme.onErrorContainer,
                         ),
                       ),
                     ),
-                  ],
+                  ),
                 ],
-              ),
+              ],
             ),
           ),
         ),
@@ -486,17 +454,12 @@ class _WebReaderPageState extends State<_WebReaderPage> {
     final bookmarked = _bookmarks.contains(_currentPage);
     return Scaffold(
       appBar: AppBar(
-        backgroundColor: const Color(0xff0f172a),
-        foregroundColor: Colors.white,
         title: _searching && _searcher != null
             ? TextField(
                 controller: _searchInput,
                 autofocus: true,
-                style: const TextStyle(color: Colors.white),
-                cursorColor: Colors.white,
                 decoration: const InputDecoration(
                   hintText: '문서에서 검색',
-                  hintStyle: TextStyle(color: Colors.white60),
                   border: InputBorder.none,
                 ),
                 onChanged: (text) =>

@@ -665,7 +665,9 @@ class _AdvancedPdfReaderPageState extends State<AdvancedPdfReaderPage> {
 
   @override
   Widget build(BuildContext context) {
-    final compact = MediaQuery.sizeOf(context).width < 720;
+    final compact =
+        MediaQuery.sizeOf(context).width < 1100 ||
+        MediaQuery.textScalerOf(context).scale(14) > 20;
     return PopScope(
       canPop: false,
       onPopInvokedWithResult: (didPop, _) {

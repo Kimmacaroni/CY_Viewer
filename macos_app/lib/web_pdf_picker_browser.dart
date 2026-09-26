@@ -3,7 +3,7 @@ import 'dart:js_interop';
 import 'dart:typed_data';
 import 'dart:ui_web' as ui_web;
 
-import 'package:flutter/widgets.dart';
+import 'package:flutter/material.dart';
 import 'package:web/web.dart';
 
 class PickedWebPdf {
@@ -97,6 +97,9 @@ class _WebPdfPickRegionState extends State<WebPdfPickRegion> {
   late final String _viewType;
   late final HTMLInputElement _input;
   late final JSFunction _changeListener;
+  late final JSFunction _focusListener;
+  late final JSFunction _blurListener;
+  bool _focused = false;
 
   @override
   void initState() {
@@ -114,6 +117,14 @@ class _WebPdfPickRegionState extends State<WebPdfPickRegion> {
       ..cursor = 'pointer';
     _changeListener = _handleChange.toJS;
     _input.addEventListener('change', _changeListener);
+    _focusListener = ((Event _) {
+      if (mounted) setState(() => _focused = true);
+    }).toJS;
+    _blurListener = ((Event _) {
+      if (mounted) setState(() => _focused = false);
+    }).toJS;
+    _input.addEventListener('focus', _focusListener);
+    _input.addEventListener('blur', _blurListener);
     ui_web.platformViewRegistry.registerViewFactory(_viewType, (_) => _input);
   }
 
@@ -126,9 +137,9 @@ class _WebPdfPickRegionState extends State<WebPdfPickRegion> {
       final file = _input.files?.item(0);
       if (file == null) return;
       final bytes = await _readFile(file);
-      widget.onPicked(PickedWebPdf(name: file.name, bytes: bytes));
+      if (mounted) widget.onPicked(PickedWebPdf(name: file.name, bytes: bytes));
     } on Object catch (error) {
-      widget.onError(error);
+      if (mounted) widget.onError(error);
     } finally {
       _input.value = '';
     }
@@ -137,11 +148,33 @@ class _WebPdfPickRegionState extends State<WebPdfPickRegion> {
   @override
   void dispose() {
     _input.removeEventListener('change', _changeListener);
+    _input.removeEventListener('focus', _focusListener);
+    _input.removeEventListener('blur', _blurListener);
     super.dispose();
   }
 
   @override
-  Widget build(BuildContext context) => HtmlElementView(viewType: _viewType);
+  Widget build(BuildContext context) => Stack(
+    fit: StackFit.expand,
+    children: [
+      HtmlElementView(viewType: _viewType),
+      if (_focused)
+        IgnorePointer(
+          child: Padding(
+            padding: const EdgeInsets.all(3),
+            child: DecoratedBox(
+              decoration: BoxDecoration(
+                border: Border.all(
+                  color: Theme.of(context).colorScheme.onPrimary,
+                  width: 2,
+                ),
+                borderRadius: BorderRadius.circular(8),
+              ),
+            ),
+          ),
+        ),
+    ],
+  );
 }
 
 Future<Uint8List> _readFile(File file) {

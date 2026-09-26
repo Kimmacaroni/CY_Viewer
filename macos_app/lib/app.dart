@@ -14,6 +14,7 @@ import 'package:shared_preferences/shared_preferences.dart';
 
 import 'advanced_reader.dart';
 import 'app_commands.dart';
+import 'cy_design.dart';
 
 class PersonalPdfApp extends StatelessWidget {
   const PersonalPdfApp({super.key});
@@ -25,17 +26,8 @@ class PersonalPdfApp extends StatelessWidget {
     locale: const Locale('ko'),
     localizationsDelegates: GlobalMaterialLocalizations.delegates,
     supportedLocales: const [Locale('ko'), Locale('en')],
-    theme: ThemeData(
-      colorScheme: ColorScheme.fromSeed(seedColor: const Color(0xff2563eb)),
-      useMaterial3: true,
-    ),
-    darkTheme: ThemeData(
-      colorScheme: ColorScheme.fromSeed(
-        seedColor: const Color(0xff60a5fa),
-        brightness: Brightness.dark,
-      ),
-      useMaterial3: true,
-    ),
+    theme: CyDesign.theme(Brightness.light),
+    darkTheme: CyDesign.theme(Brightness.dark),
     themeMode: ThemeMode.system,
     home: const LibraryPage(),
   );
@@ -371,6 +363,156 @@ class _LibraryPageState extends State<LibraryPage> {
     if (mounted) setState(() {});
   }
 
+  Widget _buildLibrary(BuildContext context, List<SavedPdf> shown) {
+    final theme = Theme.of(context);
+    return SafeArea(
+      child: Center(
+        child: ConstrainedBox(
+          constraints: const BoxConstraints(maxWidth: 1120),
+          child: Padding(
+            padding: const EdgeInsets.fromLTRB(24, 24, 24, 0),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.stretch,
+              children: [
+                Wrap(
+                  spacing: 12,
+                  runSpacing: 4,
+                  crossAxisAlignment: WrapCrossAlignment.center,
+                  children: [
+                    Text('문서함', style: theme.textTheme.headlineSmall),
+                    Text(
+                      '${_items.length}개의 문서 · 이 기기에 저장됨',
+                      style: theme.textTheme.bodySmall,
+                    ),
+                  ],
+                ),
+                const SizedBox(height: 16),
+                Wrap(
+                  spacing: 8,
+                  runSpacing: 8,
+                  children: [
+                    ChoiceChip(
+                      label: const Text('전체 문서'),
+                      selected: !_favoritesOnly,
+                      onSelected: (_) => setState(() => _favoritesOnly = false),
+                    ),
+                    ChoiceChip(
+                      avatar: const Icon(Icons.star_outline, size: 18),
+                      label: const Text('즐겨찾기'),
+                      selected: _favoritesOnly,
+                      onSelected: (_) => setState(() => _favoritesOnly = true),
+                    ),
+                  ],
+                ),
+                const SizedBox(height: 20),
+                Expanded(
+                  child: shown.isEmpty
+                      ? SingleChildScrollView(
+                          padding: const EdgeInsets.only(top: 12, bottom: 32),
+                          child: _favoritesOnly
+                              ? Card(
+                                  child: Padding(
+                                    padding: const EdgeInsets.all(32),
+                                    child: Column(
+                                      children: [
+                                        Icon(
+                                          Icons.star_outline,
+                                          size: 40,
+                                          color: theme.colorScheme.primary,
+                                        ),
+                                        const SizedBox(height: 16),
+                                        Text(
+                                          '즐겨찾는 문서가 없습니다',
+                                          style: theme.textTheme.titleLarge,
+                                        ),
+                                        const SizedBox(height: 8),
+                                        const Text(
+                                          '문서 옆의 별을 누르면 여기에 모아 볼 수 있습니다.',
+                                          textAlign: TextAlign.center,
+                                        ),
+                                        const SizedBox(height: 16),
+                                        OutlinedButton(
+                                          onPressed: () => setState(
+                                            () => _favoritesOnly = false,
+                                          ),
+                                          child: const Text('전체 문서 보기'),
+                                        ),
+                                      ],
+                                    ),
+                                  ),
+                                )
+                              : CyDocumentWelcome(
+                                  web: false,
+                                  action: FilledButton.icon(
+                                    onPressed: _pick,
+                                    icon: const Icon(
+                                      Icons.folder_open_outlined,
+                                    ),
+                                    label: const Text('PDF 열기'),
+                                  ),
+                                ),
+                        )
+                      : ListView.separated(
+                          padding: const EdgeInsets.only(bottom: 24),
+                          itemCount: shown.length,
+                          separatorBuilder: (_, _) =>
+                              const SizedBox(height: 10),
+                          itemBuilder: (_, index) {
+                            final item = shown[index];
+                            return Card(
+                              child: ListTile(
+                                contentPadding: const EdgeInsets.symmetric(
+                                  horizontal: 16,
+                                  vertical: 8,
+                                ),
+                                leading: Container(
+                                  padding: const EdgeInsets.all(10),
+                                  decoration: BoxDecoration(
+                                    color: theme.colorScheme.primaryContainer,
+                                    borderRadius: BorderRadius.circular(10),
+                                  ),
+                                  child: Icon(
+                                    Icons.description_outlined,
+                                    color: theme.colorScheme.onPrimaryContainer,
+                                  ),
+                                ),
+                                title: Text(
+                                  item.name,
+                                  maxLines: 1,
+                                  overflow: TextOverflow.ellipsis,
+                                  style: theme.textTheme.titleSmall,
+                                ),
+                                subtitle: Text(
+                                  '${item.lastPage}페이지에서 이어 읽기 · ${_date(item.openedAt)}',
+                                ),
+                                onTap: () => _open(item),
+                                trailing: IconButton(
+                                  tooltip: item.favorite
+                                      ? '즐겨찾기 해제'
+                                      : '즐겨찾기에 추가',
+                                  onPressed: () => _favorite(item),
+                                  color: item.favorite
+                                      ? theme.colorScheme.primary
+                                      : theme.colorScheme.onSurfaceVariant,
+                                  icon: Icon(
+                                    item.favorite
+                                        ? Icons.star
+                                        : Icons.star_border,
+                                  ),
+                                ),
+                              ),
+                            );
+                          },
+                        ),
+                ),
+              ],
+            ),
+          ),
+        ),
+      ),
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     final shown = _favoritesOnly
@@ -378,19 +520,18 @@ class _LibraryPageState extends State<LibraryPage> {
         : _items;
     return Scaffold(
       appBar: AppBar(
-        title: const Text('CY뷰어'),
+        title: const CyBrand(),
         actions: [
-          IconButton(
-            tooltip: '즐겨찾기',
-            onPressed: () => setState(() => _favoritesOnly = !_favoritesOnly),
-            icon: Icon(_favoritesOnly ? Icons.star : Icons.star_border),
-          ),
+          if (_items.isNotEmpty)
+            Padding(
+              padding: const EdgeInsets.only(right: 16),
+              child: FilledButton.icon(
+                onPressed: _pick,
+                icon: const Icon(Icons.add, size: 20),
+                label: const Text('PDF 열기'),
+              ),
+            ),
         ],
-      ),
-      floatingActionButton: FloatingActionButton.extended(
-        onPressed: _pick,
-        icon: const Icon(Icons.folder_open),
-        label: const Text('PDF 열기'),
       ),
       body: DropTarget(
         onDragEntered: (_) {
@@ -421,63 +562,7 @@ class _LibraryPageState extends State<LibraryPage> {
           children: [
             _loading
                 ? const Center(child: CircularProgressIndicator())
-                : shown.isEmpty
-                ? Center(
-                    child: Column(
-                      mainAxisSize: MainAxisSize.min,
-                      children: [
-                        Icon(
-                          _favoritesOnly
-                              ? Icons.star_outline
-                              : Icons.picture_as_pdf_outlined,
-                          size: 64,
-                        ),
-                        const SizedBox(height: 16),
-                        Text(
-                          _favoritesOnly ? '즐겨찾는 문서가 없습니다' : '첫 PDF를 열어 보세요',
-                          style: Theme.of(context).textTheme.titleLarge,
-                        ),
-                        const SizedBox(height: 8),
-                        const Text('문서 목록은 이 기기에만 저장됩니다.'),
-                        if (!_favoritesOnly)
-                          Padding(
-                            padding: const EdgeInsets.only(top: 20),
-                            child: FilledButton(
-                              onPressed: _pick,
-                              child: const Text('PDF 선택'),
-                            ),
-                          ),
-                      ],
-                    ),
-                  )
-                : ListView.separated(
-                    padding: const EdgeInsets.fromLTRB(16, 12, 16, 96),
-                    itemCount: shown.length,
-                    separatorBuilder: (_, _) => const SizedBox(height: 8),
-                    itemBuilder: (_, index) {
-                      final item = shown[index];
-                      return Card(
-                        child: ListTile(
-                          leading: const CircleAvatar(
-                            child: Icon(Icons.picture_as_pdf_outlined),
-                          ),
-                          title: Text(
-                            item.name,
-                            maxLines: 1,
-                            overflow: TextOverflow.ellipsis,
-                          ),
-                          subtitle: Text('최근 열람: ${_date(item.openedAt)}'),
-                          onTap: () => _open(item),
-                          trailing: IconButton(
-                            onPressed: () => _favorite(item),
-                            icon: Icon(
-                              item.favorite ? Icons.star : Icons.star_border,
-                            ),
-                          ),
-                        ),
-                      );
-                    },
-                  ),
+                : _buildLibrary(context, shown),
             if (_dragging)
               ColoredBox(
                 color: Theme.of(context).colorScheme.primary.withAlpha(28),

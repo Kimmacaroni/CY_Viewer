@@ -22,13 +22,13 @@ from tkinterdnd2 import DND_FILES, TkinterDnD
 
 
 COLORS = {
-    "ink": "#0F172A",
-    "muted": "#64748B",
-    "line": "#E2E8F0",
+    "ink": "#182235",
+    "muted": "#526174",
+    "line": "#DCE2EB",
     "surface": "#FFFFFF",
-    "canvas": "#EAF0F6",
-    "blue": "#2563EB",
-    "blue_soft": "#E0F2FE",
+    "canvas": "#F4F6F9",
+    "blue": "#245EDB",
+    "blue_soft": "#EAF1FF",
     "green": "#15803D",
     "red": "#DC2626",
     "sidebar": "#F8FAFC",
@@ -46,8 +46,8 @@ class RoundedButton(tk.Canvas):
 
     def __init__(self, parent: tk.Widget, text: str, command, variant: str = "secondary") -> None:
         compact = text in {"+", "−", "☆"}
-        self.height = 38 if compact else 42
-        self.radius = 8
+        self.height = 44
+        self.radius = 10
         self.command = command
         self.text = text
         self.variant = variant
@@ -61,8 +61,13 @@ class RoundedButton(tk.Canvas):
             highlightthickness=0,
             bd=0,
             cursor="hand2",
+            takefocus=1,
         )
         self.bind("<Configure>", lambda _: self._draw())
+        self.bind("<FocusIn>", lambda _: self._draw())
+        self.bind("<FocusOut>", lambda _: self._draw())
+        self.bind("<Return>", self._activate_key)
+        self.bind("<space>", self._activate_key)
         self.bind("<Enter>", self._enter)
         self.bind("<Leave>", self._leave)
         self.bind("<ButtonPress-1>", self._press)
@@ -72,7 +77,7 @@ class RoundedButton(tk.Canvas):
     def _palette(self) -> tuple[str, str]:
         if self.variant == "primary":
             return ("#1D4ED8" if self.hovered else COLORS["blue"], "#FFFFFF")
-        return ("#E8F0FE" if self.hovered else COLORS["surface"], COLORS["ink"])
+        return (COLORS["blue_soft"] if self.hovered or self.pressed else COLORS["surface"], COLORS["ink"])
 
     def _draw(self) -> None:
         self.delete("all")
@@ -80,10 +85,17 @@ class RoundedButton(tk.Canvas):
         radius = min(self.radius, height // 2, width // 2)
         background, foreground = self._palette()
         outline = background if self.variant == "primary" else ("#C7D2E0" if not self.hovered else "#93C5FD")
+        focused = self.focus_get() == self
+        if focused:
+            outline = COLORS["blue"]
         surface = Image.new("RGBA", (width, height), (0, 0, 0, 0))
         ImageDraw.Draw(surface).rounded_rectangle(
-            (0, 0, width - 1, height - 1), radius=radius, fill=background, outline=outline, width=1
+            (0, 0, width - 1, height - 1), radius=radius, fill=background, outline=outline, width=2 if focused else 1
         )
+        if focused and self.variant == "primary":
+            ImageDraw.Draw(surface).rounded_rectangle(
+                (3, 3, width - 4, height - 4), radius=max(1, radius - 2), outline="white", width=2
+            )
         self.surface_image = ImageTk.PhotoImage(surface)
         self.create_image(0, 0, anchor="nw", image=self.surface_image)
         self.create_text(width // 2, height // 2, text=self.text, fill=foreground, font=("Malgun Gothic", 10, "bold" if self.variant == "primary" else "normal"))
@@ -97,8 +109,14 @@ class RoundedButton(tk.Canvas):
         self.pressed = False
         self._draw()
 
+    def _activate_key(self, _) -> str:
+        self.command()
+        return "break"
+
     def _press(self, _) -> None:
+        self.focus_set()
         self.pressed = True
+        self._draw()
 
     def _release(self, event) -> None:
         was_pressed = self.pressed
@@ -183,31 +201,53 @@ class CyViewer(TkinterDnD.Tk):
         style = ttk.Style(self)
         style.theme_use("clam")
 
-        header = tk.Frame(self, bg=COLORS["ink"], padx=24, pady=14)
+        header = tk.Frame(self, bg=COLORS["surface"], padx=24, pady=16)
         header.pack(fill="x")
         tk.Label(
             header,
             text="CY뷰어",
-            fg="white",
-            bg=COLORS["ink"],
+            fg=COLORS["ink"],
+            bg=COLORS["surface"],
             font=("Malgun Gothic", 18, "bold"),
-        ).pack(side="left")
+        ).grid(row=0, column=0, sticky="w")
         self.file_label = tk.Label(
             header,
-            text="PDF 편집 작업 공간 · 문서를 열어 시작하세요",
-            fg="#CBD5E1",
-            bg=COLORS["ink"],
+            text="문서 작업 공간",
+            fg=COLORS["muted"],
+            bg=COLORS["surface"],
             font=("Malgun Gothic", 10),
         )
-        self.file_label.pack(side="left", padx=18)
-        self.save_badge = tk.Label(header, text=self.save_state, fg="#BFDBFE", bg="#1E3A5F", padx=10, pady=4, font=("Malgun Gothic", 9, "bold"))
-        self.save_badge.pack(side="right")
+        self.file_label.configure(width=1, anchor="w")
+        self.file_label.grid(row=0, column=1, sticky="ew", padx=18)
+        header.grid_columnconfigure(1, weight=1)
+        self.save_badge = tk.Label(header, text=self.save_state, fg=COLORS["muted"], bg=COLORS["canvas"], padx=10, pady=4, font=("Malgun Gothic", 9, "bold"))
+        self.save_badge.grid(row=0, column=2, sticky="e")
 
-        workspace = tk.Frame(self, bg="#EEF3F8")
+        workspace = tk.Frame(self, bg=COLORS["canvas"])
         workspace.pack(fill="both", expand=True)
-        sidebar = tk.Frame(workspace, width=278, bg="#F7F9FC", padx=16, pady=20)
-        sidebar.pack(side="left", fill="y")
-        sidebar.pack_propagate(False)
+        rail = tk.Frame(workspace, width=252, bg=COLORS["sidebar"])
+        rail.pack(side="left", fill="y")
+        rail.pack_propagate(False)
+        rail_canvas = tk.Canvas(rail, bg=COLORS["sidebar"], highlightthickness=0)
+        rail_scroll = ttk.Scrollbar(rail, orient="vertical", command=rail_canvas.yview)
+        rail_scroll.pack(side="right", fill="y")
+        rail_canvas.pack(side="left", fill="both", expand=True)
+        rail_canvas.configure(yscrollcommand=rail_scroll.set)
+        sidebar = tk.Frame(rail_canvas, bg=COLORS["sidebar"], padx=16, pady=20)
+        rail_window = rail_canvas.create_window((0, 0), window=sidebar, anchor="nw")
+        sidebar.bind("<Configure>", lambda _: rail_canvas.configure(scrollregion=rail_canvas.bbox("all")))
+        rail_canvas.bind("<Configure>", lambda event: rail_canvas.itemconfigure(rail_window, width=event.width))
+        # 탭으로 아래쪽 도구에 이동해도 포커스된 버튼이 화면 안에 보이게 한다.
+        def reveal_focused(event) -> None:
+            widget = event.widget
+            if not str(widget).startswith(str(sidebar) + "."):
+                return
+            y = widget.winfo_rooty() - sidebar.winfo_rooty()
+            visible_top = rail_canvas.canvasy(0)
+            visible_bottom = visible_top + rail_canvas.winfo_height()
+            if y < visible_top or y + widget.winfo_height() > visible_bottom:
+                rail_canvas.yview_moveto(max(0, y - 12) / max(sidebar.winfo_height(), 1))
+        self.bind("<FocusIn>", reveal_focused, add="+")
         self._button(sidebar, "＋  PDF 열기", self.open_pdf, "Primary.TButton").pack(fill="x", pady=(0, 20))
         navigation = self._section(sidebar, "01  문서 탐색")
         page_controls = tk.Frame(navigation, bg=COLORS["sidebar"])
@@ -227,18 +267,16 @@ class CyViewer(TkinterDnD.Tk):
         quick_actions.pack(fill="x")
         self._button(quick_actions, "☆", self.toggle_bookmark).pack(side="left")
         self._button(quick_actions, "OCR", self.ocr_document).pack(side="left", fill="x", expand=True, padx=(8, 0))
-        editing = tk.Frame(sidebar, bg="#F7F9FC")
-        editing.pack(fill="x", pady=(16, 0))
+        editing = self._section(sidebar, "02  선택·편집")
         tk.Label(
             editing,
             text="문구를 드래그해 선택한 뒤\n마우스 오른쪽 버튼을 누르세요.\n\n형광펜 · 밑줄 · 취소선 · 굵게\n문구 수정 · 텍스트 복사를 제공합니다.",
             justify="left", anchor="w", bg=COLORS["sidebar"], fg=COLORS["muted"],
             font=("Malgun Gothic", 9),
         ).pack(fill="x", pady=(0, 6))
-        save_actions = tk.Frame(sidebar, bg="#F7F9FC")
-        save_actions.pack(fill="x", pady=(16, 0))
-        self._button(save_actions, "PDF로 저장", self.save_as, "Primary.TButton").pack(fill="x", pady=(0, 8))
-        image_saves = tk.Frame(save_actions, bg="#F7F9FC")
+        save_actions = self._section(sidebar, "03  저장·내보내기")
+        self._button(save_actions, "PDF로 저장", self.save_as).pack(fill="x", pady=(0, 8))
+        image_saves = tk.Frame(save_actions, bg=COLORS["sidebar"])
         image_saves.pack(fill="x", pady=(0, 8))
         jpg_button = self._button(image_saves, "JPG로 저장", lambda: self.export_page("jpg"))
         jpg_button.configure(width=1)
@@ -250,9 +288,9 @@ class CyViewer(TkinterDnD.Tk):
         image_saves.grid_columnconfigure(1, weight=1, uniform="image_save")
         self._button(save_actions, "인쇄", self.print_document).pack(fill="x")
         selection_card = tk.Frame(sidebar, bg=COLORS["blue_soft"], padx=10, pady=10)
-        selection_card.pack(fill="both", expand=True, pady=(16, 0))
+        selection_card.pack(fill="x", pady=(20, 0))
         self.selection_label = tk.Label(
-            selection_card, text="선택 검사", justify="left", anchor="w",
+            selection_card, text="선택한 내용", justify="left", anchor="w",
             bg=COLORS["blue_soft"], fg="#0C4A6E", font=("Malgun Gothic", 9, "bold"),
         )
         self.selection_label.pack(fill="x")
@@ -265,28 +303,29 @@ class CyViewer(TkinterDnD.Tk):
         self.selection_details.config(state="disabled")
         self._set_selection_details("문구를 드래그해 선택하면\n이곳에서 선택한 내용을\n확인할 수 있어요.")
 
-        content = tk.Frame(workspace, bg="#EEF3F8")
+        content = tk.Frame(workspace, bg=COLORS["canvas"])
         content.pack(side="left", fill="both", expand=True)
         tools = tk.Frame(content, bg=COLORS["surface"], padx=20, pady=13)
         tools.pack(fill="x", padx=16, pady=(16, 10))
-        tk.Label(tools, text="읽기", bg=COLORS["blue_soft"], fg="#1D4ED8", padx=9, pady=4, font=("Malgun Gothic", 9, "bold")).pack(side="left", padx=(0, 12))
+        view_controls = tk.Frame(tools, bg=COLORS["surface"])
+        view_controls.pack(fill="x")
+        tk.Label(view_controls, text="읽기", bg=COLORS["blue_soft"], fg="#1D4ED8", padx=9, pady=4, font=("Malgun Gothic", 9, "bold")).pack(side="left", padx=(0, 12))
         self.view_mode_var = tk.StringVar(value="스크롤 보기")
-        view_selector = ttk.Combobox(tools, textvariable=self.view_mode_var, state="readonly", width=11, values=("스크롤 보기", "좌우 보기"), font=("Malgun Gothic", 9))
+        view_selector = ttk.Combobox(view_controls, textvariable=self.view_mode_var, state="readonly", width=11, values=("스크롤 보기", "좌우 보기"), font=("Malgun Gothic", 9))
         view_selector.pack(side="left", padx=(0, 12), ipady=4)
         view_selector.bind("<<ComboboxSelected>>", self._change_view_mode)
         self.selection_state = tk.Label(
-            tools, text="선택 없음", bg="#F1F5F9", fg=COLORS["muted"],
+            view_controls, text="선택 없음", bg="#F1F5F9", fg=COLORS["muted"],
             padx=10, pady=4, font=("Malgun Gothic", 9, "bold"),
         )
         self.selection_state.pack(side="left", padx=(0, 12))
-        self._button(tools, "−", lambda: self.change_zoom(-0.2)).pack(side="left", padx=2)
-        self._button(tools, "+", lambda: self.change_zoom(0.2)).pack(side="left", padx=2)
-        tk.Label(tools, text="Ctrl + 휠: 확대/축소", bg=COLORS["surface"], fg=COLORS["muted"], font=("Malgun Gothic", 9)).pack(side="left", padx=10)
+        self._button(view_controls, "−", lambda: self.change_zoom(-0.2)).pack(side="left", padx=2)
+        self._button(view_controls, "+", lambda: self.change_zoom(0.2)).pack(side="left", padx=2)
         search_box = tk.Frame(tools, bg="#F1F5F9", padx=8, pady=6)
-        search_box.pack(side="right")
+        search_box.pack(fill="x", pady=(12, 0))
         tk.Label(search_box, text="문서 검색", bg="#F1F5F9", fg=COLORS["muted"], font=("Malgun Gothic", 9, "bold")).pack(side="left", padx=(2, 8))
-        self.search_entry = ttk.Entry(search_box, width=22)
-        self.search_entry.pack(side="left", padx=(0, 6))
+        self.search_entry = ttk.Entry(search_box, width=10, font=("Malgun Gothic", 10))
+        self.search_entry.pack(side="left", fill="x", expand=True, padx=(0, 6))
         self.search_entry.bind("<Return>", lambda _: self.find_next())
         search_button = self._button(search_box, "검색", self.find_next)
         search_button.configure(width=70)
@@ -294,9 +333,9 @@ class CyViewer(TkinterDnD.Tk):
         self.search_status = tk.Label(search_box, text="", bg="#F1F5F9", fg=COLORS["muted"], font=("Malgun Gothic", 9))
         self.search_status.pack(side="left", padx=(8, 2))
 
-        canvas_frame = tk.Frame(content, bg="#DCE5EF")
+        canvas_frame = tk.Frame(content, bg=COLORS["canvas"])
         canvas_frame.pack(fill="both", expand=True, padx=16, pady=(0, 12))
-        self.canvas = tk.Canvas(canvas_frame, bg="#DCE5EF", highlightthickness=0)
+        self.canvas = tk.Canvas(canvas_frame, bg=COLORS["canvas"], highlightthickness=0)
         self.canvas.grid(row=0, column=0, sticky="nsew")
         self.canvas_vscroll = ttk.Scrollbar(canvas_frame, orient="vertical", command=self.canvas.yview)
         self.canvas_vscroll.grid(row=0, column=1, sticky="ns")
@@ -328,8 +367,8 @@ class CyViewer(TkinterDnD.Tk):
             anchor="w",
             padx=14,
             pady=7,
-            bg=COLORS["ink"],
-            fg="white",
+            bg=COLORS["surface"],
+            fg=COLORS["muted"],
             font=("Malgun Gothic", 10),
         )
         self.status.pack(fill="x", padx=16, pady=(0, 16))
@@ -338,7 +377,7 @@ class CyViewer(TkinterDnD.Tk):
         return RoundedButton(parent, label, command, "primary" if style == "Primary.TButton" else "secondary")
 
     def _side_title(self, parent: tk.Widget, text: str) -> None:
-        tk.Label(parent, text=text, bg="#F7F9FC", fg="#475569", font=("Malgun Gothic", 10, "bold")).pack(anchor="w", pady=(16, 8))
+        tk.Label(parent, text=text, bg=COLORS["sidebar"], fg="#475569", font=("Malgun Gothic", 10, "bold")).pack(anchor="w", pady=(16, 8))
 
     def _section(self, parent: tk.Widget, title: str) -> tk.Frame:
         self._side_title(parent, title)
@@ -346,7 +385,7 @@ class CyViewer(TkinterDnD.Tk):
         section.pack(fill="x")
         return section
 
-    def _set_save_state(self, state: str, color: str = "#BFDBFE", background: str = "#1E3A5F") -> None:
+    def _set_save_state(self, state: str, color: str = COLORS["muted"], background: str = COLORS["canvas"]) -> None:
         self.save_state = state
         self.save_badge.config(text=state, fg=color, bg=background)
 
@@ -406,7 +445,7 @@ class CyViewer(TkinterDnD.Tk):
             self.is_dirty = False
             self.file_label.config(text=f"{self.document_path.name} · 읽기 및 편집 가능")
             self._set_save_state("변경 없음")
-            self.selection_label.config(text="선택 검사")
+            self.selection_label.config(text="선택한 내용")
             self._set_selection_details("문구를 드래그해 선택하면\n이곳에서 선택한 내용을\n확인할 수 있어요.")
             self._set_selection_feedback()
             self.draw_page()
@@ -420,15 +459,16 @@ class CyViewer(TkinterDnD.Tk):
             self.canvas.delete("all")
             width, height = self.canvas.winfo_width(), self.canvas.winfo_height()
             self.canvas.create_rectangle(
-                width // 2 - 245, height // 2 - 116, width // 2 + 245, height // 2 + 116,
+                max(16, width // 2 - 245), max(16, height // 2 - 116), min(width - 16, width // 2 + 245), min(height - 16, height // 2 + 116),
                 fill="#FFFFFF", outline=COLORS["line"], width=1,
             )
             self.canvas.create_text(
                 width // 2,
                 height // 2 - 52,
-                text="CY뷰어에서 PDF를 편집하세요",
+                text="PDF를 열어 시작하세요",
                 fill=COLORS["ink"],
-                font=("Malgun Gothic", 20, "bold"),
+                font=("Malgun Gothic", 18, "bold"),
+                width=max(180, width - 64),
             )
             self.canvas.create_text(
                 width // 2,
@@ -437,7 +477,7 @@ class CyViewer(TkinterDnD.Tk):
                 fill=COLORS["muted"],
                 font=("Malgun Gothic", 11),
                 justify="center",
-                width=420,
+                width=max(180, min(420, width - 64)),
             )
             self.canvas.create_text(width // 2, height // 2 + 48, text="왼쪽의 ‘PDF 열기’ 버튼으로 시작하세요.", fill=COLORS["blue"], font=("Malgun Gothic", 10, "bold"))
             self.status.config(text="PDF 열기를 눌러 문서를 선택하세요.")
@@ -490,7 +530,7 @@ class CyViewer(TkinterDnD.Tk):
         if self.selected_rect and page_no == self.page_number:
             for rect in self.selection_regions or [self.selected_rect]:
                 image_selection = self.selection_kind == "image"
-                self.canvas.create_rectangle(left + rect.x0 * self.zoom, top + rect.y0 * self.zoom, left + rect.x1 * self.zoom, top + rect.y1 * self.zoom, fill="" if image_selection else "#60A5FA", stipple="" if image_selection else "gray50", outline="#7C3AED" if image_selection else "#2563EB", width=3 if image_selection else 1)
+                self.canvas.create_rectangle(left + rect.x0 * self.zoom, top + rect.y0 * self.zoom, left + rect.x1 * self.zoom, top + rect.y1 * self.zoom, fill="" if image_selection else "#60A5FA", stipple="" if image_selection else "gray50", outline="#7C3AED" if image_selection else "#245EDB", width=3 if image_selection else 1)
 
     def _change_view_mode(self, _event=None) -> None:
         self.view_mode = "spread" if self.view_mode_var.get() == "좌우 보기" else "scroll"
@@ -577,7 +617,7 @@ class CyViewer(TkinterDnD.Tk):
         if self.selected_rect:
             self._inspect_selection()
         else:
-            self.selection_label.config(text="선택 검사")
+            self.selection_label.config(text="선택한 내용")
             self._set_selection_details("유효한 영역이 선택되지 않았습니다.\n문구, 이미지 또는 빈 공간을\n조금 더 넓게 드래그해 보세요.")
             self._set_selection_feedback()
         self.draw_page()
@@ -954,7 +994,7 @@ class CyViewer(TkinterDnD.Tk):
 
         controls = tk.Frame(preview, bg=COLORS["surface"], padx=16, pady=10)
         controls.pack(fill="x")
-        preview_canvas = tk.Canvas(preview, bg="#DCE5EF", highlightthickness=0)
+        preview_canvas = tk.Canvas(preview, bg=COLORS["canvas"], highlightthickness=0)
         preview_canvas.pack(fill="both", expand=True, padx=16, pady=(12, 16))
         state = {"page": self.page_number, "zoom": 1.0, "image": None}
 
