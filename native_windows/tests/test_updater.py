@@ -27,7 +27,7 @@ class UpdaterTests(unittest.TestCase):
         import re
         from version import APP_VERSION
         script = Path(__file__).resolve().parents[2] / 'installer/CYViewer.iss'
-        declared = re.search(r'MyAppVersion "([0-9.]+)"', script.read_text())[1]
+        declared = re.search(r'MyAppVersion "([0-9.]+)"', script.read_text(encoding="utf-8"))[1]
         self.assertEqual(APP_VERSION, declared)
     def test_invalid_version(self):
         for value in ['1.2.x','1.2.3-beta','1.2.3.4']:
