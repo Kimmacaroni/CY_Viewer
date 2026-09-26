@@ -5,7 +5,7 @@
 ## 다운로드 주소
 
 - 설치 파일 및 이전 버전: https://github.com/Kimmacaroni/CY_Viewer/releases
-- Windows v1.1.0: https://github.com/Kimmacaroni/CY_Viewer/releases/tag/windows-v1.1.0
+- Windows v1.2.0: https://github.com/Kimmacaroni/CY_Viewer/releases/tag/windows-v1.2.0
 - 아이폰 웹앱: https://kimmacaroni.github.io/CY_Viewer/
 
 Windows, macOS, iOS는 릴리스 버전이 다를 수 있습니다. Windows 링크는
@@ -51,3 +51,7 @@ PR에서는 빌드만 확인하고 배포하지 않습니다.
 4. 태그 실행에서 EXE·SHA-256·빌드 의존성 목록을 본 저장소의 공개 Release에 게시한다.
 
 사용자가 배포를 금지하지 않은 작업은 검증부터 실제 배포 확인까지 완료한다.
+
+배포 사이트는 `/download/`에서 제공하며 사이트 변경도 Pages 배포를 실행한다.
+앱의 자동 업데이트는 플랫폼별 정식 릴리스를 조회한다. Windows는 설치 스크립트와 `native_windows/version.py` 버전을 함께 올린다.
+상세 동작과 제한은 [다운로드·업데이트 안내](DOWNLOAD_AND_UPDATES.md)를 따른다.

@@ -4,18 +4,25 @@ PDF를 읽고, 찾고, 표시하고, 저장하고, 인쇄할 수 있는 개인�
 
 ## 다운로드
 
-소스 코드, 설치 파일, 아이폰 웹앱을 이 저장소에서 함께 관리합니다.
+**[CY뷰어 배포 사이트](https://kimmacaroni.github.io/CY_Viewer/download/)**에서 접속한 기기에 맞는 버전을 받을 수 있습니다. 소스 코드, 설치 파일, 웹앱을 이 저장소에서 함께 관리합니다.
 
 | 사용 환경 | 다운로드 및 실행 |
 | --- | --- |
-| Windows 10·11 64비트 | [Windows 설치 파일 v1.1.0](https://github.com/Kimmacaroni/CY_Viewer/releases/download/windows-v1.1.0/CYViewer-Setup-v1.1.0.exe) |
-| macOS | [macOS 설치 파일 v1.4.0](https://github.com/Kimmacaroni/CY_Viewer/releases/download/macos-v1.4.0/CYViewer-macOS-v1.4.0.dmg) |
+| Windows 10·11 64비트 | [Windows 설치 파일 v1.2.0](https://github.com/Kimmacaroni/CY_Viewer/releases/download/windows-v1.2.0/CYViewer-Setup-v1.2.0.exe) |
+| macOS | [macOS 설치 파일 v1.5.0](https://github.com/Kimmacaroni/CY_Viewer/releases/download/macos-v1.5.0/CYViewer-macOS-v1.5.0.dmg) |
 | iPhone·iPad·웹 | [CY뷰어 웹앱 열기](https://kimmacaroni.github.io/CY_Viewer/) |
 
 아이폰에서는 Safari로 웹앱을 연 뒤 `공유` → `홈 화면에 추가`를 선택하면
 CY뷰어 아이콘으로 실행할 수 있습니다. 개발자 모드나 유선 연결은 필요하지 않습니다.
 
-Windows 10·11 64비트 환경을 지원합니다. Release에서 `CYViewer-Setup-v1.0.0.exe`를 내려받아 설치하세요. 설치 마법사에서 설치 위치와 바탕화면 바로가기 생성 여부를 선택할 수 있습니다.
+Windows 10·11 64비트 환경을 지원합니다. Release에서 `CYViewer-Setup-v1.2.0.exe`를 내려받아 설치하세요. 설치 마법사에서 설치 위치와 바탕화면 바로가기 생성 여부를 선택할 수 있습니다.
+
+## 업데이트
+
+Mac 1.5.0·Windows 1.2.0부터 앱 실행 시 새 버전을 자동으로 확인합니다. 기존 버전 사용자는 새 설치 파일을 한 번 직접 설치해 주세요.
+Windows는 다운로드·검증 후 설치 확인을 누르면 앱을 종료하고 업데이트한 뒤 재실행합니다. 저장하지 않은 변경이 있으면 먼저 저장해야 합니다.
+Mac은 다운로드·검증 후 DMG를 열며, Applications로의 마지막 교체는 직접 합니다.
+자세한 설명은 [다운로드·업데이트 안내](docs/DOWNLOAD_AND_UPDATES.md)를 확인하세요.
 
 ## 주요 기능
 
