@@ -35,7 +35,10 @@ class CyLanguage extends ChangeNotifier with WidgetsBindingObserver {
       _mode = 'system';
     }
     final requested = Uri.base.queryParameters['lang'];
-    if (kIsWeb && ['ko', 'en'].contains(requested)) _mode = requested!;
+    // 사용자가 직접 저장한 언어가 공유 링크의 기본 언어보다 우선한다.
+    if (kIsWeb && _mode == 'system' && ['ko', 'en'].contains(requested)) {
+      _mode = requested!;
+    }
     await _sync();
   }
 
