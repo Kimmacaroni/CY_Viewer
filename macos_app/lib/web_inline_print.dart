@@ -7,6 +7,7 @@ import 'package:pdfrx/pdfrx.dart';
 
 import 'cy_localization.dart';
 import 'web_print.dart';
+import 'web_native_control.dart';
 import 'web_print_platform.dart';
 
 /// 화면 캡처가 아닌 PDF 원본 페이지를 인쇄 해상도로 렌더링한다.
@@ -205,7 +206,10 @@ class _InlinePrintDialogState extends State<InlinePrintDialog> {
         },
         child: Text(tr(context, '닫기')),
       ),
-      FilledButton(
+      WebNativeButton(
+        label: tr(context, '인쇄'),
+        primary: true,
+        width: 100,
         onPressed: !_ready
             ? null
             : () {
@@ -215,7 +219,6 @@ class _InlinePrintDialogState extends State<InlinePrintDialog> {
                   setState(() => _error = error);
                 }
               },
-        child: Text(tr(context, '인쇄')),
       ),
     ],
   );

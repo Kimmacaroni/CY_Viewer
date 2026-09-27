@@ -1,4 +1,5 @@
 import 'cy_localization.dart';
+import 'web_native_control_browser.dart';
 
 import 'dart:async';
 import 'dart:js_interop';
@@ -36,7 +37,6 @@ class _WebPdfPickRegionState extends State<WebPdfPickRegion> {
   late final HTMLInputElement _input;
   late final JSFunction _changeListener;
   bool _reading = false;
-  HTMLDivElement? _host;
 
   @override
   void initState() {
@@ -83,9 +83,7 @@ class _WebPdfPickRegionState extends State<WebPdfPickRegion> {
   void dispose() {
     _input.removeEventListener('change', _changeListener);
     _input.disabled = true;
-    _host?.style.pointerEvents = 'none';
     _input.remove();
-    _host = null;
     super.dispose();
   }
 
@@ -99,18 +97,7 @@ class _WebPdfPickRegionState extends State<WebPdfPickRegion> {
       ..color = cssColor(colors.onPrimary)
       ..fontSize = '${MediaQuery.textScalerOf(context).scale(16)}px';
     _updateAvailability();
-    return HtmlElementView.fromTagName(
-      tagName: 'div',
-      onElementCreated: (element) {
-        final host = element as HTMLDivElement;
-        _host = host;
-        host.style
-          ..width = '100%'
-          ..height = '100%'
-          ..pointerEvents = 'auto';
-        host.append(_input);
-      },
-    );
+    return NativeControlHost(element: _input, height: 52);
   }
 }
 

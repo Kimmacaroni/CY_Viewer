@@ -17,6 +17,7 @@ import 'cy_design.dart';
 import 'recent_web_store.dart';
 import 'cy_recent_files.dart';
 import 'web_inline_print.dart';
+import 'web_native_control.dart';
 import 'web_print_platform.dart';
 
 Future<void> main() async {
@@ -517,10 +518,15 @@ class _WebReaderPageState extends State<_WebReaderPage> {
                 onTap: () => run(_controller.zoomDown),
               ),
               Divider(),
-              ListTile(
-                leading: Icon(Icons.print_outlined),
-                title: Text(tr(context, "인쇄")),
-                onTap: () => run(_print),
+              Padding(
+                padding: const EdgeInsets.symmetric(
+                  horizontal: 16,
+                  vertical: 8,
+                ),
+                child: WebNativeButton(
+                  label: tr(context, "인쇄"),
+                  onPressed: () => run(_print),
+                ),
               ),
               ListTile(
                 leading: Icon(Icons.ios_share),
@@ -631,6 +637,10 @@ class _WebReaderPageState extends State<_WebReaderPage> {
         onZoomOut: _controller.zoomDown,
         onSave: _saveCopy,
         onPrint: _print,
+        printAction: Padding(
+          padding: const EdgeInsets.only(bottom: 8),
+          child: WebNativeButton(label: tr(context, "인쇄"), onPressed: _print),
+        ),
         child: Stack(
           children: [
             WebPdfLoadGuard(

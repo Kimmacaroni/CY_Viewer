@@ -358,6 +358,7 @@ class CyReaderWorkspace extends StatelessWidget {
     required this.onZoomOut,
     this.editing,
     this.exports,
+    this.printAction,
   });
   final Widget child;
   final VoidCallback onOpen,
@@ -368,7 +369,7 @@ class CyReaderWorkspace extends StatelessWidget {
       onZoomIn,
       onZoomOut;
   final VoidCallback? onSearch, onPage;
-  final Widget? editing, exports;
+  final Widget? editing, exports, printAction;
 
   static bool isWide(BuildContext context) =>
       MediaQuery.sizeOf(context).width >= 1100 &&
@@ -449,7 +450,8 @@ class CyReaderWorkspace extends StatelessWidget {
               section(tr(context, "03  저장·내보내기"), [
                 action(tr(context, "PDF로 저장"), Icons.save_alt, onSave),
                 ?exports,
-                action(tr(context, "인쇄"), Icons.print_outlined, onPrint),
+                printAction ??
+                    action(tr(context, "인쇄"), Icons.print_outlined, onPrint),
               ]),
             ],
           ),
