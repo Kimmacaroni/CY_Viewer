@@ -1,3 +1,5 @@
+import 'cy_localization.dart';
+
 import 'dart:async';
 import 'dart:js_interop';
 import 'dart:typed_data';
@@ -6,7 +8,7 @@ import 'package:flutter/material.dart';
 import 'package:web/web.dart';
 
 class PickedWebPdf {
-  const PickedWebPdf({required this.name, required this.bytes});
+  PickedWebPdf({required this.name, required this.bytes});
 
   final String name;
   final Uint8List bytes;
@@ -43,7 +45,7 @@ class _WebPdfPickRegionState extends State<WebPdfPickRegion> {
       ..accept = 'application/pdf,.pdf'
       ..multiple = false
       ..className = 'cy-pdf-file-input'
-      ..setAttribute('aria-label', 'PDF 열기');
+      ..setAttribute('aria-label', trNow("PDF 열기"));
     // 기본 파일 선택 버튼 자체를 표시한다. 투명 입력이나 대체 문구를 겹치지 않는다.
     _changeListener = ((Event _) => unawaited(_processSelection())).toJS;
     _input.addEventListener('change', _changeListener);
@@ -52,7 +54,10 @@ class _WebPdfPickRegionState extends State<WebPdfPickRegion> {
   void _updateAvailability() {
     _input.disabled = !widget.enabled || _reading;
     _input.setAttribute('aria-busy', '$_reading');
-    _input.setAttribute('aria-label', _reading ? 'PDF 읽는 중' : 'PDF 열기');
+    _input.setAttribute(
+      'aria-label',
+      _reading ? trNow("PDF 읽는 중") : trNow("PDF 열기"),
+    );
   }
 
   Future<void> _processSelection() async {
@@ -62,7 +67,7 @@ class _WebPdfPickRegionState extends State<WebPdfPickRegion> {
     _reading = true;
     _updateAvailability();
     try {
-      final bytes = await _readFile(file).timeout(const Duration(seconds: 60));
+      final bytes = await _readFile(file).timeout(Duration(seconds: 60));
       if (mounted) widget.onPicked(PickedWebPdf(name: file.name, bytes: bytes));
     } on Object catch (error) {
       if (mounted) widget.onError(error);
@@ -112,7 +117,7 @@ Future<Uint8List> _readFile(File file) {
     ((Event _) {
       final buffer = (reader.result as JSArrayBuffer?)?.toDart;
       if (buffer == null) {
-        completer.completeError(const FormatException('PDF 데이터를 읽지 못했습니다.'));
+        completer.completeError(FormatException(trNow("PDF 데이터를 읽지 못했습니다.")));
       } else {
         completer.complete(buffer.asUint8List());
       }
@@ -121,7 +126,7 @@ Future<Uint8List> _readFile(File file) {
   reader.addEventListener(
     'error',
     ((Event _) => completer.completeError(
-      StateError('PDF 파일 읽기에 실패했습니다.'),
+      StateError(trNow("PDF 파일 읽기에 실패했습니다.")),
     )).toJS,
   );
   reader.readAsArrayBuffer(file);
@@ -137,5 +142,5 @@ void openWebPdfInBrowser(Uint8List bytes) {
   final url = URL.createObjectURL(blob);
   window.open(url, '_blank');
   // 새 탭이 데이터를 읽기 전에 해제하지 않고, 임시 URL의 수명은 제한한다.
-  Timer(const Duration(minutes: 10), () => URL.revokeObjectURL(url));
+  Timer(Duration(minutes: 10), () => URL.revokeObjectURL(url));
 }

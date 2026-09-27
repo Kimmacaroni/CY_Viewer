@@ -16,3 +16,11 @@ test('외부 다운로드 주소와 초안은 추천하지 않음',()=>{
   const bad=release('3.0.0');bad.assets[0].browser_download_url='https://example.com/fake.dmg';
   assert.equal(latest([bad,{...release('4.0.0'),draft:true}],'mac'),null);
 });
+
+const {resolveLanguage} = require('../site/download/language.js');
+test('한국어 기기 언어, 영어 대체, 수동 선택', () => {
+  assert.equal(resolveLanguage('system', ['ko-KR']), 'ko');
+  assert.equal(resolveLanguage('system', ['ja-JP']), 'en');
+  assert.equal(resolveLanguage('ko', ['en-US']), 'ko');
+  assert.equal(resolveLanguage('en', ['ko-KR']), 'en');
+});

@@ -62,3 +62,11 @@ Apple 앱과 웹앱의 기능 차이는 [플랫폼 안내](macos_app/README.md),
 ## 배포 안내
 
 CY뷰어와 아이콘의 저작권은 저장소 소유자에게 있습니다. 프로그램을 다시 배포하거나 상업적으로 이용하려면 저장소 소유자의 허가를 받아 주세요.
+
+## Public downloads / 공개 사용
+
+Anyone can use [CY Viewer on the web](https://kimmacaroni.github.io/CY_Viewer/) or download the Mac/Windows apps from the [download site](https://kimmacaroni.github.io/CY_Viewer/download/), without signing in.
+
+CY Viewer supports **한국어 and English**. It follows the device language by default (English for other languages). Use the language menu to choose manually. Web and Mac apply changes immediately; Windows applies the selected language next time it starts. Your PDF content is not translated or uploaded.
+
+한국어·영어와 기기 언어 자동 선택을 지원합니다. 웹·Mac은 언어 선택을 바로 반영하고 Windows는 문서 작업을 유지하기 위해 다음 실행부터 반영합니다. 파일 선택·인쇄 창의 언어는 운영체제 설정을 따릅니다.

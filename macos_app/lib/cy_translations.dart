@@ -1,469 +1,5 @@
-import Cocoa
-import FlutterMacOS
-import PDFKit
-import Vision
-import CryptoKit
-
-class MainFlutterWindow: NSWindow {
-  private var securityScopedURLs: [URL] = []
-  private var fileAccessChannel: FlutterMethodChannel?
-  private var commandChannel: FlutterMethodChannel?
-  private var updateController: MacUpdateController?
-
-  override func awakeFromNib() {
-    let flutterViewController = FlutterViewController()
-    let windowFrame = self.frame
-    self.contentViewController = flutterViewController
-    self.setFrame(windowFrame, display: true)
-
-    RegisterGeneratedPlugins(registry: flutterViewController)
-
-    commandChannel = FlutterMethodChannel(
-      name: "com.kimmacaroni.cyviewer/commands",
-      binaryMessenger: flutterViewController.engine.binaryMessenger)
-
-    let ocrChannel = FlutterMethodChannel(
-      name: "com.kimmacaroni.cyviewer/ocr",
-      binaryMessenger: flutterViewController.engine.binaryMessenger)
-    ocrChannel.setMethodCallHandler { call, result in
-      guard call.method == "recognizePdf" else {
-        result(FlutterMethodNotImplemented)
-        return
-      }
-      guard
-        let arguments = call.arguments as? [String: Any],
-        let path = arguments["path"] as? String
-      else {
-        result(FlutterError(
-          code: "invalid_arguments",
-          message: cyNativeTr("PDF 경로가 없습니다."),
-          details: nil))
-        return
-      }
-      Self.recognizePdf(path: path, result: result)
-    }
-
-    let fileAccessChannel = FlutterMethodChannel(
-      name: "com.kimmacaroni.cyviewer/file_access",
-      binaryMessenger: flutterViewController.engine.binaryMessenger)
-    self.fileAccessChannel = fileAccessChannel
-    fileAccessChannel.setMethodCallHandler { [weak self] call, result in
-      guard let self else {
-        result(FlutterError(
-          code: "window_closed",
-          message: cyNativeTr("앱 창이 닫혀 파일 접근 권한을 처리할 수 없습니다."),
-          details: nil))
-        return
-      }
-      self.handleFileAccess(call: call, result: result)
-    }
-    IncomingFileCoordinator.shared.attach(channel: fileAccessChannel)
-
-    super.awakeFromNib()
-    let languageChannel = FlutterMethodChannel(name: "com.kimmacaroni.cyviewer/language", binaryMessenger: flutterViewController.engine.binaryMessenger)
-    languageChannel.setMethodCallHandler { call, result in
-      guard call.method == "set", let mode = call.arguments as? String,
-            ["ko", "en", "system"].contains(mode) else { result(FlutterMethodNotImplemented); return }
-      UserDefaults.standard.set(mode, forKey: "cy_language")
-      cyTranslateMenu(NSApp.mainMenu)
-      result(nil)
-    }
-    cyTranslateMenu(NSApp.mainMenu)
-    let updater = MacUpdateController(window: self)
-    updateController = updater
-    let updateChannel = FlutterMethodChannel(name: "com.kimmacaroni.cyviewer/updates", binaryMessenger: flutterViewController.engine.binaryMessenger)
-    updateChannel.setMethodCallHandler { call, result in
-      guard call.method == "check" else { result(FlutterMethodNotImplemented); return }
-      updater.check(manual: true)
-      result(nil)
-    }
-  }
-
-  private func sendCommand(_ command: String) {
-    commandChannel?.invokeMethod(command, arguments: nil)
-  }
-
-  @objc func openPdf(_ sender: Any?) { sendCommand("open") }
-  @objc func savePdfCopy(_ sender: Any?) { sendCommand("saveCopy") }
-  @objc func printPdf(_ sender: Any?) { sendCommand("print") }
-  @objc func findInPdf(_ sender: Any?) { sendCommand("find") }
-  @objc func findNextInPdf(_ sender: Any?) { sendCommand("findNext") }
-  @objc func findPreviousInPdf(_ sender: Any?) { sendCommand("findPrevious") }
-  @objc func zoomInPdf(_ sender: Any?) { sendCommand("zoomIn") }
-  @objc func zoomOutPdf(_ sender: Any?) { sendCommand("zoomOut") }
-  @objc func showActualSizePdf(_ sender: Any?) { sendCommand("actualSize") }
-  @objc func togglePdfBookmark(_ sender: Any?) { sendCommand("bookmark") }
-  @objc func goToPdfPage(_ sender: Any?) { sendCommand("goToPage") }
-
-  deinit {
-    for url in securityScopedURLs {
-      url.stopAccessingSecurityScopedResource()
-    }
-  }
-
-  private func handleFileAccess(call: FlutterMethodCall, result: @escaping FlutterResult) {
-    do {
-      switch call.method {
-      case "takePendingFiles":
-        result(IncomingFileCoordinator.shared.takePendingPaths())
-      case "createBookmark":
-        guard let arguments = call.arguments as? [String: Any] else {
-          throw FileAccessError.invalidArguments
-        }
-        guard let path = arguments["path"] as? String else {
-          throw FileAccessError.invalidPath
-        }
-        let data = try URL(fileURLWithPath: path).bookmarkData(
-          options: .withSecurityScope,
-          includingResourceValuesForKeys: nil,
-          relativeTo: nil)
-        result(FlutterStandardTypedData(bytes: data))
-      case "resolveBookmark":
-        guard let arguments = call.arguments as? [String: Any] else {
-          throw FileAccessError.invalidArguments
-        }
-        guard let typedData = arguments["bookmark"] as? FlutterStandardTypedData else {
-          throw FileAccessError.invalidBookmark
-        }
-        var isStale = false
-        let url = try URL(
-          resolvingBookmarkData: typedData.data,
-          options: [.withSecurityScope, .withoutUI],
-          relativeTo: nil,
-          bookmarkDataIsStale: &isStale)
-        if url.startAccessingSecurityScopedResource() {
-          securityScopedURLs.append(url)
-        }
-        var response: [String: Any] = ["path": url.path]
-        if isStale {
-          let refreshed = try url.bookmarkData(
-            options: .withSecurityScope,
-            includingResourceValuesForKeys: nil,
-            relativeTo: nil)
-          response["bookmark"] = FlutterStandardTypedData(bytes: refreshed)
-        }
-        result(response)
-      default:
-        result(FlutterMethodNotImplemented)
-      }
-    } catch {
-      result(FlutterError(
-        code: "file_access_failed",
-        message: cyNativeTr("파일 접근 권한을 저장할 수 없습니다: {0}", [String(describing: error.localizedDescription)]),
-        details: nil))
-    }
-  }
-
-  private static func recognizePdf(path: String, result: @escaping FlutterResult) {
-    DispatchQueue.global(qos: .userInitiated).async {
-      guard let document = PDFDocument(url: URL(fileURLWithPath: path)) else {
-        DispatchQueue.main.async {
-          result(FlutterError(
-            code: "open_failed",
-            message: cyNativeTr("PDF를 열 수 없습니다."),
-            details: nil))
-        }
-        return
-      }
-
-      guard document.pageCount > 0 else {
-        DispatchQueue.main.async {
-          result(FlutterError(
-            code: "empty_document",
-            message: cyNativeTr("페이지가 없는 PDF 문서입니다."),
-            details: nil))
-        }
-        return
-      }
-
-      do {
-        var pages: [String] = []
-        for index in 0..<document.pageCount {
-          try autoreleasepool {
-            guard let page = document.page(at: index) else { return }
-            let bounds = page.bounds(for: .mediaBox)
-            guard bounds.width > 0, bounds.height > 0 else { return }
-
-            // 비정상적으로 큰 페이지나 장문 PDF에서도 메모리 사용량이
-            // 폭증하지 않도록 OCR 이미지를 긴 변 기준 2200px로 제한한다.
-            let scale = min(2.0, 2200.0 / max(bounds.width, bounds.height))
-            let thumbnail = page.thumbnail(
-              of: NSSize(
-                width: max(bounds.width * scale, 1),
-                height: max(bounds.height * scale, 1)),
-              for: .mediaBox)
-            var imageRect = NSRect(origin: .zero, size: thumbnail.size)
-            guard let image = thumbnail.cgImage(
-              forProposedRect: &imageRect,
-              context: nil,
-              hints: nil)
-            else { return }
-
-            var recognized: [String] = []
-            let request = VNRecognizeTextRequest { request, _ in
-              recognized = (request.results as? [VNRecognizedTextObservation] ?? [])
-                .compactMap { $0.topCandidates(1).first?.string }
-            }
-            request.recognitionLevel = .accurate
-            let supportedLanguages = try request.supportedRecognitionLanguages()
-            let preferredLanguages = ["ko-KR", "en-US"].filter {
-              supportedLanguages.contains($0)
-            }
-            if !preferredLanguages.isEmpty {
-              request.recognitionLanguages = preferredLanguages
-            }
-            request.usesLanguageCorrection = true
-            try VNImageRequestHandler(cgImage: image).perform([request])
-            pages.append(
-              cyNativeTr("--- {0} 페이지 ---\n", [String(describing: index + 1)]) + recognized.joined(separator: "\n"))
-          }
-        }
-        let text = pages.joined(separator: "\n\n")
-        DispatchQueue.main.async { result(text) }
-      } catch {
-        DispatchQueue.main.async {
-          result(FlutterError(
-            code: "ocr_failed",
-            message: cyNativeTr("OCR 처리에 실패했습니다: {0}", [String(describing: error.localizedDescription)]),
-            details: nil))
-        }
-      }
-    }
-  }
-}
-
-private enum FileAccessError: LocalizedError {
-  case invalidArguments
-  case invalidPath
-  case invalidBookmark
-
-  var errorDescription: String? {
-    switch self {
-    case .invalidArguments:
-      return cyNativeTr("파일 접근 정보가 없습니다.")
-    case .invalidPath:
-      return cyNativeTr("파일 경로가 올바르지 않습니다.")
-    case .invalidBookmark:
-      return cyNativeTr("저장된 파일 접근 정보가 올바르지 않습니다.")
-    }
-  }
-}
-
-// 배포본의 샌드박스와 파일 접근 권한을 유지하는 업데이트 다운로드 도우미.
-private struct MacUpdateInfo {
-  let version: String
-  let fileName: String
-  let url: URL
-  let checksumURL: URL
-  let size: Int64
-
-  static func versionParts(_ version: String) -> [Int]? {
-    guard version.range(of: "^[0-9]+\\.[0-9]+\\.[0-9]+$", options: .regularExpression) != nil else { return nil }
-    let values = version.split(separator: ".").compactMap { Int($0) }
-    return values.count == 3 && values.allSatisfy { $0 >= 0 } ? values : nil
-  }
-
-  static func newest(_ releases: [[String: Any]], current: String) -> MacUpdateInfo? {
-    guard let installed = versionParts(current) else { return nil }
-    return releases.compactMap { release -> MacUpdateInfo? in
-      guard release["draft"] as? Bool == false,
-            release["prerelease"] as? Bool == false,
-            let tag = release["tag_name"] as? String,
-            tag.range(of: "^macos-v[0-9]+\\.[0-9]+\\.[0-9]+$", options: .regularExpression) != nil
-      else { return nil }
-      let version = String(tag.dropFirst(7))
-      guard let parts = versionParts(version), installed.lexicographicallyPrecedes(parts),
-            let assets = release["assets"] as? [[String: Any]] else { return nil }
-      let filename = "CYViewer-macOS-v\(version).dmg"
-      let checksum = "SHA256SUMS-macOS-v\(version).txt"
-      let prefix = "https://github.com/Kimmacaroni/CY_Viewer/releases/download/\(tag)/"
-      guard let binary = assets.first(where: { $0["name"] as? String == filename }),
-            let sums = assets.first(where: { $0["name"] as? String == checksum }),
-            binary["browser_download_url"] as? String == prefix + filename,
-            sums["browser_download_url"] as? String == prefix + checksum,
-            let size = binary["size"] as? Int64, size > 0, size <= 250 * 1024 * 1024,
-            let url = URL(string: prefix + filename), let checksumURL = URL(string: prefix + checksum)
-      else { return nil }
-      return MacUpdateInfo(version: version, fileName: filename, url: url, checksumURL: checksumURL, size: size)
-    }.max { (versionParts($0.version) ?? []).lexicographicallyPrecedes(versionParts($1.version) ?? []) }
-  }
-
-  static func checksum(_ text: String, fileName: String) -> String? {
-    for line in text.split(whereSeparator: \.isNewline) {
-      let pieces = line.trimmingCharacters(in: .whitespacesAndNewlines).split(maxSplits: 1, whereSeparator: \.isWhitespace)
-      guard pieces.count == 2 else { continue }
-      let hash = String(pieces[0]).lowercased()
-      let name = pieces[1].trimmingCharacters(in: .whitespaces).trimmingCharacters(in: CharacterSet(charactersIn: "*"))
-      if name == fileName && hash.range(of: "^[a-f0-9]{64}$", options: .regularExpression) != nil { return hash }
-    }
-    return nil
-  }
-}
-
-private final class MacUpdateController {
-  private weak var window: NSWindow?
-  private var busy = false
-  private var timer: Timer?
-  private var progressWindow: NSWindow?
-  private var progressLabel: NSTextField?
-  private var downloaded: URL?
-  private let version = Bundle.main.infoDictionary?["CFBundleShortVersionString"] as? String ?? "0.0.0"
-
-  init(window: NSWindow) {
-    self.window = window
-    DispatchQueue.main.asyncAfter(deadline: .now() + 5) { [weak self] in self?.check(manual: false) }
-    timer = Timer.scheduledTimer(withTimeInterval: 6 * 60 * 60, repeats: true) { [weak self] _ in self?.check(manual: false) }
-  }
-  deinit { timer?.invalidate() }
-
-  func check(manual: Bool) {
-    if busy {
-      if manual { progressWindow?.makeKeyAndOrderFront(nil) }
-      return
-    }
-    if let downloaded {
-      openInstaller(downloaded)
-      return
-    }
-    busy = true
-    if manual { showProgress(cyNativeTr("새 버전을 확인하고 있습니다…")) }
-    var request = URLRequest(url: URL(string: "https://api.github.com/repos/Kimmacaroni/CY_Viewer/releases?per_page=100")!)
-    request.timeoutInterval = 20
-    request.setValue("CYViewer/\(version)", forHTTPHeaderField: "User-Agent")
-    URLSession.shared.dataTask(with: request) { [weak self] data, response, error in
-      guard let self else { return }
-      let releases: [[String: Any]]?
-      if error == nil, (response as? HTTPURLResponse)?.statusCode == 200, let data, data.count < 4 * 1024 * 1024 {
-        releases = (try? JSONSerialization.jsonObject(with: data)) as? [[String: Any]]
-      } else { releases = nil }
-      DispatchQueue.main.async {
-        self.busy = false
-        self.closeProgress()
-        guard let releases else {
-          if manual { self.notice(cyNativeTr("업데이트 확인 실패"), cyNativeTr("인터넷 연결을 확인하고 다시 시도해 주세요.")) }
-          return
-        }
-        guard let update = MacUpdateInfo.newest(releases, current: self.version) else {
-          if manual { self.notice(cyNativeTr("최신 버전입니다"), cyNativeTr("현재 CY뷰어 {0}을 사용하고 있습니다.", [String(describing: self.version)])) }
-          return
-        }
-        let alert = NSAlert()
-        alert.messageText = cyNativeTr("CY뷰어 {0} 업데이트", [String(describing: update.version)])
-        alert.informativeText = cyNativeTr("현재 버전: {0}\n\n설치 파일을 다운로드하고 검증한 뒤 엽니다. 마지막으로 CYViewer.app을 Applications로 옮겨 기존 앱을 교체해 주세요.", [String(describing: self.version)])
-        alert.addButton(withTitle: cyNativeTr("다운로드"))
-        alert.addButton(withTitle: cyNativeTr("나중에"))
-        self.present(alert) { response in
-          if response == .alertFirstButtonReturn { self.download(update) }
-        }
-      }
-    }.resume()
-  }
-
-  private func present(_ alert: NSAlert, completion: @escaping (NSApplication.ModalResponse) -> Void) {
-    if let window, window.attachedSheet == nil { alert.beginSheetModal(for: window, completionHandler: completion) }
-    else { completion(alert.runModal()) }
-  }
-  private func notice(_ title: String, _ message: String) {
-    let alert = NSAlert(); alert.messageText = title; alert.informativeText = message
-    alert.addButton(withTitle: cyNativeTr("확인")); present(alert) { _ in }
-  }
-  private func showProgress(_ message: String) {
-    if progressWindow == nil {
-      let panel = NSPanel(contentRect: NSRect(x: 0, y: 0, width: 380, height: 120), styleMask: [.titled], backing: .buffered, defer: false)
-      panel.title = cyNativeTr("CY뷰어 업데이트")
-      panel.isReleasedWhenClosed = false
-      let label = NSTextField(wrappingLabelWithString: message)
-      label.frame = NSRect(x: 24, y: 50, width: 332, height: 44)
-      let progress = NSProgressIndicator(frame: NSRect(x: 24, y: 24, width: 332, height: 16))
-      progress.style = .bar; progress.isIndeterminate = true; progress.startAnimation(nil)
-      panel.contentView?.addSubview(label); panel.contentView?.addSubview(progress)
-      panel.center(); progressWindow = panel; progressLabel = label
-    }
-    progressLabel?.stringValue = message
-    progressWindow?.orderFront(nil)
-  }
-  private func closeProgress() { progressWindow?.orderOut(nil) }
-  private func fail(_ message: String) {
-    DispatchQueue.main.async { self.busy = false; self.closeProgress(); self.notice(cyNativeTr("업데이트를 완료하지 못했습니다"), message) }
-  }
-
-  private func download(_ update: MacUpdateInfo) {
-    busy = true
-    showProgress(cyNativeTr("설치 파일을 다운로드하고 검증합니다…"))
-    var request = URLRequest(url: update.checksumURL); request.timeoutInterval = 30
-    URLSession.shared.dataTask(with: request) { [weak self] data, response, error in
-      guard let self else { return }
-      guard error == nil, (response as? HTTPURLResponse)?.statusCode == 200,
-            let data, data.count <= 65536, let text = String(data: data, encoding: .utf8),
-            let expected = MacUpdateInfo.checksum(text, fileName: update.fileName)
-      else { self.fail(cyNativeTr("설치 파일의 검증 정보를 받지 못했습니다. 다시 시도해 주세요.")); return }
-      var packageRequest = URLRequest(url: update.url); packageRequest.timeoutInterval = 300
-      URLSession.shared.downloadTask(with: packageRequest) { [weak self] temporary, response, error in
-        guard let self else { return }
-        guard error == nil, (response as? HTTPURLResponse)?.statusCode == 200,
-              response?.url?.scheme == "https", let temporary
-        else { self.fail(cyNativeTr("설치 파일을 다운로드하지 못했습니다. 다시 시도해 주세요.")); return }
-        do {
-          let attributes = try FileManager.default.attributesOfItem(atPath: temporary.path)
-          guard (attributes[.size] as? NSNumber)?.int64Value == update.size else { throw UpdateError.invalidFile }
-          let handle = try FileHandle(forReadingFrom: temporary)
-          defer { try? handle.close() }
-          var hash = SHA256()
-          while let chunk = try handle.read(upToCount: 1024 * 1024), !chunk.isEmpty { hash.update(data: chunk) }
-          let actual = hash.finalize().map { String(format: "%02x", $0) }.joined()
-          guard actual == expected else { throw UpdateError.invalidFile }
-          let directory = FileManager.default.temporaryDirectory.appendingPathComponent("CYViewer-update-" + UUID().uuidString)
-          try FileManager.default.createDirectory(at: directory, withIntermediateDirectories: true)
-          let target = directory.appendingPathComponent(update.fileName)
-          try FileManager.default.moveItem(at: temporary, to: target)
-          DispatchQueue.main.async {
-            self.downloaded = target; self.busy = false; self.closeProgress(); self.openInstaller(target)
-          }
-        } catch { self.fail(cyNativeTr("설치 파일 검증에 실패했습니다. 다시 다운로드해 주세요.")) }
-      }.resume()
-    }.resume()
-  }
-
-  private func openInstaller(_ url: URL) {
-    let alert = NSAlert()
-    alert.messageText = cyNativeTr("설치 파일이 준비되었습니다")
-    alert.informativeText = cyNativeTr("작업한 문서를 저장하세요. DMG를 연 뒤 CY뷰어를 종료하고 CYViewer.app을 Applications로 옮겨 교체합니다. 앱을 자동으로 종료하거나 문서를 닫지 않습니다.")
-    alert.addButton(withTitle: cyNativeTr("설치 파일 열기")); alert.addButton(withTitle: cyNativeTr("나중에"))
-    present(alert) { response in
-      if response == .alertFirstButtonReturn && !NSWorkspace.shared.open(url) {
-        self.notice(cyNativeTr("설치 파일을 열 수 없습니다"), cyNativeTr("배포 사이트에서 설치 파일을 받아 주세요.\nhttps://kimmacaroni.github.io/CY_Viewer/download/"))
-      }
-    }
-  }
-  private enum UpdateError: Error { case invalidFile }
-}
-
-// Flutter와 같은 언어를 기본 메뉴와 업데이트 알림에도 적용한다.
-private var cyOriginalMenuTitles: [ObjectIdentifier: String] = [:]
-private func cyTranslateMenu(_ menu: NSMenu?) {
-  guard let menu else { return }
-  for item in menu.items {
-    let key = ObjectIdentifier(item)
-    let original = cyOriginalMenuTitles[key] ?? item.title
-    cyOriginalMenuTitles[key] = original
-    item.title = cyNativeTr(original)
-    cyTranslateMenu(item.submenu)
-  }
-}
-private func cyNativeTr(_ source: String, _ args: [String] = []) -> String {
-  let mode = UserDefaults.standard.string(forKey: "cy_language") ?? "system"
-  let code = mode == "system" ? (Locale.preferredLanguages.first ?? "en") : mode
-  let text = code.hasPrefix("ko") ? source : (cyNativeEnglish[source] ?? source)
-  let result = NSMutableString(string: text)
-  let regex = try! NSRegularExpression(pattern: #"\{(\d+)\}"#)
-  for match in regex.matches(in: text, range: NSRange(location: 0, length: result.length)).reversed() {
-    let index = Int((text as NSString).substring(with: match.range(at: 1)))!
-    if index < args.count { result.replaceCharacters(in: match.range, with: args[index]) }
-  }
-  return result as String
-}
-// BEGIN GENERATED TRANSLATIONS
-private let cyNativeEnglish: [String: String] = [
+// scripts/generate_localizations.py로 생성합니다.
+const cyEnglish = <String, String>{
   "CY뷰어": "CY Viewer",
   "외부에서 전달한 PDF를 열 수 없습니다: {0}": "Could not open the shared PDF: {0}",
   "문서 목록 형식 오류": "Invalid document list",
@@ -478,14 +14,16 @@ private let cyNativeEnglish: [String: String] = [
   "전체 문서": "All documents",
   "즐겨찾기": "Favorites",
   "즐겨찾는 문서가 없습니다": "No favorite documents",
-  "문서 옆의 별을 누르면 여기에 모아 볼 수 있습니다.": "Select the star next to a document to find it here.",
+  "문서 옆의 별을 누르면 여기에 모아 볼 수 있습니다.":
+      "Select the star next to a document to find it here.",
   "전체 문서 보기": "Show all documents",
   "PDF 열기": "Open PDF",
   "{0}페이지에서 이어 읽기 · {1}": "Continue on page {0} · {1}",
   "즐겨찾기 해제": "Remove from favorites",
   "즐겨찾기에 추가": "Add to favorites",
   "업데이트 확인": "Check for updates",
-  "업데이트를 확인하지 못했습니다. 다시 시도해 주세요.": "Could not check for updates. Please try again.",
+  "업데이트를 확인하지 못했습니다. 다시 시도해 주세요.":
+      "Could not check for updates. Please try again.",
   "PDF 파일을 끌어놓아 주세요.": "Please drop a PDF file.",
   "여기에 PDF를 놓아 열기": "Drop a PDF here to open",
   "페이지로 이동": "Go to page",
@@ -552,8 +90,10 @@ private let cyNativeEnglish: [String: String] = [
   "문구를 드래그해 선택한 뒤 복사하거나 표시하세요.": "Select text to copy or annotate it.",
   "PDF 열기 실패: {0}": "PDF open failed: {0}",
   "PDF를 열 수 없습니다": "Cannot open this PDF",
-  "파일이 이동되었거나 접근 권한이 변경되었을 수 있습니다. ": "The file may have moved or its access permissions may have changed. ",
-  "문서함으로 돌아가 PDF를 다시 선택해 주세요.": "Go back to the library and select the PDF again.",
+  "파일이 이동되었거나 접근 권한이 변경되었을 수 있습니다. ":
+      "The file may have moved or its access permissions may have changed. ",
+  "문서함으로 돌아가 PDF를 다시 선택해 주세요.":
+      "Go back to the library and select the PDF again.",
   "페이지가 없는 PDF 문서입니다.": "This PDF has no pages.",
   "복사": "Copy",
   "형광펜": "Highlight",
@@ -576,7 +116,8 @@ private let cyNativeEnglish: [String: String] = [
   "이 기기에 있는 PDF 파일을 선택하세요.": "Choose a PDF file on this device.",
   "파일을 선택하면 문서함에 추가됩니다.": "Choose a file to add it to your library.",
   "문서는 서버로 전송되지 않습니다.\n웹앱을 닫으면 PDF 원본은 남지 않습니다.": "Documents are not uploaded to a server.\nThe PDF is not retained after closing the web app.",
-  "문서와 최근 열람 목록은\n이 기기에서만 관리합니다.": "Documents and reading history\nstay on this device.",
+  "문서와 최근 열람 목록은\n이 기기에서만 관리합니다.":
+      "Documents and reading history\nstay on this device.",
   "01  문서 탐색": "01  Navigate",
   "문서 검색": "Search document",
   "보기 방식 · 책갈피 목록": "Reading layout · Bookmarks",
@@ -584,7 +125,8 @@ private let cyNativeEnglish: [String: String] = [
   "문구를 드래그해 선택하고 복사하세요.": "Select text to copy it.",
   "03  저장·내보내기": "03  Save and export",
   "선택한 PDF를 읽지 못했습니다.": "Could not read the selected PDF.",
-  "PDF를 열 수 없습니다. 다시 선택해 주세요. ({0})": "Could not open the PDF. Please choose it again. ({0})",
+  "PDF를 열 수 없습니다. 다시 선택해 주세요. ({0})":
+      "Could not open the PDF. Please choose it again. ({0})",
   "설치 방법": "How to install",
   "아이폰에 설치하기": "Install on iPhone",
   "Safari 아래쪽의 공유 버튼을 누른 다음 ": "Tap Share in Safari, then ",
@@ -597,14 +139,17 @@ private let cyNativeEnglish: [String: String] = [
   "PDF 복사본 저장·공유": "Save or share a PDF copy",
   "브라우저로 PDF 열기": "Open PDF in browser",
   "웹 버전 안내": "About the web version",
-  "OCR과 페이지 이미지 저장은 브라우저 제한으로 제공되지 않습니다.": "OCR and page image export are not available in the web version.",
+  "OCR과 페이지 이미지 저장은 브라우저 제한으로 제공되지 않습니다.":
+      "OCR and page image export are not available in the web version.",
   "PDF 페이지를 불러오고 있습니다.": "Loading PDF pages…",
   "PDF를 표시할 수 없습니다.": "Cannot display this PDF.",
   "다른 PDF 선택": "Choose another PDF",
   "PDF 읽기를 완료하지 못했습니다.": "Could not finish loading the PDF.",
   "PDF를 준비하고 있습니다.": "Preparing your PDF…",
-  "브라우저 기본 뷰어로 열거나 다른 PDF를 선택해 주세요.": "Open it in the browser viewer or choose another PDF.",
-  "처음에는 읽기 도구를 내려받는 데 시간이 걸릴 수 있습니다.": "The reader tools may take a moment to download the first time.",
+  "브라우저 기본 뷰어로 열거나 다른 PDF를 선택해 주세요.":
+      "Open it in the browser viewer or choose another PDF.",
+  "처음에는 읽기 도구를 내려받는 데 시간이 걸릴 수 있습니다.":
+      "The reader tools may take a moment to download the first time.",
   "PDF 읽는 중": "Reading PDF",
   "PDF 데이터를 읽지 못했습니다.": "Could not read PDF data.",
   "PDF 파일 읽기에 실패했습니다.": "Failed to read the PDF file.",
@@ -612,17 +157,20 @@ private let cyNativeEnglish: [String: String] = [
   "CY뷰어 | 개인용 PDF 뷰어": "CY Viewer | PDF Viewer",
   "◀ 이전": "◀ Previous",
   "다음 ▶": "Next ▶",
-  "문구를 드래그해 선택하면\n이곳에서 선택한 내용을\n확인할 수 있어요.": "Select text in the document\nto review your selection\nhere.",
+  "문구를 드래그해 선택하면\n이곳에서 선택한 내용을\n확인할 수 있어요.":
+      "Select text in the document\nto review your selection\nhere.",
   "PDF를 선택하거나 이 창에 끌어놓으세요.": "Choose a PDF or drop it into this window.",
   "문서는 이 기기에서만 처리합니다.": "Documents are processed only on this device.",
   "저장 필요": "Unsaved changes",
   "  ★ 책갈피": "  ★ Bookmarked",
-  "  |  문구 선택됨: 왼쪽에서 표시 또는 수정": "  |  Text selected: annotate or edit in the left panel",
+  "  |  문구 선택됨: 왼쪽에서 표시 또는 수정":
+      "  |  Text selected: annotate or edit in the left panel",
   "  |  저장 필요": "  |  Unsaved changes",
   "선택 종류: {0}": "Selection type: {0}",
   "{0} 표시를 적용했습니다.": "Applied {0}.",
   "굵게 처리": "Make bold",
-  "원문을 굵은 글꼴로 교체합니다. 계속할까요?": "Replace the selected text with a bold font? Continue?",
+  "원문을 굵은 글꼴로 교체합니다. 계속할까요?":
+      "Replace the selected text with a bold font? Continue?",
   "문구 수정": "Edit text",
   "새 문구를 입력하세요.": "Enter the new text.",
   "인쇄 미리보기 | CY뷰어": "Print preview | CY Viewer",
@@ -637,13 +185,17 @@ private let cyNativeEnglish: [String: String] = [
   "PDF 열기를 눌러 문서를 선택하세요.": "Select Open PDF to choose a document.",
   "PDF 파일 선택": "Choose a PDF file",
   "변경 없음": "No changes",
-  "{0} / {1} 페이지   |   {2}   |   확대 {3}%{4}{5}{6}": "Page {0} / {1}   |   {2}   |   Zoom {3}%{4}{5}{6}",
+  "{0} / {1} 페이지   |   {2}   |   확대 {3}%{4}{5}{6}":
+      "Page {0} / {1}   |   {2}   |   Zoom {3}%{4}{5}{6}",
   "좌우 보기": "Horizontal",
   "유효한 영역이 선택되지 않았습니다.\n문구, 이미지 또는 빈 공간을\n조금 더 넓게 드래그해 보세요.": "No valid selection.\nTry selecting a larger area\nwith text or an image.",
-  "OCR 엔진을 찾을 수 없습니다. Tesseract OCR을 설치한 뒤 다시 시도하세요.": "OCR engine not found. Install Tesseract OCR and try again.",
-  "한국어·영어 OCR 언어 데이터를 찾을 수 없습니다.": "Korean and English OCR language data not found.",
+  "OCR 엔진을 찾을 수 없습니다. Tesseract OCR을 설치한 뒤 다시 시도하세요.":
+      "OCR engine not found. Install Tesseract OCR and try again.",
+  "한국어·영어 OCR 언어 데이터를 찾을 수 없습니다.":
+      "Korean and English OCR language data not found.",
   "먼저 PDF를 열어 주세요.": "Open a PDF first.",
-  "선택 텍스트를 클립보드에 복사했습니다. ({0}자)": "Copied selected text to the clipboard. ({0} characters)",
+  "선택 텍스트를 클립보드에 복사했습니다. ({0}자)":
+      "Copied selected text to the clipboard. ({0} characters)",
   "텍스트": "Text",
   "이미지 {0}개": "{0} images",
   "빈 공간": "Empty space",
@@ -659,30 +211,36 @@ private let cyNativeEnglish: [String: String] = [
   "현재 페이지를 {0} 이미지로 저장했습니다.": "Saved the current page as a {0} image.",
   "저장된 책갈피가 없습니다.": "No saved bookmarks.",
   "＋  PDF 열기": "＋  Open PDF",
-  "  |  오른쪽이 아닌 왼쪽 아래 ‘PDF로 저장’으로 사본을 보관하세요.": "  |  Use “Save as PDF” in the lower left panel to save a copy.",
+  "  |  오른쪽이 아닌 왼쪽 아래 ‘PDF로 저장’으로 사본을 보관하세요.":
+      "  |  Use “Save as PDF” in the lower left panel to save a copy.",
   "텍스트 선택됨 · {0}자": "Text selected · {0} characters",
   "{0} · 읽기 및 편집 가능": "{0} · Ready to read and edit",
   "PDF를 열 수 없습니다.\n\n{0}": "Could not open the PDF.\n\n{0}",
   "PDF를 열어 시작하세요": "Open a PDF to start",
-  "PDF 열기 또는 끌어놓기\n읽기·검색 → 문구 선택 → 편집 → 저장": "Open or drop a PDF\nRead and search → Select text → Edit → Save",
+  "PDF 열기 또는 끌어놓기\n읽기·검색 → 문구 선택 → 편집 → 저장":
+      "Open or drop a PDF\nRead and search → Select text → Edit → Save",
   "왼쪽의 ‘PDF 열기’ 버튼으로 시작하세요.": "Start with “Open PDF” in the left panel.",
-  "문서 OCR을 마쳤습니다.\n\n인식 단어: {0}개\n실패한 페이지: {1}": "Document OCR finished.\n\nWords recognized: {0}\nFailed pages: {1}",
+  "문서 OCR을 마쳤습니다.\n\n인식 단어: {0}개\n실패한 페이지: {1}":
+      "Document OCR finished.\n\nWords recognized: {0}\nFailed pages: {1}",
   "문서 전체 OCR이 완료됐습니다.\n\n페이지: {0}개\n인식 단어: {1}개\n이제 모든 페이지에서 검색·선택·복사·표시·수정할 수 있습니다.": "Document OCR completed.\n\nPages: {0}\nWords recognized: {1}\nYou can now search, select, copy, annotate and edit all pages.",
   "OCR을 실행할 수 없습니다.\n\n{0}": "Could not run OCR.\n\n{0}",
   "선택 검사 · ": "Inspect selection · ",
   "선택한 텍스트": "Selected text",
-  "텍스트는 형광펜·밑줄·취소선·굵게·문구 수정을 사용할 수 있습니다.": "Use highlight, underline, strikethrough, bold or edit on selected text.",
+  "텍스트는 형광펜·밑줄·취소선·굵게·문구 수정을 사용할 수 있습니다.":
+      "Use highlight, underline, strikethrough, bold or edit on selected text.",
   "먼저 문구를 드래그해 선택한 뒤 마우스 오른쪽 버튼을 누르세요.": "Select text, then right-click.",
   "저장 완료 · {0}": "Saved · {0}",
   "저장할 수 없습니다.\n\n{0}": "Could not save.\n\n{0}",
   "현재 페이지를 {0}으로 저장했습니다.": "Saved the current page as {0}.",
   "이미지로 저장할 수 없습니다.\n\n{0}": "Could not save the image.\n\n{0}",
   "Windows 인쇄 미리보기를 준비하고 있습니다…": "Preparing Windows print preview…",
-  "Windows 인쇄 미리보기를 열 수 없습니다.\n\n{0}": "Could not open Windows print preview.\n\n{0}",
+  "Windows 인쇄 미리보기를 열 수 없습니다.\n\n{0}":
+      "Could not open Windows print preview.\n\n{0}",
   "{0} / {1} 페이지 · {2}%": "Page {0} / {1} · {2}%",
   "Windows 인쇄 대기열에 작업을 만들지 못했습니다.": "Could not create a Windows print job.",
   "작업 #{0} · ": "Job #{0} · ",
-  "인쇄 작업을 Windows 대기열에 보냈습니다.\n\n{0}페이지: {1}~{2}": "Sent the print job to Windows.\n\n{0} pages: {1}–{2}",
+  "인쇄 작업을 Windows 대기열에 보냈습니다.\n\n{0}페이지: {1}~{2}":
+      "Sent the print job to Windows.\n\n{0} pages: {1}–{2}",
   "인쇄를 시작할 수 없습니다.\n\n{0}": "Could not start printing.\n\n{0}",
   "결과 없음": "No results",
   "문구를 드래그해 선택한 뒤\n마우스 오른쪽 버튼을 누르세요.\n\n형광펜 · 밑줄 · 취소선 · 굵게\n문구 수정 · 텍스트 복사를 제공합니다.": "Select text, then right-click.\n\nHighlight · Underline · Strikethrough · Bold\nEdit text · Copy text",
@@ -691,18 +249,23 @@ private let cyNativeEnglish: [String: String] = [
   "PDF 문서": "PDF document",
   "OCR 엔진이 결과를 만들지 못했습니다.": "The OCR engine produced no output.",
   "OCR 진행 중 · {0} / {1} 페이지를 인식하고 있습니다…": "OCR in progress · Page {0} / {1}…",
-  "OCR 완료 · {0} / {1} 페이지, {2}개 단어 인식": "OCR completed · Page {0} / {1}, {2} words",
-  "OCR 완료 · 전체 {0}페이지에서 {1}개 단어를 인식했습니다.": "OCR completed · {1} words across {0} pages.",
+  "OCR 완료 · {0} / {1} 페이지, {2}개 단어 인식":
+      "OCR completed · Page {0} / {1}, {2} words",
+  "OCR 완료 · 전체 {0}페이지에서 {1}개 단어를 인식했습니다.":
+      "OCR completed · {1} words across {0} pages.",
   "OCR 실패": "OCR failed",
   "선택 영역에 이미지가 있습니다.": "The selection contains an image.",
-  "현재 버전에서는 이미지를 확인할 수 있으며, 이미지 편집 기능은 준비 중입니다.": "Images can be viewed. Image editing is not yet available.",
+  "현재 버전에서는 이미지를 확인할 수 있으며, 이미지 편집 기능은 준비 중입니다.":
+      "Images can be viewed. Image editing is not yet available.",
   "선택 영역에 텍스트나 이미지가 없습니다.": "The selection contains no text or images.",
-  "빈 공간에는 표시·문구 수정 기능을 적용할 수 없습니다.": "Annotations and text editing cannot be applied to empty space.",
+  "빈 공간에는 표시·문구 수정 기능을 적용할 수 없습니다.":
+      "Annotations and text editing cannot be applied to empty space.",
   "{0} 이미지": "{0} image",
   "인쇄 미리보기": "Print preview",
   "Windows 인쇄 대화상자 오류: {0}": "Windows print dialog error: {0}",
   "인쇄가 취소됐습니다.": "Printing canceled.",
-  "선택한 프린터의 인쇄 가능 영역을 확인할 수 없습니다.": "Could not determine the printable area of the selected printer.",
+  "선택한 프린터의 인쇄 가능 영역을 확인할 수 없습니다.":
+      "Could not determine the printable area of the selected printer.",
   "인쇄 대기열 전송 완료 · {0}{1}~{2}페이지": "Sent to print queue · {0}Pages {1}–{2}",
   "{0}페이지 인쇄 작업을 시작하지 못했습니다.": "Could not start printing page {0}.",
   "{0}페이지를 인쇄 대기열에 보내지 못했습니다.": "Could not send page {0} to the print queue.",
@@ -713,10 +276,13 @@ private let cyNativeEnglish: [String: String] = [
   "업데이트 확인 중…": "Checking for updates…",
   "다운로드 0%": "Downloading 0%",
   "HTTPS가 아닌 다운로드 주소입니다.": "Download URL must use HTTPS.",
-  "설치 파일 검증에 실패했습니다. 다시 다운로드해 주세요.": "Installer verification failed. Please download it again.",
+  "설치 파일 검증에 실패했습니다. 다시 다운로드해 주세요.":
+      "Installer verification failed. Please download it again.",
   "CY뷰어 업데이트": "CY Viewer update",
-  "개발 실행에서는 설치를 시작하지 않습니다.": "Installation is not available when running from source.",
-  "저장하지 않은 변경이 있습니다. PDF를 저장한 뒤 업데이트 설치를 다시 눌러 주세요.": "You have unsaved changes. Save your PDF before installing the update.",
+  "개발 실행에서는 설치를 시작하지 않습니다.":
+      "Installation is not available when running from source.",
+  "저장하지 않은 변경이 있습니다. PDF를 저장한 뒤 업데이트 설치를 다시 눌러 주세요.":
+      "You have unsaved changes. Save your PDF before installing the update.",
   "다운로드와 검증이 완료되었습니다.\n\nCY뷰어를 종료하고 업데이트를 설치한 뒤 다시 실행할까요?": "Download and verification completed.\n\nClose CY Viewer, install the update and restart?",
   "설치를 시작하지 못했습니다.\n{0}": "Could not start installation.\n{0}",
   "설치 파일 크기가 일치하지 않습니다.": "Installer size does not match.",
@@ -728,7 +294,8 @@ private let cyNativeEnglish: [String: String] = [
   "현재 최신 버전({0})입니다.": "You are up to date ({0}).",
   "업데이트 재시도": "Retry update",
   "PDF 경로가 없습니다.": "PDF path is missing.",
-  "앱 창이 닫혀 파일 접근 권한을 처리할 수 없습니다.": "The app window is closed; file access cannot be processed.",
+  "앱 창이 닫혀 파일 접근 권한을 처리할 수 없습니다.":
+      "The app window is closed; file access cannot be processed.",
   "파일 접근 권한을 저장할 수 없습니다: {0}": "Could not save file access permission: {0}",
   "PDF를 열 수 없습니다.": "Could not open the PDF.",
   "--- {0} 페이지 ---\n": "--- Page {0} ---\n",
@@ -747,8 +314,10 @@ private let cyNativeEnglish: [String: String] = [
   "나중에": "Later",
   "업데이트를 완료하지 못했습니다": "Could not complete the update",
   "설치 파일을 다운로드하고 검증합니다…": "Downloading and verifying the installer…",
-  "설치 파일의 검증 정보를 받지 못했습니다. 다시 시도해 주세요.": "Could not get installer verification information. Please try again.",
-  "설치 파일을 다운로드하지 못했습니다. 다시 시도해 주세요.": "Could not download the installer. Please try again.",
+  "설치 파일의 검증 정보를 받지 못했습니다. 다시 시도해 주세요.":
+      "Could not get installer verification information. Please try again.",
+  "설치 파일을 다운로드하지 못했습니다. 다시 시도해 주세요.":
+      "Could not download the installer. Please try again.",
   "설치 파일이 준비되었습니다": "Installer is ready",
   "작업한 문서를 저장하세요. DMG를 연 뒤 CY뷰어를 종료하고 CYViewer.app을 Applications로 옮겨 교체합니다. 앱을 자동으로 종료하거나 문서를 닫지 않습니다.": "Save your documents. After opening the DMG, quit CY Viewer and move CYViewer.app to Applications to replace it. Your app and documents will not be closed automatically.",
   "설치 파일 열기": "Open installer",
@@ -818,13 +387,15 @@ private let cyNativeEnglish: [String: String] = [
   "내 기기에서,": "Your PDFs.",
   "바로 여는 PDF.": "On your device.",
   "읽고, 찾고, 중요한 내용을 남기세요.": "Read, search and keep what matters.",
-  "Mac, Windows, 웹에서 같은 CY뷰어를 만납니다.": "One CY Viewer across Mac, Windows and the web.",
+  "Mac, Windows, 웹에서 같은 CY뷰어를 만납니다.":
+      "One CY Viewer across Mac, Windows and the web.",
   "설치 없이 바로 시작": "Start without installing",
   "웹앱 열기": "Open web app",
   "브라우저에서 PDF를 선택하면 바로 열립니다.": "Choose a PDF in your browser to start reading.",
   "다른 운영체제 다운로드": "Downloads for other platforms",
   "하나의 문서 작업 공간": "One document workspace",
-  "CY뷰어 문서함 화면: 전체 문서와 즐겨찾기, PDF 열기 기능": "CY Viewer library with all documents, favorites and Open PDF",
+  "CY뷰어 문서함 화면: 전체 문서와 즐겨찾기, PDF 열기 기능":
+      "CY Viewer library with all documents, favorites and Open PDF",
   "문서 검색 · 책갈피 · 표시 · 저장": "Search · Bookmark · Annotate · Save",
   "어디서든, CY뷰어.": "CY Viewer, wherever you read.",
   "아래에서 기기에 맞는 버전을 선택하세요.": "Choose the version for your device below.",
@@ -835,7 +406,8 @@ private let cyNativeEnglish: [String: String] = [
   "Windows 다운로드": "Download for Windows",
   "웹앱": "Web app",
   "iPhone·iPad·Android·PC 브라우저": "iPhone · iPad · Android · Desktop browsers",
-  "별도 설치 없이 사용 · 홈 화면에 추가 가능": "No installation required · Add to your home screen",
+  "별도 설치 없이 사용 · 홈 화면에 추가 가능":
+      "No installation required · Add to your home screen",
   "홈 화면에 추가하는 방법 ↓": "How to add to your home screen ↓",
   "기기 자동 추천과 최신 버전 확인에는 JavaScript가 필요합니다. 위 다운로드 링크는 그대로 사용할 수 있습니다.": "JavaScript is required for device recommendations and release checks. The download links above still work.",
   "새 버전도 앱 안에서.": "Updates, right in the app.",
@@ -859,5 +431,4 @@ private let cyNativeEnglish: [String: String] = [
   "CYViewer 종료": "Quit CY Viewer",
   "CY뷰어 가리기": "Hide CY Viewer",
   "CY뷰어 종료": "Quit CY Viewer",
-]
-// END GENERATED TRANSLATIONS
+};

@@ -1,3 +1,5 @@
+import 'cy_localization.dart';
+
 import 'dart:async';
 import 'dart:convert';
 import 'dart:io';
@@ -31,7 +33,7 @@ enum _ViewMode { scroll, horizontal, facing }
 enum _ExportFormat { pdf, png, jpg }
 
 class _TextMark {
-  const _TextMark(this.range, this.type);
+  _TextMark(this.range, this.type);
 
   final PdfPageTextRange range;
   final _MarkType type;
@@ -103,7 +105,7 @@ class _AdvancedPdfReaderPageState extends State<AdvancedPdfReaderPage> {
     }
     try {
       final data = await File(widget.path).readAsBytes();
-      if (data.isEmpty) throw const FormatException('빈 PDF 파일입니다.');
+      if (data.isEmpty) throw FormatException(trNow("빈 PDF 파일입니다."));
       if (!mounted) return;
       setState(() => _pdfData = data);
     } on Object catch (error) {
@@ -115,13 +117,13 @@ class _AdvancedPdfReaderPageState extends State<AdvancedPdfReaderPage> {
   Widget _buildPdfLoadingState() {
     final error = _pdfLoadError;
     if (error == null) {
-      return const Center(child: CircularProgressIndicator());
+      return Center(child: CircularProgressIndicator());
     }
     return Center(
       child: Card(
-        margin: const EdgeInsets.all(32),
+        margin: EdgeInsets.all(32),
         child: Padding(
-          padding: const EdgeInsets.all(24),
+          padding: EdgeInsets.all(24),
           child: Column(
             mainAxisSize: MainAxisSize.min,
             children: [
@@ -130,17 +132,20 @@ class _AdvancedPdfReaderPageState extends State<AdvancedPdfReaderPage> {
                 size: 48,
                 color: Theme.of(context).colorScheme.error,
               ),
-              const SizedBox(height: 16),
+              SizedBox(height: 16),
               Text(
-                'PDF를 읽을 수 없습니다',
+                tr(context, "PDF를 읽을 수 없습니다"),
                 style: Theme.of(context).textTheme.titleLarge,
               ),
-              const SizedBox(height: 8),
-              const Text(
-                '파일 접근 권한이 만료되었을 수 있습니다. 다시 시도하거나 문서함에서 PDF를 다시 선택해 주세요.',
+              SizedBox(height: 8),
+              Text(
+                tr(
+                  context,
+                  "파일 접근 권한이 만료되었을 수 있습니다. 다시 시도하거나 문서함에서 PDF를 다시 선택해 주세요.",
+                ),
                 textAlign: TextAlign.center,
               ),
-              const SizedBox(height: 20),
+              SizedBox(height: 20),
               Wrap(
                 spacing: 12,
                 runSpacing: 8,
@@ -148,13 +153,13 @@ class _AdvancedPdfReaderPageState extends State<AdvancedPdfReaderPage> {
                 children: [
                   OutlinedButton.icon(
                     onPressed: _loadPdfData,
-                    icon: const Icon(Icons.refresh),
-                    label: const Text('다시 시도'),
+                    icon: Icon(Icons.refresh),
+                    label: Text(tr(context, "다시 시도")),
                   ),
                   FilledButton.icon(
                     onPressed: () => Navigator.of(context).pop(_currentPage),
-                    icon: const Icon(Icons.arrow_back),
-                    label: const Text('문서함으로 돌아가기'),
+                    icon: Icon(Icons.arrow_back),
+                    label: Text(tr(context, "문서함으로 돌아가기")),
                   ),
                 ],
               ),
@@ -182,7 +187,7 @@ class _AdvancedPdfReaderPageState extends State<AdvancedPdfReaderPage> {
               ..sort(),
       );
     } on Object catch (error) {
-      _showMessage('책갈피를 불러오지 못했습니다: $error');
+      _showMessage(tr(context, "책갈피를 불러오지 못했습니다: {0}", [error]));
     }
   }
 
@@ -202,7 +207,7 @@ class _AdvancedPdfReaderPageState extends State<AdvancedPdfReaderPage> {
     try {
       await _saveBookmarks();
     } on Object catch (error) {
-      _showMessage('책갈피를 저장하지 못했습니다: $error');
+      _showMessage(trNow("책갈피를 저장하지 못했습니다: {0}", [error]));
     }
   }
 
@@ -219,21 +224,21 @@ class _AdvancedPdfReaderPageState extends State<AdvancedPdfReaderPage> {
       builder: (context) => SizedBox(
         height: 360,
         child: _bookmarks.isEmpty
-            ? const Center(child: Text('저장한 책갈피가 없습니다.'))
+            ? Center(child: Text(tr(context, "저장한 책갈피가 없습니다.")))
             : ListView.builder(
                 itemCount: _bookmarks.length,
                 itemBuilder: (context, index) {
                   final page = _bookmarks[index];
                   return ListTile(
-                    leading: const Icon(Icons.bookmark),
-                    title: Text('$page 페이지'),
+                    leading: Icon(Icons.bookmark),
+                    title: Text(tr(context, "{0} 페이지", [page])),
                     onTap: () async {
                       Navigator.pop(context);
                       await _controller.goToPage(pageNumber: page);
                     },
                     trailing: IconButton(
-                      tooltip: '삭제',
-                      icon: const Icon(Icons.close),
+                      tooltip: tr(context, "삭제"),
+                      icon: Icon(Icons.close),
                       onPressed: () async {
                         setState(() => _bookmarks.remove(page));
                         await _saveBookmarks();
@@ -253,7 +258,7 @@ class _AdvancedPdfReaderPageState extends State<AdvancedPdfReaderPage> {
     final page = await showDialog<int>(
       context: context,
       builder: (context) => AlertDialog(
-        title: const Text('페이지로 이동'),
+        title: Text(tr(context, "페이지로 이동")),
         content: TextField(
           controller: input,
           autofocus: true,
@@ -263,11 +268,11 @@ class _AdvancedPdfReaderPageState extends State<AdvancedPdfReaderPage> {
         actions: [
           TextButton(
             onPressed: () => Navigator.pop(context),
-            child: const Text('취소'),
+            child: Text(tr(context, "취소")),
           ),
           FilledButton(
             onPressed: () => Navigator.pop(context, int.tryParse(input.text)),
-            child: const Text('이동'),
+            child: Text(tr(context, "이동")),
           ),
         ],
       ),
@@ -306,7 +311,7 @@ class _AdvancedPdfReaderPageState extends State<AdvancedPdfReaderPage> {
     if (ranges.isEmpty) {
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('먼저 문서의 텍스트를 드래그해 선택해 주세요.')),
+          SnackBar(content: Text(tr(context, "먼저 문서의 텍스트를 드래그해 선택해 주세요."))),
         );
       }
       return;
@@ -330,7 +335,7 @@ class _AdvancedPdfReaderPageState extends State<AdvancedPdfReaderPage> {
     try {
       setState(() {
         _busy = true;
-        _busyMessage = '인쇄할 문서를 준비하고 있습니다…';
+        _busyMessage = tr(context, "인쇄할 문서를 준비하고 있습니다…");
       });
       final bytes = await File(widget.path).readAsBytes();
       await Printing.layoutPdf(
@@ -339,7 +344,7 @@ class _AdvancedPdfReaderPageState extends State<AdvancedPdfReaderPage> {
         onLayout: (_) async => bytes,
       );
     } catch (error) {
-      _showMessage('인쇄 창을 열 수 없습니다: $error');
+      _showMessage(trNow("인쇄 창을 열 수 없습니다: {0}", [error]));
     } finally {
       if (mounted) setState(() => _busy = false);
     }
@@ -350,7 +355,7 @@ class _AdvancedPdfReaderPageState extends State<AdvancedPdfReaderPage> {
     try {
       setState(() {
         _busy = true;
-        _busyMessage = '파일을 준비하고 있습니다…';
+        _busyMessage = tr(context, "파일을 준비하고 있습니다…");
       });
       final bytes = await File(widget.path).readAsBytes();
       final baseName = widget.name.toLowerCase().endsWith('.pdf')
@@ -358,18 +363,18 @@ class _AdvancedPdfReaderPageState extends State<AdvancedPdfReaderPage> {
           : widget.name;
       if (format == _ExportFormat.pdf) {
         final savedPath = await FilePicker.saveFile(
-          dialogTitle: 'PDF로 저장',
-          fileName: '$baseName-복사본.pdf',
+          dialogTitle: trNow("PDF로 저장"),
+          fileName: trNow("{0}-복사본.pdf", [baseName]),
           bytes: bytes,
           type: FileType.custom,
-          allowedExtensions: const ['pdf'],
+          allowedExtensions: ['pdf'],
         );
-        if (savedPath != null) _showMessage('PDF 복사본을 저장했습니다.');
+        if (savedPath != null) _showMessage(trNow("PDF 복사본을 저장했습니다."));
       } else {
         final directory = await FilePicker.getDirectoryPath(
           dialogTitle: format == _ExportFormat.png
-              ? 'PNG 저장 폴더 선택'
-              : 'JPG 저장 폴더 선택',
+              ? trNow("PNG 저장 폴더 선택")
+              : trNow("JPG 저장 폴더 선택"),
         );
         if (directory == null) return;
         var pageNumber = 0;
@@ -377,7 +382,10 @@ class _AdvancedPdfReaderPageState extends State<AdvancedPdfReaderPage> {
           pageNumber++;
           if (mounted) {
             setState(
-              () => _busyMessage = '페이지 $pageNumber / $_pageCount 저장 중…',
+              () => _busyMessage = tr(context, "페이지 {0} / {1} 저장 중…", [
+                pageNumber,
+                _pageCount,
+              ]),
             );
           }
           final extension = format == _ExportFormat.png ? 'png' : 'jpg';
@@ -389,7 +397,7 @@ class _AdvancedPdfReaderPageState extends State<AdvancedPdfReaderPage> {
           } else {
             final decoded = image_lib.decodePng(await page.toPng());
             if (decoded == null) {
-              throw StateError('페이지 이미지를 변환할 수 없습니다.');
+              throw StateError(trNow("페이지 이미지를 변환할 수 없습니다."));
             }
             await output.writeAsBytes(
               image_lib.encodeJpg(decoded, quality: 92),
@@ -398,15 +406,18 @@ class _AdvancedPdfReaderPageState extends State<AdvancedPdfReaderPage> {
           }
         }
         if (mounted) {
-          ScaffoldMessenger.of(
-            context,
-          ).showSnackBar(SnackBar(content: Text('$pageNumber개 페이지를 저장했습니다.')));
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(
+              content: Text(tr(context, "{0}개 페이지를 저장했습니다.", [pageNumber])),
+            ),
+          );
         }
       }
     } catch (error) {
       if (mounted) {
-        ScaffoldMessenger.of(context)
-            .showSnackBar(SnackBar(content: Text('저장할 수 없습니다: $error')));
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text(tr(context, "저장할 수 없습니다: {0}", [error]))),
+        );
       }
     } finally {
       if (mounted) setState(() => _busy = false);
@@ -418,7 +429,7 @@ class _AdvancedPdfReaderPageState extends State<AdvancedPdfReaderPage> {
     try {
       setState(() {
         _busy = true;
-        _busyMessage = '문서 전체의 글자를 인식하고 있습니다…';
+        _busyMessage = tr(context, "문서 전체의 글자를 인식하고 있습니다…");
       });
       final text = await _ocrChannel.invokeMethod<String>('recognizePdf', {
         'path': widget.path,
@@ -428,12 +439,12 @@ class _AdvancedPdfReaderPageState extends State<AdvancedPdfReaderPage> {
       await showDialog<void>(
         context: context,
         builder: (context) => AlertDialog(
-          title: const Text('OCR 결과'),
+          title: Text(tr(context, "OCR 결과")),
           content: SizedBox(
             width: 680,
             height: 460,
             child: result.isEmpty
-                ? const Center(child: Text('인식된 텍스트가 없습니다.'))
+                ? Center(child: Text(tr(context, "인식된 텍스트가 없습니다.")))
                 : SingleChildScrollView(child: SelectableText(result)),
           ),
           actions: [
@@ -443,20 +454,20 @@ class _AdvancedPdfReaderPageState extends State<AdvancedPdfReaderPage> {
                   await Clipboard.setData(ClipboardData(text: result));
                   if (context.mounted) Navigator.pop(context);
                 },
-                icon: const Icon(Icons.copy_outlined),
-                label: const Text('전체 복사'),
+                icon: Icon(Icons.copy_outlined),
+                label: Text(tr(context, "전체 복사")),
               ),
             FilledButton(
               onPressed: () => Navigator.pop(context),
-              child: const Text('닫기'),
+              child: Text(tr(context, "닫기")),
             ),
           ],
         ),
       );
     } on PlatformException catch (error) {
-      _showMessage(error.message ?? 'OCR을 실행할 수 없습니다.');
+      _showMessage(error.message ?? trNow("OCR을 실행할 수 없습니다."));
     } on Object catch (error) {
-      _showMessage('OCR을 실행할 수 없습니다: $error');
+      _showMessage(trNow("OCR을 실행할 수 없습니다: {0}", [error]));
     } finally {
       if (mounted) setState(() => _busy = false);
     }
@@ -519,16 +530,22 @@ class _AdvancedPdfReaderPageState extends State<AdvancedPdfReaderPage> {
         await showDialog<void>(
           context: context,
           builder: (context) => AlertDialog(
-            title: const Text('CY뷰어 사용 방법'),
+            title: Text(tr(context, "CY뷰어 사용 방법")),
             content: Text(
               Platform.isMacOS
-                  ? '• ⌘O: PDF 열기\n• ⌘F: 문서 검색\n• ⌘G / ⇧⌘G: 다음·이전 검색 결과\n• ⌘+ / ⌘- / ⌘0: 확대·축소·실제 크기\n• ⌘S: PDF 복사본 저장\n• ⌘P: 인쇄\n• 텍스트 드래그 후 하단 도구막대: 복사·형광펜·밑줄·취소선·강조'
-                  : '• 돋보기: 문서 텍스트 검색\n• 문서 도구: 책갈피, 확대·축소, 페이지 이동, 인쇄, OCR, 저장\n• 화면을 두 손가락으로 확대·축소\n• 텍스트를 길게 누르거나 드래그한 뒤 하단 도구막대에서 복사·형광펜·밑줄·취소선·강조',
+                  ? tr(
+                      context,
+                      "• ⌘O: PDF 열기\n• ⌘F: 문서 검색\n• ⌘G / ⇧⌘G: 다음·이전 검색 결과\n• ⌘+ / ⌘- / ⌘0: 확대·축소·실제 크기\n• ⌘S: PDF 복사본 저장\n• ⌘P: 인쇄\n• 텍스트 드래그 후 하단 도구막대: 복사·형광펜·밑줄·취소선·강조",
+                    )
+                  : tr(
+                      context,
+                      "• 돋보기: 문서 텍스트 검색\n• 문서 도구: 책갈피, 확대·축소, 페이지 이동, 인쇄, OCR, 저장\n• 화면을 두 손가락으로 확대·축소\n• 텍스트를 길게 누르거나 드래그한 뒤 하단 도구막대에서 복사·형광펜·밑줄·취소선·강조",
+                    ),
             ),
             actions: [
               TextButton(
                 onPressed: () => Navigator.pop(context),
-                child: const Text('확인'),
+                child: Text(tr(context, "확인")),
               ),
             ],
           ),
@@ -550,44 +567,45 @@ class _AdvancedPdfReaderPageState extends State<AdvancedPdfReaderPage> {
         child: SizedBox(
           height: MediaQuery.sizeOf(sheetContext).height * 0.78,
           child: ListView(
-            padding: const EdgeInsets.fromLTRB(12, 0, 12, 24),
+            padding: EdgeInsets.fromLTRB(12, 0, 12, 24),
             children: [
-              const ListTile(
-                title: Text('문서 도구'),
-                subtitle: Text('macOS와 동일한 기능을 사용할 수 있습니다.'),
+              const Align(
+                alignment: Alignment.centerRight,
+                child: CyLanguageButton(),
               ),
               ListTile(
-                leading: const Icon(Icons.bookmarks_outlined),
-                title: const Text('책갈피 목록'),
+                title: Text(tr(context, "문서 도구")),
+                subtitle: Text(tr(context, "macOS와 동일한 기능을 사용할 수 있습니다.")),
+              ),
+              ListTile(
+                leading: Icon(Icons.bookmarks_outlined),
+                title: Text(tr(context, "책갈피 목록")),
                 onTap: () => run(_showBookmarks),
               ),
               ListTile(
-                leading: const Icon(Icons.find_in_page_outlined),
-                title: const Text('페이지로 이동'),
+                leading: Icon(Icons.find_in_page_outlined),
+                title: Text(tr(context, "페이지로 이동")),
                 onTap: _pageCount == 0 ? null : () => run(_goToPage),
               ),
-              const Divider(),
+              Divider(),
               Padding(
-                padding: const EdgeInsets.symmetric(
-                  horizontal: 16,
-                  vertical: 8,
-                ),
+                padding: EdgeInsets.symmetric(horizontal: 16, vertical: 8),
                 child: SegmentedButton<_ViewMode>(
-                  segments: const [
+                  segments: [
                     ButtonSegment(
                       value: _ViewMode.scroll,
                       icon: Icon(Icons.view_day_outlined),
-                      label: Text('세로'),
+                      label: Text(tr(context, "세로")),
                     ),
                     ButtonSegment(
                       value: _ViewMode.horizontal,
                       icon: Icon(Icons.view_carousel_outlined),
-                      label: Text('가로'),
+                      label: Text(tr(context, "가로")),
                     ),
                     ButtonSegment(
                       value: _ViewMode.facing,
                       icon: Icon(Icons.menu_book_outlined),
-                      label: Text('두 쪽'),
+                      label: Text(tr(context, "두 쪽")),
                     ),
                   ],
                   selected: {_viewMode},
@@ -598,55 +616,55 @@ class _AdvancedPdfReaderPageState extends State<AdvancedPdfReaderPage> {
                 ),
               ),
               ListTile(
-                leading: const Icon(Icons.zoom_in),
-                title: const Text('확대'),
+                leading: Icon(Icons.zoom_in),
+                title: Text(tr(context, "확대")),
                 onTap: () => run(_controller.zoomUp),
               ),
               ListTile(
-                leading: const Icon(Icons.zoom_out),
-                title: const Text('축소'),
+                leading: Icon(Icons.zoom_out),
+                title: Text(tr(context, "축소")),
                 onTap: () => run(_controller.zoomDown),
               ),
               ListTile(
-                leading: const Icon(Icons.center_focus_strong),
-                title: const Text('실제 크기'),
+                leading: Icon(Icons.center_focus_strong),
+                title: Text(tr(context, "실제 크기")),
                 onTap: () => run(_showActualSize),
               ),
-              const Divider(),
+              Divider(),
               ListTile(
-                leading: const Icon(Icons.print_outlined),
-                title: const Text('인쇄'),
+                leading: Icon(Icons.print_outlined),
+                title: Text(tr(context, "인쇄")),
                 onTap: () => run(_printDocument),
               ),
               ListTile(
-                leading: const Icon(Icons.document_scanner_outlined),
-                title: const Text('문서 전체 OCR'),
+                leading: Icon(Icons.document_scanner_outlined),
+                title: Text(tr(context, "문서 전체 OCR")),
                 onTap: _busy ? null : () => run(_runOcr),
               ),
               ListTile(
-                leading: const Icon(Icons.picture_as_pdf_outlined),
-                title: const Text('PDF 복사본 저장'),
+                leading: Icon(Icons.picture_as_pdf_outlined),
+                title: Text(tr(context, "PDF 복사본 저장")),
                 onTap: () => run(() => _export(_ExportFormat.pdf)),
               ),
               ListTile(
-                leading: const Icon(Icons.image_outlined),
-                title: const Text('PNG로 저장'),
+                leading: Icon(Icons.image_outlined),
+                title: Text(tr(context, "PNG로 저장")),
                 onTap: () => run(() => _export(_ExportFormat.png)),
               ),
               ListTile(
-                leading: const Icon(Icons.photo_outlined),
-                title: const Text('JPG로 저장'),
+                leading: Icon(Icons.photo_outlined),
+                title: Text(tr(context, "JPG로 저장")),
                 onTap: () => run(() => _export(_ExportFormat.jpg)),
               ),
-              const Divider(),
+              Divider(),
               ListTile(
-                leading: const Icon(Icons.layers_clear_outlined),
-                title: const Text('이 문서의 표시 지우기'),
+                leading: Icon(Icons.layers_clear_outlined),
+                title: Text(tr(context, "이 문서의 표시 지우기")),
                 onTap: () => run(_clearMarks),
               ),
               ListTile(
-                leading: const Icon(Icons.help_outline),
-                title: const Text('사용 방법'),
+                leading: Icon(Icons.help_outline),
+                title: Text(tr(context, "사용 방법")),
                 onTap: () => run(() => _selectAction(_ReaderAction.help)),
               ),
             ],
@@ -680,8 +698,8 @@ class _AdvancedPdfReaderPageState extends State<AdvancedPdfReaderPage> {
               ? TextField(
                   controller: _searchInput,
                   autofocus: true,
-                  decoration: const InputDecoration(
-                    hintText: '문서에서 검색',
+                  decoration: InputDecoration(
+                    hintText: tr(context, "문서에서 검색"),
                     border: InputBorder.none,
                   ),
                   onChanged: _startSearch,
@@ -690,8 +708,8 @@ class _AdvancedPdfReaderPageState extends State<AdvancedPdfReaderPage> {
                   crossAxisAlignment: CrossAxisAlignment.start,
                   mainAxisSize: MainAxisSize.min,
                   children: [
-                    const Text(
-                      'CY뷰어',
+                    Text(
+                      tr(context, "CY뷰어"),
                       style: TextStyle(
                         fontSize: 12,
                         fontWeight: FontWeight.w700,
@@ -710,31 +728,31 @@ class _AdvancedPdfReaderPageState extends State<AdvancedPdfReaderPage> {
                       ),
                     ),
                   IconButton(
-                    tooltip: '이전 결과',
+                    tooltip: tr(context, "이전 결과"),
                     onPressed: _searcher!.goToPrevMatch,
-                    icon: const Icon(Icons.keyboard_arrow_up),
+                    icon: Icon(Icons.keyboard_arrow_up),
                   ),
                   IconButton(
-                    tooltip: '다음 결과',
+                    tooltip: tr(context, "다음 결과"),
                     onPressed: _searcher!.goToNextMatch,
-                    icon: const Icon(Icons.keyboard_arrow_down),
+                    icon: Icon(Icons.keyboard_arrow_down),
                   ),
                   IconButton(
-                    tooltip: '검색 닫기',
+                    tooltip: tr(context, "검색 닫기"),
                     onPressed: _hideSearch,
-                    icon: const Icon(Icons.close),
+                    icon: Icon(Icons.close),
                   ),
                 ]
               : [
                   IconButton(
-                    tooltip: '검색',
+                    tooltip: tr(context, "검색"),
                     onPressed: _searcher == null ? null : _showSearch,
-                    icon: const Icon(Icons.search),
+                    icon: Icon(Icons.search),
                   ),
                   IconButton(
                     tooltip: _bookmarks.contains(_currentPage)
-                        ? '책갈피 삭제'
-                        : '이 페이지 책갈피',
+                        ? tr(context, "책갈피 삭제")
+                        : tr(context, "이 페이지 책갈피"),
                     onPressed: _toggleBookmark,
                     icon: Icon(
                       _bookmarks.contains(_currentPage)
@@ -743,9 +761,9 @@ class _AdvancedPdfReaderPageState extends State<AdvancedPdfReaderPage> {
                     ),
                   ),
                   IconButton(
-                    tooltip: '문서 도구',
+                    tooltip: tr(context, "문서 도구"),
                     onPressed: _showMobileTools,
-                    icon: const Icon(Icons.more_horiz),
+                    icon: Icon(Icons.more_horiz),
                   ),
                 ],
         ),
@@ -762,12 +780,12 @@ class _AdvancedPdfReaderPageState extends State<AdvancedPdfReaderPage> {
           editing: Column(
             crossAxisAlignment: CrossAxisAlignment.stretch,
             children: [
-              const Text('문구를 드래그해 선택한 뒤 복사하거나 표시하세요.'),
-              const SizedBox(height: 8),
+              Text(tr(context, "문구를 드래그해 선택한 뒤 복사하거나 표시하세요.")),
+              SizedBox(height: 8),
               OutlinedButton.icon(
                 onPressed: _busy ? null : _runOcr,
-                icon: const Icon(Icons.document_scanner_outlined),
-                label: const Text('문서 전체 OCR'),
+                icon: Icon(Icons.document_scanner_outlined),
+                label: Text(tr(context, "문서 전체 OCR")),
               ),
             ],
           ),
@@ -776,14 +794,14 @@ class _AdvancedPdfReaderPageState extends State<AdvancedPdfReaderPage> {
               Expanded(
                 child: OutlinedButton(
                   onPressed: () => _export(_ExportFormat.jpg),
-                  child: const Text('JPG'),
+                  child: Text('JPG'),
                 ),
               ),
-              const SizedBox(width: 8),
+              SizedBox(width: 8),
               Expanded(
                 child: OutlinedButton(
                   onPressed: () => _export(_ExportFormat.png),
-                  child: const Text('PNG'),
+                  child: Text('PNG'),
                 ),
               ),
             ],
@@ -800,12 +818,12 @@ class _AdvancedPdfReaderPageState extends State<AdvancedPdfReaderPage> {
                   controller: _controller,
                   params: PdfViewerParams(
                     errorBannerBuilder: (context, error, _, _) {
-                      debugPrint('PDF 열기 실패: $error');
+                      debugPrint(tr(context, "PDF 열기 실패: {0}", [error]));
                       return Center(
                         child: Card(
-                          margin: const EdgeInsets.all(32),
+                          margin: EdgeInsets.all(32),
                           child: Padding(
-                            padding: const EdgeInsets.all(24),
+                            padding: EdgeInsets.all(24),
                             child: Column(
                               mainAxisSize: MainAxisSize.min,
                               children: [
@@ -814,23 +832,26 @@ class _AdvancedPdfReaderPageState extends State<AdvancedPdfReaderPage> {
                                   size: 48,
                                   color: Theme.of(context).colorScheme.error,
                                 ),
-                                const SizedBox(height: 16),
+                                SizedBox(height: 16),
                                 Text(
-                                  'PDF를 열 수 없습니다',
+                                  tr(context, "PDF를 열 수 없습니다"),
                                   style: Theme.of(context).textTheme.titleLarge,
                                 ),
-                                const SizedBox(height: 8),
-                                const Text(
-                                  '파일이 이동되었거나 접근 권한이 변경되었을 수 있습니다. '
-                                  '문서함으로 돌아가 PDF를 다시 선택해 주세요.',
+                                SizedBox(height: 8),
+                                Text(
+                                  tr(
+                                        context,
+                                        "파일이 이동되었거나 접근 권한이 변경되었을 수 있습니다. ",
+                                      ) +
+                                      tr(context, "문서함으로 돌아가 PDF를 다시 선택해 주세요."),
                                   textAlign: TextAlign.center,
                                 ),
-                                const SizedBox(height: 20),
+                                SizedBox(height: 20),
                                 FilledButton.icon(
                                   onPressed: () =>
                                       Navigator.of(context).pop(_currentPage),
-                                  icon: const Icon(Icons.arrow_back),
-                                  label: const Text('문서함으로 돌아가기'),
+                                  icon: Icon(Icons.arrow_back),
+                                  label: Text(tr(context, "문서함으로 돌아가기")),
                                 ),
                               ],
                             ),
@@ -864,7 +885,7 @@ class _AdvancedPdfReaderPageState extends State<AdvancedPdfReaderPage> {
                         _bookmarks.removeWhere((page) => page > pageCount);
                       });
                       if (pageCount == 0) {
-                        _showMessage('페이지가 없는 PDF 문서입니다.');
+                        _showMessage(tr(context, "페이지가 없는 PDF 문서입니다."));
                         return;
                       }
                       final initial = widget.initialPage.clamp(1, pageCount);
@@ -972,7 +993,7 @@ class _AdvancedPdfReaderPageState extends State<AdvancedPdfReaderPage> {
                       borderRadius: BorderRadius.circular(14),
                       child: SingleChildScrollView(
                         scrollDirection: Axis.horizontal,
-                        padding: const EdgeInsets.symmetric(
+                        padding: EdgeInsets.symmetric(
                           horizontal: 6,
                           vertical: 4,
                         ),
@@ -989,24 +1010,24 @@ class _AdvancedPdfReaderPageState extends State<AdvancedPdfReaderPage> {
                                   setState(() => _hasSelectedText = false);
                                 }
                               },
-                              icon: const Icon(Icons.copy_outlined, size: 18),
-                              label: const Text('복사'),
+                              icon: Icon(Icons.copy_outlined, size: 18),
+                              label: Text(tr(context, "복사")),
                             ),
                             TextButton(
                               onPressed: () => _applyMark(_MarkType.highlight),
-                              child: const Text('형광펜'),
+                              child: Text(tr(context, "형광펜")),
                             ),
                             TextButton(
                               onPressed: () => _applyMark(_MarkType.underline),
-                              child: const Text('밑줄'),
+                              child: Text(tr(context, "밑줄")),
                             ),
                             TextButton(
                               onPressed: () => _applyMark(_MarkType.strike),
-                              child: const Text('취소선'),
+                              child: Text(tr(context, "취소선")),
                             ),
                             TextButton(
                               onPressed: () => _applyMark(_MarkType.bold),
-                              child: const Text('강조'),
+                              child: Text(tr(context, "강조")),
                             ),
                           ],
                         ),
@@ -1021,18 +1042,18 @@ class _AdvancedPdfReaderPageState extends State<AdvancedPdfReaderPage> {
                     child: Center(
                       child: Card(
                         child: Padding(
-                          padding: const EdgeInsets.all(24),
+                          padding: EdgeInsets.all(24),
                           child: Row(
                             mainAxisSize: MainAxisSize.min,
                             children: [
-                              const SizedBox(
+                              SizedBox(
                                 width: 22,
                                 height: 22,
                                 child: CircularProgressIndicator(
                                   strokeWidth: 2.5,
                                 ),
                               ),
-                              const SizedBox(width: 16),
+                              SizedBox(width: 16),
                               Text(_busyMessage),
                             ],
                           ),

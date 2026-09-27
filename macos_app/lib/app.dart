@@ -1,3 +1,5 @@
+import 'cy_localization.dart';
+
 import 'dart:async';
 import 'dart:convert';
 import 'dart:io';
@@ -20,16 +22,21 @@ class PersonalPdfApp extends StatelessWidget {
   const PersonalPdfApp({super.key});
 
   @override
-  Widget build(BuildContext context) => MaterialApp(
-    title: 'CY뷰어',
-    debugShowCheckedModeBanner: false,
-    locale: const Locale('ko'),
-    localizationsDelegates: GlobalMaterialLocalizations.delegates,
-    supportedLocales: const [Locale('ko'), Locale('en')],
-    theme: CyDesign.theme(Brightness.light),
-    darkTheme: CyDesign.theme(Brightness.dark),
-    themeMode: ThemeMode.system,
-    home: const LibraryPage(),
+  Widget build(BuildContext context) => CyLanguageScope(
+    child: ListenableBuilder(
+      listenable: CyLanguage.instance,
+      builder: (context, _) => MaterialApp(
+        title: tr(context, "CY뷰어"),
+        debugShowCheckedModeBanner: false,
+        locale: CyLanguage.instance.locale,
+        localizationsDelegates: GlobalMaterialLocalizations.delegates,
+        supportedLocales: [Locale('ko'), Locale('en')],
+        theme: CyDesign.theme(Brightness.light),
+        darkTheme: CyDesign.theme(Brightness.dark),
+        themeMode: ThemeMode.system,
+        home: LibraryPage(),
+      ),
+    ),
   );
 }
 
@@ -134,13 +141,13 @@ class _LibraryPageState extends State<LibraryPage> {
           await _fileAccessChannel.invokeListMethod<String>(
             'takePendingFiles',
           ) ??
-          const [];
+          [];
       await _waitUntilReady();
       await _openIncomingFiles(paths);
     } on MissingPluginException {
       // 네이티브 파일 열기 연동이 없는 플랫폼이나 테스트 환경이다.
     } on Object catch (error) {
-      _showMessage('외부에서 전달한 PDF를 열 수 없습니다: $error');
+      _showMessage(trNow("외부에서 전달한 PDF를 열 수 없습니다: {0}", [error]));
     }
   }
 
@@ -167,7 +174,7 @@ class _LibraryPageState extends State<LibraryPage> {
       final raw = (await SharedPreferences.getInstance()).getString(_key);
       if (raw != null) {
         final decoded = jsonDecode(raw);
-        if (decoded is! List) throw const FormatException('문서 목록 형식 오류');
+        if (decoded is! List) throw FormatException(trNow("문서 목록 형식 오류"));
         _items = decoded
             .whereType<Map>()
             .map((item) {
@@ -241,14 +248,14 @@ class _LibraryPageState extends State<LibraryPage> {
     try {
       final files = await FilePicker.pickFiles(
         type: FileType.custom,
-        allowedExtensions: const ['pdf'],
+        allowedExtensions: ['pdf'],
       );
       final file = files.isEmpty ? null : files.first;
       if (file?.path == null) return;
       final path = await _persistIosFile(file!.path!, file.name);
       await _addAndOpen(path, file.name);
     } on Object catch (error) {
-      _showMessage('파일 선택 창을 열 수 없습니다: $error');
+      _showMessage(trNow("파일 선택 창을 열 수 없습니다: {0}", [error]));
     }
   }
 
@@ -277,15 +284,17 @@ class _LibraryPageState extends State<LibraryPage> {
   Future<void> _addAndOpen(String path, String name, {bool open = true}) async {
     if (!path.toLowerCase().endsWith('.pdf')) {
       if (mounted) {
-        ScaffoldMessenger.of(context)
-            .showSnackBar(const SnackBar(content: Text('PDF 파일만 열 수 있습니다.')));
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text(tr(context, "PDF 파일만 열 수 있습니다."))),
+        );
       }
       return;
     }
     if (!File(path).existsSync()) {
       if (mounted) {
-        ScaffoldMessenger.of(context)
-            .showSnackBar(const SnackBar(content: Text('파일을 찾을 수 없습니다.')));
+        ScaffoldMessenger.of(
+          context,
+        ).showSnackBar(SnackBar(content: Text(tr(context, "파일을 찾을 수 없습니다."))));
       }
       return;
     }
@@ -307,7 +316,7 @@ class _LibraryPageState extends State<LibraryPage> {
     try {
       await _save();
     } on Object catch (error) {
-      _showMessage('최근 문서 목록을 저장하지 못했습니다: $error');
+      _showMessage(trNow("최근 문서 목록을 저장하지 못했습니다: {0}", [error]));
     }
     if (!mounted) return;
     setState(() {});
@@ -322,8 +331,9 @@ class _LibraryPageState extends State<LibraryPage> {
       await _save();
       if (mounted) {
         setState(() {});
-        ScaffoldMessenger.of(context)
-            .showSnackBar(const SnackBar(content: Text('파일이 이동되었거나 삭제되었습니다.')));
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text(tr(context, "파일이 이동되었거나 삭제되었습니다."))),
+        );
       }
       return;
     }
@@ -358,7 +368,7 @@ class _LibraryPageState extends State<LibraryPage> {
     try {
       await _save();
     } on Object catch (error) {
-      _showMessage('즐겨찾기를 저장하지 못했습니다: $error');
+      _showMessage(trNow("즐겨찾기를 저장하지 못했습니다: {0}", [error]));
     }
     if (mounted) setState(() {});
   }
@@ -368,9 +378,9 @@ class _LibraryPageState extends State<LibraryPage> {
     return SafeArea(
       child: Center(
         child: ConstrainedBox(
-          constraints: const BoxConstraints(maxWidth: 1120),
+          constraints: BoxConstraints(maxWidth: 1120),
           child: Padding(
-            padding: const EdgeInsets.fromLTRB(24, 24, 24, 0),
+            padding: EdgeInsets.fromLTRB(24, 24, 24, 0),
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.stretch,
               children: [
@@ -379,40 +389,43 @@ class _LibraryPageState extends State<LibraryPage> {
                   runSpacing: 4,
                   crossAxisAlignment: WrapCrossAlignment.center,
                   children: [
-                    Text('문서함', style: theme.textTheme.headlineSmall),
                     Text(
-                      '${_items.length}개의 문서 · 이 기기에 저장됨',
+                      tr(context, "문서함"),
+                      style: theme.textTheme.headlineSmall,
+                    ),
+                    Text(
+                      tr(context, "{0}개의 문서 · 이 기기에 저장됨", [_items.length]),
                       style: theme.textTheme.bodySmall,
                     ),
                   ],
                 ),
-                const SizedBox(height: 16),
+                SizedBox(height: 16),
                 Wrap(
                   spacing: 8,
                   runSpacing: 8,
                   children: [
                     ChoiceChip(
-                      label: const Text('전체 문서'),
+                      label: Text(tr(context, "전체 문서")),
                       selected: !_favoritesOnly,
                       onSelected: (_) => setState(() => _favoritesOnly = false),
                     ),
                     ChoiceChip(
-                      avatar: const Icon(Icons.star_outline, size: 18),
-                      label: const Text('즐겨찾기'),
+                      avatar: Icon(Icons.star_outline, size: 18),
+                      label: Text(tr(context, "즐겨찾기")),
                       selected: _favoritesOnly,
                       onSelected: (_) => setState(() => _favoritesOnly = true),
                     ),
                   ],
                 ),
-                const SizedBox(height: 20),
+                SizedBox(height: 20),
                 Expanded(
                   child: shown.isEmpty
                       ? SingleChildScrollView(
-                          padding: const EdgeInsets.only(top: 12, bottom: 32),
+                          padding: EdgeInsets.only(top: 12, bottom: 32),
                           child: _favoritesOnly
                               ? Card(
                                   child: Padding(
-                                    padding: const EdgeInsets.all(32),
+                                    padding: EdgeInsets.all(32),
                                     child: Column(
                                       children: [
                                         Icon(
@@ -420,22 +433,25 @@ class _LibraryPageState extends State<LibraryPage> {
                                           size: 40,
                                           color: theme.colorScheme.primary,
                                         ),
-                                        const SizedBox(height: 16),
+                                        SizedBox(height: 16),
                                         Text(
-                                          '즐겨찾는 문서가 없습니다',
+                                          tr(context, "즐겨찾는 문서가 없습니다"),
                                           style: theme.textTheme.titleLarge,
                                         ),
-                                        const SizedBox(height: 8),
-                                        const Text(
-                                          '문서 옆의 별을 누르면 여기에 모아 볼 수 있습니다.',
+                                        SizedBox(height: 8),
+                                        Text(
+                                          tr(
+                                            context,
+                                            "문서 옆의 별을 누르면 여기에 모아 볼 수 있습니다.",
+                                          ),
                                           textAlign: TextAlign.center,
                                         ),
-                                        const SizedBox(height: 16),
+                                        SizedBox(height: 16),
                                         OutlinedButton(
                                           onPressed: () => setState(
                                             () => _favoritesOnly = false,
                                           ),
-                                          child: const Text('전체 문서 보기'),
+                                          child: Text(tr(context, "전체 문서 보기")),
                                         ),
                                       ],
                                     ),
@@ -445,28 +461,25 @@ class _LibraryPageState extends State<LibraryPage> {
                                   web: false,
                                   action: FilledButton.icon(
                                     onPressed: _pick,
-                                    icon: const Icon(
-                                      Icons.folder_open_outlined,
-                                    ),
-                                    label: const Text('PDF 열기'),
+                                    icon: Icon(Icons.folder_open_outlined),
+                                    label: Text(tr(context, "PDF 열기")),
                                   ),
                                 ),
                         )
                       : ListView.separated(
-                          padding: const EdgeInsets.only(bottom: 24),
+                          padding: EdgeInsets.only(bottom: 24),
                           itemCount: shown.length,
-                          separatorBuilder: (_, _) =>
-                              const SizedBox(height: 10),
+                          separatorBuilder: (_, _) => SizedBox(height: 10),
                           itemBuilder: (_, index) {
                             final item = shown[index];
                             return Card(
                               child: ListTile(
-                                contentPadding: const EdgeInsets.symmetric(
+                                contentPadding: EdgeInsets.symmetric(
                                   horizontal: 16,
                                   vertical: 8,
                                 ),
                                 leading: Container(
-                                  padding: const EdgeInsets.all(10),
+                                  padding: EdgeInsets.all(10),
                                   decoration: BoxDecoration(
                                     color: theme.colorScheme.primaryContainer,
                                     borderRadius: BorderRadius.circular(10),
@@ -483,13 +496,16 @@ class _LibraryPageState extends State<LibraryPage> {
                                   style: theme.textTheme.titleSmall,
                                 ),
                                 subtitle: Text(
-                                  '${item.lastPage}페이지에서 이어 읽기 · ${_date(item.openedAt)}',
+                                  tr(context, "{0}페이지에서 이어 읽기 · {1}", [
+                                    item.lastPage,
+                                    _date(item.openedAt),
+                                  ]),
                                 ),
                                 onTap: () => _open(item),
                                 trailing: IconButton(
                                   tooltip: item.favorite
-                                      ? '즐겨찾기 해제'
-                                      : '즐겨찾기에 추가',
+                                      ? tr(context, "즐겨찾기 해제")
+                                      : tr(context, "즐겨찾기에 추가"),
                                   onPressed: () => _favorite(item),
                                   color: item.favorite
                                       ? theme.colorScheme.primary
@@ -520,21 +536,24 @@ class _LibraryPageState extends State<LibraryPage> {
         : _items;
     return Scaffold(
       appBar: AppBar(
-        title: const CyBrand(),
+        title: CyBrand(),
         actions: [
+          const CyLanguageButton(),
           if (Platform.isMacOS)
             IconButton(
-              tooltip: '업데이트 확인',
-              icon: const Icon(Icons.system_update_alt),
+              tooltip: tr(context, "업데이트 확인"),
+              icon: Icon(Icons.system_update_alt),
               onPressed: () async {
                 try {
-                  await const MethodChannel('com.kimmacaroni.cyviewer/updates')
+                  await MethodChannel('com.kimmacaroni.cyviewer/updates')
                       .invokeMethod<void>('check');
                 } on PlatformException catch (_) {
                   if (context.mounted) {
                     ScaffoldMessenger.of(context).showSnackBar(
-                      const SnackBar(
-                        content: Text('업데이트를 확인하지 못했습니다. 다시 시도해 주세요.'),
+                      SnackBar(
+                        content: Text(
+                          tr(context, "업데이트를 확인하지 못했습니다. 다시 시도해 주세요."),
+                        ),
                       ),
                     );
                   }
@@ -543,11 +562,11 @@ class _LibraryPageState extends State<LibraryPage> {
             ),
           if (_items.isNotEmpty)
             Padding(
-              padding: const EdgeInsets.only(right: 16),
+              padding: EdgeInsets.only(right: 16),
               child: FilledButton.icon(
                 onPressed: _pick,
-                icon: const Icon(Icons.add, size: 20),
-                label: const Text('PDF 열기'),
+                icon: Icon(Icons.add, size: 20),
+                label: Text(tr(context, "PDF 열기")),
               ),
             ),
         ],
@@ -568,7 +587,7 @@ class _LibraryPageState extends State<LibraryPage> {
           if (pdfs.isEmpty) {
             if (mounted) {
               ScaffoldMessenger.of(context).showSnackBar(
-                const SnackBar(content: Text('PDF 파일을 끌어놓아 주세요.')),
+                SnackBar(content: Text(tr(context, "PDF 파일을 끌어놓아 주세요."))),
               );
             }
             return;
@@ -580,7 +599,7 @@ class _LibraryPageState extends State<LibraryPage> {
           fit: StackFit.expand,
           children: [
             _loading
-                ? const Center(child: CircularProgressIndicator())
+                ? Center(child: CircularProgressIndicator())
                 : _buildLibrary(context, shown),
             if (_dragging)
               ColoredBox(
@@ -589,7 +608,7 @@ class _LibraryPageState extends State<LibraryPage> {
                   child: Card(
                     elevation: 8,
                     child: Padding(
-                      padding: const EdgeInsets.symmetric(
+                      padding: EdgeInsets.symmetric(
                         horizontal: 36,
                         vertical: 28,
                       ),
@@ -601,8 +620,8 @@ class _LibraryPageState extends State<LibraryPage> {
                             size: 48,
                             color: Theme.of(context).colorScheme.primary,
                           ),
-                          const SizedBox(height: 12),
-                          const Text('여기에 PDF를 놓아 열기'),
+                          SizedBox(height: 12),
+                          Text(tr(context, "여기에 PDF를 놓아 열기")),
                         ],
                       ),
                     ),
@@ -631,7 +650,7 @@ class _PdfReaderPageState extends State<PdfReaderPage> {
     final page = await showDialog<int>(
       context: context,
       builder: (context) => AlertDialog(
-        title: const Text('페이지로 이동'),
+        title: Text(tr(context, "페이지로 이동")),
         content: TextField(
           controller: input,
           autofocus: true,
@@ -641,11 +660,11 @@ class _PdfReaderPageState extends State<PdfReaderPage> {
         actions: [
           TextButton(
             onPressed: () => Navigator.pop(context),
-            child: const Text('취소'),
+            child: Text(tr(context, "취소")),
           ),
           FilledButton(
             onPressed: () => Navigator.pop(context, int.tryParse(input.text)),
-            child: const Text('이동'),
+            child: Text(tr(context, "이동")),
           ),
         ],
       ),
@@ -661,19 +680,19 @@ class _PdfReaderPageState extends State<PdfReaderPage> {
       title: Text(widget.item.name, overflow: TextOverflow.ellipsis),
       actions: [
         IconButton(
-          tooltip: '축소',
+          tooltip: tr(context, "축소"),
           onPressed: _controller.zoomDown,
-          icon: const Icon(Icons.zoom_out),
+          icon: Icon(Icons.zoom_out),
         ),
         IconButton(
-          tooltip: '확대',
+          tooltip: tr(context, "확대"),
           onPressed: _controller.zoomUp,
-          icon: const Icon(Icons.zoom_in),
+          icon: Icon(Icons.zoom_in),
         ),
         IconButton(
-          tooltip: '페이지 이동',
+          tooltip: tr(context, "페이지 이동"),
           onPressed: _pages == 0 ? null : _pageDialog,
-          icon: const Icon(Icons.find_in_page_outlined),
+          icon: Icon(Icons.find_in_page_outlined),
         ),
       ],
     ),

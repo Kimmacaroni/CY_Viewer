@@ -1,0 +1,1 @@
+void setBrowserLanguage(String code) {}

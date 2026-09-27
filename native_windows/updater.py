@@ -1,5 +1,7 @@
 """공식 릴리스 확인, 무결성 검사, 사용자 동의 후 설치를 담당한다."""
 from __future__ import annotations
+
+from cy_localization import tr
 import hashlib
 import json
 import queue
@@ -21,7 +23,7 @@ MAX_PACKAGE = 250 * 1024 * 1024
 
 def version_tuple(value):
     if not isinstance(value, str) or not re.fullmatch(r"\d+\.\d+\.\d+", value):
-        raise ValueError("버전 형식이 올바르지 않습니다.")
+        raise ValueError(tr('버전 형식이 올바르지 않습니다.'))
     return tuple(map(int, value.split(".")))
 
 
@@ -59,7 +61,7 @@ def select_release(releases, current=APP_VERSION):
 class HTTPSRedirect(urllib.request.HTTPRedirectHandler):
     def redirect_request(self, req, fp, code, msg, headers, newurl):
         if not newurl.startswith("https://"):
-            raise ValueError("HTTPS가 아닌 다운로드 주소입니다.")
+            raise ValueError(tr('HTTPS가 아닌 다운로드 주소입니다.'))
         return super().redirect_request(req, fp, code, msg, headers, newurl)
 
 
@@ -72,10 +74,10 @@ def check_release():
     with open_url(API) as response:
         data = response.read(4 * 1024 * 1024 + 1)
     if len(data) > 4 * 1024 * 1024:
-        raise ValueError("업데이트 응답이 너무 큽니다.")
+        raise ValueError(tr('업데이트 응답이 너무 큽니다.'))
     releases = json.loads(data)
     if not isinstance(releases, list):
-        raise ValueError("업데이트 목록을 읽을 수 없습니다.")
+        raise ValueError(tr('업데이트 목록을 읽을 수 없습니다.'))
     return select_release(releases)
 
 
@@ -84,7 +86,7 @@ def checksum_for(text, filename):
         match = re.fullmatch(r"([a-fA-F0-9]{64})\s+\*?(.+)", line.strip())
         if match and match[2] == filename:
             return match[1].lower()
-    raise ValueError("설치 파일의 검증 정보를 찾을 수 없습니다.")
+    raise ValueError(tr('설치 파일의 검증 정보를 찾을 수 없습니다.'))
 
 
 def download(update, progress, opener=open_url):
@@ -99,12 +101,12 @@ def download(update, progress, opener=open_url):
             while chunk := response.read(256 * 1024):
                 received += len(chunk)
                 if received > update.size:
-                    raise ValueError("설치 파일 크기가 일치하지 않습니다.")
+                    raise ValueError(tr('설치 파일 크기가 일치하지 않습니다.'))
                 output.write(chunk)
                 digest.update(chunk)
                 progress(int(received * 100 / update.size))
         if received != update.size or digest.hexdigest() != expected:
-            raise ValueError("설치 파일 검증에 실패했습니다. 다시 다운로드해 주세요.")
+            raise ValueError(tr('설치 파일 검증에 실패했습니다. 다시 다운로드해 주세요.'))
         partial.rename(target)
         return target
     except Exception:
@@ -123,7 +125,7 @@ Wait-Process -Id {int(pid)} -ErrorAction SilentlyContinue
 $arguments = @('/SILENT', '/NORESTART', '/SP-', '/NOCLOSEAPPLICATIONS', {powershell_quote('/DIR="' + str(executable.parent) + '"')})
 $setup = Start-Process -FilePath {powershell_quote(installer)} -ArgumentList $arguments -Wait -PassThru
 if ($setup.ExitCode -eq 0) {{ Start-Process -FilePath {powershell_quote(executable)} }}
-else {{ Add-Type -AssemblyName PresentationFramework; [System.Windows.MessageBox]::Show('업데이트 설치를 완료하지 못했습니다. 배포 사이트에서 다시 설치해 주세요.', 'CY뷰어 업데이트') }}
+else {{ Add-Type -AssemblyName PresentationFramework; [System.Windows.MessageBox]::Show('업데이트 설치 실패 / Update installation failed. Please download the installer from the CY Viewer website.', 'CY Viewer Update') }}
 '''
 
 
@@ -152,12 +154,12 @@ class UpdateController:
             self.install()
             return
         self.busy = True
-        self.label("업데이트 확인 중…")
+        self.label(tr('업데이트 확인 중…'))
         def work():
             try:
                 self.events.put(("checked", (check_release(), manual)))
             except Exception:
-                self.events.put(("error", ("업데이트를 확인할 수 없습니다. 인터넷 연결을 확인하고 다시 시도해 주세요.", manual)))
+                self.events.put(("error", (tr('업데이트를 확인할 수 없습니다. 인터넷 연결을 확인하고 다시 시도해 주세요.'), manual)))
         threading.Thread(target=work, daemon=True).start()
 
     def poll(self):
@@ -165,49 +167,49 @@ class UpdateController:
             while True:
                 event, value = self.events.get_nowait()
                 if event == "progress":
-                    self.label(f"다운로드 {value}%")
+                    self.label(tr('다운로드 {0}%', f'{value}'))
                 elif event == "checked":
                     self.busy = False
-                    self.label("업데이트 확인")
+                    self.label(tr('업데이트 확인'))
                     update, manual = value
-                    if update and messagebox.askyesno("CY뷰어 업데이트", f"새 버전 {update.version}이 있습니다.\n현재 버전: {APP_VERSION}\n\n설치 파일을 다운로드할까요? 문서는 계속 사용할 수 있습니다.", parent=self.app):
+                    if update and messagebox.askyesno(tr('CY뷰어 업데이트'), tr('새 버전 {0}이 있습니다.\n현재 버전: {1}\n\n설치 파일을 다운로드할까요? 문서는 계속 사용할 수 있습니다.', f'{update.version}', f'{APP_VERSION}'), parent=self.app):
                         self.start_download(update)
                     elif not update and manual:
-                        messagebox.showinfo("CY뷰어 업데이트", f"현재 최신 버전({APP_VERSION})입니다.", parent=self.app)
+                        messagebox.showinfo(tr('CY뷰어 업데이트'), tr('현재 최신 버전({0})입니다.', f'{APP_VERSION}'), parent=self.app)
                 elif event == "ready":
                     self.busy = False
                     self.ready = value
-                    self.label("업데이트 설치")
+                    self.label(tr('업데이트 설치'))
                     self.install()
                 elif event == "error":
                     self.busy = False
-                    self.label("업데이트 재시도")
+                    self.label(tr('업데이트 재시도'))
                     message, visible = value
                     if visible:
-                        messagebox.showerror("CY뷰어 업데이트", message, parent=self.app)
+                        messagebox.showerror(tr('CY뷰어 업데이트'), message, parent=self.app)
         except queue.Empty:
             pass
         self.app.after(200, self.poll)
 
     def start_download(self, update):
         self.busy = True
-        self.label("다운로드 0%")
+        self.label(tr('다운로드 0%'))
         def work():
             try:
                 path = download(update, lambda percent: self.events.put(("progress", percent)))
                 self.events.put(("ready", path))
             except Exception as error:
-                self.events.put(("error", (f"업데이트를 다운로드하지 못했습니다.\n{error}", True)))
+                self.events.put(("error", (tr('업데이트를 다운로드하지 못했습니다.\n{0}', f'{error}'), True)))
         threading.Thread(target=work, daemon=True).start()
 
     def install(self):
         if not getattr(sys, "frozen", False):
-            messagebox.showinfo("CY뷰어 업데이트", "개발 실행에서는 설치를 시작하지 않습니다.", parent=self.app)
+            messagebox.showinfo(tr('CY뷰어 업데이트'), tr('개발 실행에서는 설치를 시작하지 않습니다.'), parent=self.app)
             return
         if self.app.is_dirty:
-            messagebox.showinfo("CY뷰어 업데이트", "저장하지 않은 변경이 있습니다. PDF를 저장한 뒤 업데이트 설치를 다시 눌러 주세요.", parent=self.app)
+            messagebox.showinfo(tr('CY뷰어 업데이트'), tr('저장하지 않은 변경이 있습니다. PDF를 저장한 뒤 업데이트 설치를 다시 눌러 주세요.'), parent=self.app)
             return
-        if not messagebox.askyesno("CY뷰어 업데이트", "다운로드와 검증이 완료되었습니다.\n\nCY뷰어를 종료하고 업데이트를 설치한 뒤 다시 실행할까요?", parent=self.app):
+        if not messagebox.askyesno(tr('CY뷰어 업데이트'), tr('다운로드와 검증이 완료되었습니다.\n\nCY뷰어를 종료하고 업데이트를 설치한 뒤 다시 실행할까요?'), parent=self.app):
             return
         try:
             import os
@@ -216,4 +218,4 @@ class UpdateController:
             subprocess.Popen(["powershell.exe", "-NoProfile", "-NonInteractive", "-ExecutionPolicy", "Bypass", "-File", str(script)], creationflags=subprocess.CREATE_NO_WINDOW)
             self.app.destroy()
         except Exception as error:
-            messagebox.showerror("CY뷰어 업데이트", f"설치를 시작하지 못했습니다.\n{error}", parent=self.app)
+            messagebox.showerror(tr('CY뷰어 업데이트'), tr('설치를 시작하지 못했습니다.\n{0}', f'{error}'), parent=self.app)

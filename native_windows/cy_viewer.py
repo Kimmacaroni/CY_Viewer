@@ -2,6 +2,8 @@
 
 from __future__ import annotations
 
+from cy_localization import tr, MODE, save_mode
+
 import tkinter as tk
 import csv
 import ctypes
@@ -130,7 +132,7 @@ class RoundedButton(tk.Canvas):
 class CyViewer(TkinterDnD.Tk):
     def __init__(self) -> None:
         super().__init__()
-        self.title("CY뷰어 | 개인용 PDF 뷰어")
+        self.title(tr('CY뷰어 | 개인용 PDF 뷰어'))
         app_icon = bundled_path("assets/CYViewer.ico")
         if app_icon.exists():
             self.iconbitmap(default=str(app_icon))
@@ -163,12 +165,29 @@ class CyViewer(TkinterDnD.Tk):
         self.selection_kind = "none"
         self.selection_preview: int | None = None
         self.is_dirty = False
-        self.save_state = "새 문서 없음"
+        self.save_state = tr('새 문서 없음')
 
+        language_menu = tk.Menu(self, tearoff=0)
+        choices = tk.Menu(language_menu, tearoff=0)
+        self.language_mode = tk.StringVar(value=MODE)
+        for value, label in [('system', '기기 언어 / System'), ('ko', '한국어'), ('en', 'English')]:
+            choices.add_radiobutton(label=label, value=value, variable=self.language_mode,
+                                    command=self._save_language)
+        language_menu.add_cascade(label='언어 / Language', menu=choices)
+        self.configure(menu=language_menu)
         self._make_ui()
         self.after(300, self._apply_windows_title_icon)
         self.drop_target_register(DND_FILES)
         self.dnd_bind("<<Drop>>", self.drop_pdf)
+
+    def _save_language(self):
+        try:
+            save_mode(self.language_mode.get())
+            messagebox.showinfo('언어 / Language',
+                '다음 실행부터 선택한 언어가 적용됩니다. 문서를 저장한 뒤 앱을 다시 열어 주세요.\n\n'
+                'The selected language will apply next time. Save your document, then reopen the app.', parent=self)
+        except OSError as error:
+            messagebox.showerror('언어 / Language', f'설정을 저장하지 못했습니다 / Could not save settings: {error}', parent=self)
 
     def _apply_windows_title_icon(self) -> None:
         """Windows 제목 표시줄이 Tk 기본 깃털로 되돌아가지 않게 앱 아이콘을 직접 지정합니다."""
@@ -206,14 +225,14 @@ class CyViewer(TkinterDnD.Tk):
         header.pack(fill="x")
         tk.Label(
             header,
-            text="CY뷰어",
+            text=tr('CY뷰어'),
             fg=COLORS["ink"],
             bg=COLORS["surface"],
             font=("Malgun Gothic", 18, "bold"),
         ).grid(row=0, column=0, sticky="w")
         self.file_label = tk.Label(
             header,
-            text="문서 작업 공간",
+            text=tr('문서 작업 공간'),
             fg=COLORS["muted"],
             bg=COLORS["surface"],
             font=("Malgun Gothic", 10),
@@ -223,7 +242,7 @@ class CyViewer(TkinterDnD.Tk):
         header.grid_columnconfigure(1, weight=1)
         self.save_badge = tk.Label(header, text=self.save_state, fg=COLORS["muted"], bg=COLORS["canvas"], padx=10, pady=4, font=("Malgun Gothic", 9, "bold"))
         self.save_badge.grid(row=0, column=2, sticky="e")
-        update_button = self._button(header, "업데이트 확인", lambda: self.updater.check())
+        update_button = self._button(header, tr('업데이트 확인'), lambda: self.updater.check())
         update_button.configure(width=148)
         update_button.grid(row=0, column=3, padx=(12, 0))
         self.updater = UpdateController(self, update_button)
@@ -253,17 +272,17 @@ class CyViewer(TkinterDnD.Tk):
             if y < visible_top or y + widget.winfo_height() > visible_bottom:
                 rail_canvas.yview_moveto(max(0, y - 12) / max(sidebar.winfo_height(), 1))
         self.bind("<FocusIn>", reveal_focused, add="+")
-        self._button(sidebar, "＋  PDF 열기", self.open_pdf, "Primary.TButton").pack(fill="x", pady=(0, 20))
-        navigation = self._section(sidebar, "01  문서 탐색")
+        self._button(sidebar, tr('＋  PDF 열기'), self.open_pdf, "Primary.TButton").pack(fill="x", pady=(0, 20))
+        navigation = self._section(sidebar, tr('01  문서 탐색'))
         page_controls = tk.Frame(navigation, bg=COLORS["sidebar"])
         page_controls.pack(fill="x", pady=(0, 8))
-        previous = self._button(page_controls, "◀ 이전", self.previous_page)
+        previous = self._button(page_controls, tr('◀ 이전'), self.previous_page)
         previous.configure(width=1)
         previous.grid(row=0, column=0, sticky="ew")
-        go_to = self._button(page_controls, "이동", self.go_to_page)
+        go_to = self._button(page_controls, tr('이동'), self.go_to_page)
         go_to.configure(width=1)
         go_to.grid(row=0, column=1, sticky="ew", padx=6)
-        following = self._button(page_controls, "다음 ▶", self.next_page)
+        following = self._button(page_controls, tr('다음 ▶'), self.next_page)
         following.configure(width=1)
         following.grid(row=0, column=2, sticky="ew")
         for column in range(3):
@@ -272,30 +291,30 @@ class CyViewer(TkinterDnD.Tk):
         quick_actions.pack(fill="x")
         self._button(quick_actions, "☆", self.toggle_bookmark).pack(side="left")
         self._button(quick_actions, "OCR", self.ocr_document).pack(side="left", fill="x", expand=True, padx=(8, 0))
-        editing = self._section(sidebar, "02  선택·편집")
+        editing = self._section(sidebar, tr('02  선택·편집'))
         tk.Label(
             editing,
-            text="문구를 드래그해 선택한 뒤\n마우스 오른쪽 버튼을 누르세요.\n\n형광펜 · 밑줄 · 취소선 · 굵게\n문구 수정 · 텍스트 복사를 제공합니다.",
+            text=tr('문구를 드래그해 선택한 뒤\n마우스 오른쪽 버튼을 누르세요.\n\n형광펜 · 밑줄 · 취소선 · 굵게\n문구 수정 · 텍스트 복사를 제공합니다.'),
             justify="left", anchor="w", bg=COLORS["sidebar"], fg=COLORS["muted"],
             font=("Malgun Gothic", 9),
         ).pack(fill="x", pady=(0, 6))
-        save_actions = self._section(sidebar, "03  저장·내보내기")
-        self._button(save_actions, "PDF로 저장", self.save_as).pack(fill="x", pady=(0, 8))
+        save_actions = self._section(sidebar, tr('03  저장·내보내기'))
+        self._button(save_actions, tr('PDF로 저장'), self.save_as).pack(fill="x", pady=(0, 8))
         image_saves = tk.Frame(save_actions, bg=COLORS["sidebar"])
         image_saves.pack(fill="x", pady=(0, 8))
-        jpg_button = self._button(image_saves, "JPG로 저장", lambda: self.export_page("jpg"))
+        jpg_button = self._button(image_saves, tr('JPG로 저장'), lambda: self.export_page("jpg"))
         jpg_button.configure(width=1)
         jpg_button.grid(row=0, column=0, sticky="ew")
-        png_button = self._button(image_saves, "PNG로 저장", lambda: self.export_page("png"))
+        png_button = self._button(image_saves, tr('PNG로 저장'), lambda: self.export_page("png"))
         png_button.configure(width=1)
         png_button.grid(row=0, column=1, sticky="ew", padx=(8, 0))
         image_saves.grid_columnconfigure(0, weight=1, uniform="image_save")
         image_saves.grid_columnconfigure(1, weight=1, uniform="image_save")
-        self._button(save_actions, "인쇄", self.print_document).pack(fill="x")
+        self._button(save_actions, tr('인쇄'), self.print_document).pack(fill="x")
         selection_card = tk.Frame(sidebar, bg=COLORS["blue_soft"], padx=10, pady=10)
         selection_card.pack(fill="x", pady=(20, 0))
         self.selection_label = tk.Label(
-            selection_card, text="선택한 내용", justify="left", anchor="w",
+            selection_card, text=tr('선택한 내용'), justify="left", anchor="w",
             bg=COLORS["blue_soft"], fg="#0C4A6E", font=("Malgun Gothic", 9, "bold"),
         )
         self.selection_label.pack(fill="x")
@@ -306,7 +325,7 @@ class CyViewer(TkinterDnD.Tk):
         )
         self.selection_details.pack(fill="both", expand=True)
         self.selection_details.config(state="disabled")
-        self._set_selection_details("문구를 드래그해 선택하면\n이곳에서 선택한 내용을\n확인할 수 있어요.")
+        self._set_selection_details(tr('문구를 드래그해 선택하면\n이곳에서 선택한 내용을\n확인할 수 있어요.'))
 
         content = tk.Frame(workspace, bg=COLORS["canvas"])
         content.pack(side="left", fill="both", expand=True)
@@ -314,13 +333,13 @@ class CyViewer(TkinterDnD.Tk):
         tools.pack(fill="x", padx=16, pady=(16, 10))
         view_controls = tk.Frame(tools, bg=COLORS["surface"])
         view_controls.pack(fill="x")
-        tk.Label(view_controls, text="읽기", bg=COLORS["blue_soft"], fg="#1D4ED8", padx=9, pady=4, font=("Malgun Gothic", 9, "bold")).pack(side="left", padx=(0, 12))
-        self.view_mode_var = tk.StringVar(value="스크롤 보기")
-        view_selector = ttk.Combobox(view_controls, textvariable=self.view_mode_var, state="readonly", width=11, values=("스크롤 보기", "좌우 보기"), font=("Malgun Gothic", 9))
+        tk.Label(view_controls, text=tr('읽기'), bg=COLORS["blue_soft"], fg="#1D4ED8", padx=9, pady=4, font=("Malgun Gothic", 9, "bold")).pack(side="left", padx=(0, 12))
+        self.view_mode_var = tk.StringVar(value=tr('스크롤 보기'))
+        view_selector = ttk.Combobox(view_controls, textvariable=self.view_mode_var, state="readonly", width=11, values=(tr('스크롤 보기'), tr('좌우 보기')), font=("Malgun Gothic", 9))
         view_selector.pack(side="left", padx=(0, 12), ipady=4)
         view_selector.bind("<<ComboboxSelected>>", self._change_view_mode)
         self.selection_state = tk.Label(
-            view_controls, text="선택 없음", bg="#F1F5F9", fg=COLORS["muted"],
+            view_controls, text=tr('선택 없음'), bg="#F1F5F9", fg=COLORS["muted"],
             padx=10, pady=4, font=("Malgun Gothic", 9, "bold"),
         )
         self.selection_state.pack(side="left", padx=(0, 12))
@@ -328,11 +347,11 @@ class CyViewer(TkinterDnD.Tk):
         self._button(view_controls, "+", lambda: self.change_zoom(0.2)).pack(side="left", padx=2)
         search_box = tk.Frame(tools, bg="#F1F5F9", padx=8, pady=6)
         search_box.pack(fill="x", pady=(12, 0))
-        tk.Label(search_box, text="문서 검색", bg="#F1F5F9", fg=COLORS["muted"], font=("Malgun Gothic", 9, "bold")).pack(side="left", padx=(2, 8))
+        tk.Label(search_box, text=tr('문서 검색'), bg="#F1F5F9", fg=COLORS["muted"], font=("Malgun Gothic", 9, "bold")).pack(side="left", padx=(2, 8))
         self.search_entry = ttk.Entry(search_box, width=10, font=("Malgun Gothic", 10))
         self.search_entry.pack(side="left", fill="x", expand=True, padx=(0, 6))
         self.search_entry.bind("<Return>", lambda _: self.find_next())
-        search_button = self._button(search_box, "검색", self.find_next)
+        search_button = self._button(search_box, tr('검색'), self.find_next)
         search_button.configure(width=70)
         search_button.pack(side="left")
         self.search_status = tk.Label(search_box, text="", bg="#F1F5F9", fg=COLORS["muted"], font=("Malgun Gothic", 9))
@@ -358,17 +377,17 @@ class CyViewer(TkinterDnD.Tk):
         self.canvas.drop_target_register(DND_FILES)
         self.canvas.dnd_bind("<<Drop>>", self.drop_pdf)
         self.context_menu = tk.Menu(self, tearoff=0, font=("Malgun Gothic", 10), bg=COLORS["surface"], fg=COLORS["ink"], activebackground=COLORS["blue_soft"], activeforeground=COLORS["ink"])
-        self.context_menu.add_command(label="형광펜", command=lambda: self.mark_selection("highlight"))
-        self.context_menu.add_command(label="밑줄", command=lambda: self.mark_selection("underline"))
-        self.context_menu.add_command(label="취소선", command=lambda: self.mark_selection("strike"))
+        self.context_menu.add_command(label=tr('형광펜'), command=lambda: self.mark_selection("highlight"))
+        self.context_menu.add_command(label=tr('밑줄'), command=lambda: self.mark_selection("underline"))
+        self.context_menu.add_command(label=tr('취소선'), command=lambda: self.mark_selection("strike"))
         self.context_menu.add_separator()
-        self.context_menu.add_command(label="굵게 처리", command=self.bold_selection)
-        self.context_menu.add_command(label="문구 수정", command=self.edit_selection)
-        self.context_menu.add_command(label="텍스트 복사", command=self.copy_selected_text)
+        self.context_menu.add_command(label=tr('굵게 처리'), command=self.bold_selection)
+        self.context_menu.add_command(label=tr('문구 수정'), command=self.edit_selection)
+        self.context_menu.add_command(label=tr('텍스트 복사'), command=self.copy_selected_text)
 
         self.status = tk.Label(
             content,
-            text="PDF 열기를 눌러 문서를 선택하세요.",
+            text=tr('PDF 열기를 눌러 문서를 선택하세요.'),
             anchor="w",
             padx=14,
             pady=7,
@@ -398,13 +417,13 @@ class CyViewer(TkinterDnD.Tk):
             widget.pack(fill="x", pady=(0, 12))
             parent.bind("<Configure>", lambda event, item=widget: item.configure(wraplength=max(120, event.width - 16)), add="+")
             return widget
-        label(intro, "문서 작업 공간", bold=True, color=COLORS["blue"])
-        label(intro, "문서를 열고,\n바로 읽으세요.", 24, True)
-        label(intro, "PDF를 선택하거나 이 창에 끌어놓으세요.", color=COLORS["muted"])
+        label(intro, tr('문서 작업 공간'), bold=True, color=COLORS["blue"])
+        label(intro, tr('문서를 열고,\n바로 읽으세요.'), 24, True)
+        label(intro, tr('PDF를 선택하거나 이 창에 끌어놓으세요.'), color=COLORS["muted"])
         for title, detail in [
-            ("찾고 읽기", "문서 검색 · 확대 · 보기 방식 변경"),
-            ("중요한 페이지 남기기", "책갈피로 필요한 곳을 빠르게 찾기"),
-            ("표시하고 저장하기", "텍스트 표시 · OCR · PDF와 이미지 저장"),
+            (tr('찾고 읽기'), tr('문서 검색 · 확대 · 보기 방식 변경')),
+            (tr('중요한 페이지 남기기'), tr('책갈피로 필요한 곳을 빠르게 찾기')),
+            (tr('표시하고 저장하기'), tr('텍스트 표시 · OCR · PDF와 이미지 저장')),
         ]:
             label(intro, title, 11, True)
             label(intro, detail, 10, color=COLORS["muted"])
@@ -412,11 +431,11 @@ class CyViewer(TkinterDnD.Tk):
             highlightbackground=COLORS["line"], highlightthickness=1)
         panel.grid(row=0, column=1, sticky="ew", padx=(28, 0))
         label(panel, "PDF", 24, True, COLORS["blue"], COLORS["surface"])
-        label(panel, "어떤 문서를 읽을까요?", 17, True, background=COLORS["surface"])
-        label(panel, "이 기기에 있는 PDF 파일을 선택하세요.", color=COLORS["muted"], background=COLORS["surface"])
-        self._button(panel, "＋  PDF 열기", self.open_pdf, "Primary.TButton").pack(fill="x", pady=(12, 24))
+        label(panel, tr('어떤 문서를 읽을까요?'), 17, True, background=COLORS["surface"])
+        label(panel, tr('이 기기에 있는 PDF 파일을 선택하세요.'), color=COLORS["muted"], background=COLORS["surface"])
+        self._button(panel, tr('＋  PDF 열기'), self.open_pdf, "Primary.TButton").pack(fill="x", pady=(12, 24))
         tk.Frame(panel, bg=COLORS["line"], height=1).pack(fill="x", pady=(0, 16))
-        label(panel, "문서는 이 기기에서만 처리합니다.", 10, color=COLORS["muted"], background=COLORS["surface"])
+        label(panel, tr('문서는 이 기기에서만 처리합니다.'), 10, color=COLORS["muted"], background=COLORS["surface"])
         # 자식 위에서도 파일을 놓을 수 있도록 같은 파일 열기 동작을 연결한다.
         def register_drop(widget):
             widget.drop_target_register(DND_FILES)
@@ -443,8 +462,8 @@ class CyViewer(TkinterDnD.Tk):
 
     def _mark_dirty(self, message: str) -> None:
         self.is_dirty = True
-        self._set_save_state("저장 필요", "#FEF3C7", "#92400E")
-        self.status.config(text=message + "  |  오른쪽이 아닌 왼쪽 아래 ‘PDF로 저장’으로 사본을 보관하세요.")
+        self._set_save_state(tr('저장 필요'), "#FEF3C7", "#92400E")
+        self.status.config(text=message + tr('  |  오른쪽이 아닌 왼쪽 아래 ‘PDF로 저장’으로 사본을 보관하세요.'))
 
     def _set_selection_details(self, text: str) -> None:
         self.selection_details.config(state="normal")
@@ -454,15 +473,15 @@ class CyViewer(TkinterDnD.Tk):
 
     def _set_selection_feedback(self, text: str | None = None, kind: str = "none") -> None:
         if text:
-            self.selection_state.config(text=f"텍스트 선택됨 · {len(text)}자", bg="#DBEAFE", fg="#1D4ED8")
+            self.selection_state.config(text=tr('텍스트 선택됨 · {0}자', f'{len(text)}'), bg="#DBEAFE", fg="#1D4ED8")
         elif kind == "image":
-            self.selection_state.config(text="이미지 선택됨", bg="#EDE9FE", fg="#6D28D9")
+            self.selection_state.config(text=tr('이미지 선택됨'), bg="#EDE9FE", fg="#6D28D9")
         else:
-            self.selection_state.config(text="선택 없음", bg="#F1F5F9", fg=COLORS["muted"])
+            self.selection_state.config(text=tr('선택 없음'), bg="#F1F5F9", fg=COLORS["muted"])
 
     def open_pdf(self) -> None:
         selected = filedialog.askopenfilename(
-            title="PDF 파일 선택", filetypes=[("PDF 문서", "*.pdf")]
+            title=tr('PDF 파일 선택'), filetypes=[(tr('PDF 문서'), "*.pdf")]
         )
         if not selected:
             return
@@ -474,7 +493,7 @@ class CyViewer(TkinterDnD.Tk):
             return "break"
         selected = Path(files[0])
         if selected.suffix.lower() != ".pdf":
-            messagebox.showinfo("CY뷰어", "PDF 파일만 열 수 있습니다.")
+            messagebox.showinfo(tr('CY뷰어'), tr('PDF 파일만 열 수 있습니다.'))
             return "break"
         self.load_pdf(selected)
         return "break"
@@ -496,17 +515,17 @@ class CyViewer(TkinterDnD.Tk):
             self.selection_regions = []
             self.selection_kind = "none"
             self.is_dirty = False
-            self.file_label.config(text=f"{self.document_path.name} · 읽기 및 편집 가능")
-            self._set_save_state("변경 없음")
-            self.selection_label.config(text="선택한 내용")
-            self._set_selection_details("문구를 드래그해 선택하면\n이곳에서 선택한 내용을\n확인할 수 있어요.")
+            self.file_label.config(text=tr('{0} · 읽기 및 편집 가능', f'{self.document_path.name}'))
+            self._set_save_state(tr('변경 없음'))
+            self.selection_label.config(text=tr('선택한 내용'))
+            self._set_selection_details(tr('문구를 드래그해 선택하면\n이곳에서 선택한 내용을\n확인할 수 있어요.'))
             self._set_selection_feedback()
             self.welcome.pack_forget()
             self.workspace.pack(fill="both", expand=True)
             self.save_badge.grid()
             self.draw_page()
         except Exception as error:
-            messagebox.showerror("CY뷰어", f"PDF를 열 수 없습니다.\n\n{error}")
+            messagebox.showerror(tr('CY뷰어'), tr('PDF를 열 수 없습니다.\n\n{0}', f'{error}'))
 
     def draw_page(self) -> None:
         if not self.canvas.winfo_width():
@@ -521,7 +540,7 @@ class CyViewer(TkinterDnD.Tk):
             self.canvas.create_text(
                 width // 2,
                 height // 2 - 52,
-                text="PDF를 열어 시작하세요",
+                text=tr('PDF를 열어 시작하세요'),
                 fill=COLORS["ink"],
                 font=("Malgun Gothic", 18, "bold"),
                 width=max(180, width - 64),
@@ -529,14 +548,14 @@ class CyViewer(TkinterDnD.Tk):
             self.canvas.create_text(
                 width // 2,
                 height // 2 - 10,
-                text="PDF 열기 또는 끌어놓기\n읽기·검색 → 문구 선택 → 편집 → 저장",
+                text=tr('PDF 열기 또는 끌어놓기\n읽기·검색 → 문구 선택 → 편집 → 저장'),
                 fill=COLORS["muted"],
                 font=("Malgun Gothic", 11),
                 justify="center",
                 width=max(180, min(420, width - 64)),
             )
-            self.canvas.create_text(width // 2, height // 2 + 48, text="왼쪽의 ‘PDF 열기’ 버튼으로 시작하세요.", fill=COLORS["blue"], font=("Malgun Gothic", 10, "bold"))
-            self.status.config(text="PDF 열기를 눌러 문서를 선택하세요.")
+            self.canvas.create_text(width // 2, height // 2 + 48, text=tr('왼쪽의 ‘PDF 열기’ 버튼으로 시작하세요.'), fill=COLORS["blue"], font=("Malgun Gothic", 10, "bold"))
+            self.status.config(text=tr('PDF 열기를 눌러 문서를 선택하세요.'))
             return
         self.canvas.delete("all")
         width, height = self.canvas.winfo_width(), self.canvas.winfo_height()
@@ -570,11 +589,11 @@ class CyViewer(TkinterDnD.Tk):
         self.canvas.configure(scrollregion=(0, 0, content_width, content_height))
         if self.page_number in self.page_layouts:
             self.page_left, self.page_top = self.page_layouts[self.page_number][:2]
-        bookmark = "  ★ 책갈피" if self.page_number in self.bookmarks else ""
-        selection = "  |  문구 선택됨: 왼쪽에서 표시 또는 수정" if self.selected_rect else ""
-        dirty = "  |  저장 필요" if self.is_dirty else ""
+        bookmark = tr('  ★ 책갈피') if self.page_number in self.bookmarks else ""
+        selection = tr('  |  문구 선택됨: 왼쪽에서 표시 또는 수정') if self.selected_rect else ""
+        dirty = tr('  |  저장 필요') if self.is_dirty else ""
         self.status.config(
-            text=f"{self.page_number + 1} / {len(self.document)} 페이지   |   {'스크롤 보기' if self.view_mode == 'scroll' else '좌우 보기'}   |   확대 {int(self.zoom * 100)}%{bookmark}{selection}{dirty}"
+            text=tr('{0} / {1} 페이지   |   {2}   |   확대 {3}%{4}{5}{6}', f'{self.page_number + 1}', f'{len(self.document)}', f"{(tr('스크롤 보기') if self.view_mode == 'scroll' else tr('좌우 보기'))}", f'{int(self.zoom * 100)}', f'{bookmark}', f'{selection}', f'{dirty}')
         )
 
     def _draw_rendered_page(self, page_no: int, photo: ImageTk.PhotoImage, left: int, top: int, width: int, height: int) -> None:
@@ -589,7 +608,7 @@ class CyViewer(TkinterDnD.Tk):
                 self.canvas.create_rectangle(left + rect.x0 * self.zoom, top + rect.y0 * self.zoom, left + rect.x1 * self.zoom, top + rect.y1 * self.zoom, fill="" if image_selection else "#60A5FA", stipple="" if image_selection else "gray50", outline="#7C3AED" if image_selection else "#245EDB", width=3 if image_selection else 1)
 
     def _change_view_mode(self, _event=None) -> None:
-        self.view_mode = "spread" if self.view_mode_var.get() == "좌우 보기" else "scroll"
+        self.view_mode = "spread" if self.view_mode_var.get() == tr('좌우 보기') else "scroll"
         if self.view_mode == "spread" and self.page_number % 2:
             self.page_number -= 1
         self.canvas.xview_moveto(0)
@@ -673,8 +692,8 @@ class CyViewer(TkinterDnD.Tk):
         if self.selected_rect:
             self._inspect_selection()
         else:
-            self.selection_label.config(text="선택한 내용")
-            self._set_selection_details("유효한 영역이 선택되지 않았습니다.\n문구, 이미지 또는 빈 공간을\n조금 더 넓게 드래그해 보세요.")
+            self.selection_label.config(text=tr('선택한 내용'))
+            self._set_selection_details(tr('유효한 영역이 선택되지 않았습니다.\n문구, 이미지 또는 빈 공간을\n조금 더 넓게 드래그해 보세요.'))
             self._set_selection_feedback()
         self.draw_page()
 
@@ -754,10 +773,10 @@ class CyViewer(TkinterDnD.Tk):
         ]
         executable = next((candidate for candidate in candidates if candidate.exists()), None)
         if not executable:
-            raise RuntimeError("OCR 엔진을 찾을 수 없습니다. Tesseract OCR을 설치한 뒤 다시 시도하세요.")
+            raise RuntimeError(tr('OCR 엔진을 찾을 수 없습니다. Tesseract OCR을 설치한 뒤 다시 시도하세요.'))
         data_path = self._ocr_data_path()
         if not (data_path / "kor.traineddata").exists() or not (data_path / "eng.traineddata").exists():
-            raise RuntimeError("한국어·영어 OCR 언어 데이터를 찾을 수 없습니다.")
+            raise RuntimeError(tr('한국어·영어 OCR 언어 데이터를 찾을 수 없습니다.'))
         return executable, data_path
 
     @staticmethod
@@ -790,7 +809,7 @@ class CyViewer(TkinterDnD.Tk):
                 creationflags=getattr(subprocess, "CREATE_NO_WINDOW", 0),
             )
             if result.returncode != 0:
-                raise RuntimeError(self._decode_ocr_output(result.stderr).strip() or "OCR 엔진이 결과를 만들지 못했습니다.")
+                raise RuntimeError(self._decode_ocr_output(result.stderr).strip() or tr('OCR 엔진이 결과를 만들지 못했습니다.'))
             data = list(csv.DictReader(io.StringIO(self._decode_ocr_output(result.stdout)), delimiter="\t"))
         finally:
             image_path.unlink(missing_ok=True)
@@ -812,7 +831,7 @@ class CyViewer(TkinterDnD.Tk):
 
     def ocr_document(self) -> None:
         if not self.document:
-            messagebox.showinfo("CY뷰어", "먼저 PDF를 열어 주세요.")
+            messagebox.showinfo(tr('CY뷰어'), tr('먼저 PDF를 열어 주세요.'))
             return
         try:
             executable, data_path = self._configure_ocr()
@@ -821,7 +840,7 @@ class CyViewer(TkinterDnD.Tk):
             failed_pages: list[int] = []
             total_pages = len(self.document)
             for number in range(total_pages):
-                self.status.config(text=f"OCR 진행 중 · {number + 1} / {total_pages} 페이지를 인식하고 있습니다…")
+                self.status.config(text=tr('OCR 진행 중 · {0} / {1} 페이지를 인식하고 있습니다…', f'{number + 1}', f'{total_pages}'))
                 self.update_idletasks()
                 try:
                     words = self._ocr_page(number, executable, data_path)
@@ -832,14 +851,14 @@ class CyViewer(TkinterDnD.Tk):
             self.draw_page()
             if failed_pages:
                 pages = ", ".join(map(str, failed_pages))
-                self.status.config(text=f"OCR 완료 · {total_pages - len(failed_pages)} / {total_pages} 페이지, {total_words}개 단어 인식")
-                messagebox.showwarning("CY뷰어", f"문서 OCR을 마쳤습니다.\n\n인식 단어: {total_words}개\n실패한 페이지: {pages}")
+                self.status.config(text=tr('OCR 완료 · {0} / {1} 페이지, {2}개 단어 인식', f'{total_pages - len(failed_pages)}', f'{total_pages}', f'{total_words}'))
+                messagebox.showwarning(tr('CY뷰어'), tr('문서 OCR을 마쳤습니다.\n\n인식 단어: {0}개\n실패한 페이지: {1}', f'{total_words}', f'{pages}'))
             else:
-                self.status.config(text=f"OCR 완료 · 전체 {total_pages}페이지에서 {total_words}개 단어를 인식했습니다.")
-                messagebox.showinfo("CY뷰어", f"문서 전체 OCR이 완료됐습니다.\n\n페이지: {total_pages}개\n인식 단어: {total_words}개\n이제 모든 페이지에서 검색·선택·복사·표시·수정할 수 있습니다.")
+                self.status.config(text=tr('OCR 완료 · 전체 {0}페이지에서 {1}개 단어를 인식했습니다.', f'{total_pages}', f'{total_words}'))
+                messagebox.showinfo(tr('CY뷰어'), tr('문서 전체 OCR이 완료됐습니다.\n\n페이지: {0}개\n인식 단어: {1}개\n이제 모든 페이지에서 검색·선택·복사·표시·수정할 수 있습니다.', f'{total_pages}', f'{total_words}'))
         except Exception as error:
-            self.status.config(text="OCR 실패")
-            messagebox.showerror("CY뷰어", f"OCR을 실행할 수 없습니다.\n\n{error}")
+            self.status.config(text=tr('OCR 실패'))
+            messagebox.showerror(tr('CY뷰어'), tr('OCR을 실행할 수 없습니다.\n\n{0}', f'{error}'))
 
     def copy_selected_text(self) -> None:
         text = self._selected_text()
@@ -849,7 +868,7 @@ class CyViewer(TkinterDnD.Tk):
         self.clipboard_clear()
         self.clipboard_append(text)
         self.update()
-        self.status.config(fg="white", text=f"선택 텍스트를 클립보드에 복사했습니다. ({len(text)}자)")
+        self.status.config(fg="white", text=tr('선택 텍스트를 클립보드에 복사했습니다. ({0}자)', f'{len(text)}'))
 
     def _inspect_selection(self) -> None:
         if not self.document or not self.selected_rect:
@@ -866,26 +885,26 @@ class CyViewer(TkinterDnD.Tk):
 
         parts: list[str] = []
         if text:
-            parts.append("텍스트")
+            parts.append(tr('텍스트'))
         if image_count:
-            parts.append(f"이미지 {image_count}개")
+            parts.append(tr('이미지 {0}개', f'{image_count}'))
         if not parts:
-            parts.append("빈 공간")
-        self.selection_label.config(text="선택 검사 · " + " · ".join(parts))
+            parts.append(tr('빈 공간'))
+        self.selection_label.config(text=tr('선택 검사 · ') + " · ".join(parts))
         self._set_selection_feedback(text, "image" if image_count and not text else "text" if text else "none")
 
-        details = [f"선택 종류: {', '.join(parts)}"]
+        details = [tr('선택 종류: {0}', f"{', '.join(parts)}")]
         if text:
-            details.extend(["", "선택한 텍스트", text, "", "텍스트는 형광펜·밑줄·취소선·굵게·문구 수정을 사용할 수 있습니다."])
+            details.extend(["", tr('선택한 텍스트'), text, "", tr('텍스트는 형광펜·밑줄·취소선·굵게·문구 수정을 사용할 수 있습니다.')])
         elif image_count:
-            details.extend(["", "선택 영역에 이미지가 있습니다.", "현재 버전에서는 이미지를 확인할 수 있으며, 이미지 편집 기능은 준비 중입니다."])
+            details.extend(["", tr('선택 영역에 이미지가 있습니다.'), tr('현재 버전에서는 이미지를 확인할 수 있으며, 이미지 편집 기능은 준비 중입니다.')])
         else:
-            details.extend(["", "선택 영역에 텍스트나 이미지가 없습니다.", "빈 공간에는 표시·문구 수정 기능을 적용할 수 없습니다."])
+            details.extend(["", tr('선택 영역에 텍스트나 이미지가 없습니다.'), tr('빈 공간에는 표시·문구 수정 기능을 적용할 수 없습니다.')])
         self._set_selection_details("\n".join(details))
 
     def _require_selection(self) -> pymupdf.Rect | None:
         if not self.document or not self.selected_rect:
-            messagebox.showinfo("CY뷰어", "문서에서 문구를 드래그해 먼저 선택하세요.")
+            messagebox.showinfo(tr('CY뷰어'), tr('문서에서 문구를 드래그해 먼저 선택하세요.'))
             return None
         return self.selected_rect
 
@@ -893,7 +912,7 @@ class CyViewer(TkinterDnD.Tk):
         if not self.document:
             return
         if not self.selected_rect or not self._selected_text():
-            self.status.config(text="먼저 문구를 드래그해 선택한 뒤 마우스 오른쪽 버튼을 누르세요.")
+            self.status.config(text=tr('먼저 문구를 드래그해 선택한 뒤 마우스 오른쪽 버튼을 누르세요.'))
             return
         self.context_menu.tk_popup(event.x_root, event.y_root)
 
@@ -919,8 +938,8 @@ class CyViewer(TkinterDnD.Tk):
                 annotation = page.add_strikeout_annot(region)
                 annotation.update()
         self.selected_rect = None
-        label = {"highlight": "형광펜", "underline": "밑줄", "strike": "취소선"}[kind]
-        self._mark_dirty(f"{label} 표시를 적용했습니다.")
+        label = {"highlight": tr('형광펜'), "underline": tr('밑줄'), "strike": tr('취소선')}[kind]
+        self._mark_dirty(tr('{0} 표시를 적용했습니다.', f'{label}'))
         self.draw_page()
 
     def _replace_selected_text(self, text: str, bold: bool) -> None:
@@ -946,13 +965,13 @@ class CyViewer(TkinterDnD.Tk):
         finally:
             trial.close()
         if result < 0:
-            messagebox.showwarning("CY뷰어", "원래 글자 크기를 유지할 공간이 부족합니다. 글자를 축소하지 않았으며 원문도 바꾸지 않았습니다.")
+            messagebox.showwarning(tr('CY뷰어'), tr('원래 글자 크기를 유지할 공간이 부족합니다. 글자를 축소하지 않았으며 원문도 바꾸지 않았습니다.'))
             return
         page.add_redact_annot(rect, fill=(1, 1, 1))
         page.apply_redactions()
         page.insert_textbox(target, text, fontsize=source_size, color=(0, 0, 0), **font_kwargs)
         self.selected_rect = None
-        self._mark_dirty("문구를 변경했습니다." if not bold else "선택 문구를 굵게 처리했습니다.")
+        self._mark_dirty(tr('문구를 변경했습니다.') if not bold else tr('선택 문구를 굵게 처리했습니다.'))
         self.draw_page()
 
     def bold_selection(self) -> None:
@@ -960,7 +979,7 @@ class CyViewer(TkinterDnD.Tk):
         if not text:
             self._require_selection()
             return
-        if messagebox.askyesno("굵게 처리", "원문을 굵은 글꼴로 교체합니다. 계속할까요?", parent=self):
+        if messagebox.askyesno(tr('굵게 처리'), tr('원문을 굵은 글꼴로 교체합니다. 계속할까요?'), parent=self):
             self._replace_selected_text(text, bold=True)
 
     def edit_selection(self) -> None:
@@ -968,39 +987,39 @@ class CyViewer(TkinterDnD.Tk):
         if not original:
             self._require_selection()
             return
-        changed = simpledialog.askstring("문구 수정", "새 문구를 입력하세요.", initialvalue=original, parent=self)
+        changed = simpledialog.askstring(tr('문구 수정'), tr('새 문구를 입력하세요.'), initialvalue=original, parent=self)
         if changed is not None and changed.strip():
-            if messagebox.askyesno("문구 수정", "기존 문구를 새 문구로 바꿉니다. 이 변경은 저장 전까지 되돌릴 수 없습니다. 계속할까요?", parent=self):
+            if messagebox.askyesno(tr('문구 수정'), tr('기존 문구를 새 문구로 바꿉니다. 이 변경은 저장 전까지 되돌릴 수 없습니다. 계속할까요?'), parent=self):
                 self._replace_selected_text(changed.strip(), bold=False)
 
     def save_as(self) -> None:
         if not self.document:
             return
         selected = filedialog.asksaveasfilename(
-            title="편집한 PDF 저장",
+            title=tr('편집한 PDF 저장'),
             defaultextension=".pdf",
-            filetypes=[("PDF 문서", "*.pdf")],
+            filetypes=[(tr('PDF 문서'), "*.pdf")],
         )
         if not selected:
             return
         try:
             self.document.save(selected)
             self.is_dirty = False
-            self._set_save_state("저장 완료", "#DCFCE7", "#166534")
-            self.status.config(text=f"저장 완료 · {Path(selected).name}")
-            messagebox.showinfo("CY뷰어", "편집한 PDF를 저장했습니다.")
+            self._set_save_state(tr('저장 완료'), "#DCFCE7", "#166534")
+            self.status.config(text=tr('저장 완료 · {0}', f'{Path(selected).name}'))
+            messagebox.showinfo(tr('CY뷰어'), tr('편집한 PDF를 저장했습니다.'))
         except Exception as error:
-            messagebox.showerror("CY뷰어", f"저장할 수 없습니다.\n\n{error}")
+            messagebox.showerror(tr('CY뷰어'), tr('저장할 수 없습니다.\n\n{0}', f'{error}'))
 
     def export_page(self, image_format: str) -> None:
         if not self.document:
-            messagebox.showinfo("CY뷰어", "먼저 PDF를 열어 주세요.")
+            messagebox.showinfo(tr('CY뷰어'), tr('먼저 PDF를 열어 주세요.'))
             return
         extension = ".jpg" if image_format == "jpg" else ".png"
         selected = filedialog.asksaveasfilename(
-            title=f"현재 페이지를 {image_format.upper()}로 저장",
+            title=tr('현재 페이지를 {0}로 저장', f'{image_format.upper()}'),
             defaultextension=extension,
-            filetypes=[(f"{image_format.upper()} 이미지", f"*{extension}")],
+            filetypes=[(tr('{0} 이미지', f'{image_format.upper()}'), f"*{extension}")],
         )
         if not selected:
             return
@@ -1011,14 +1030,14 @@ class CyViewer(TkinterDnD.Tk):
                 image.save(selected, format="JPEG", quality=95)
             else:
                 image.save(selected, format="PNG")
-            self.status.config(text=f"현재 페이지를 {Path(selected).name}으로 저장했습니다.")
-            messagebox.showinfo("CY뷰어", f"현재 페이지를 {image_format.upper()} 이미지로 저장했습니다.")
+            self.status.config(text=tr('현재 페이지를 {0}으로 저장했습니다.', f'{Path(selected).name}'))
+            messagebox.showinfo(tr('CY뷰어'), tr('현재 페이지를 {0} 이미지로 저장했습니다.', f'{image_format.upper()}'))
         except Exception as error:
-            messagebox.showerror("CY뷰어", f"이미지로 저장할 수 없습니다.\n\n{error}")
+            messagebox.showerror(tr('CY뷰어'), tr('이미지로 저장할 수 없습니다.\n\n{0}', f'{error}'))
 
     def print_document(self) -> None:
         if not self.document:
-            messagebox.showinfo("CY뷰어", "먼저 PDF를 열어 주세요.")
+            messagebox.showinfo(tr('CY뷰어'), tr('먼저 PDF를 열어 주세요.'))
             return
         try:
             request_directory = Path(tempfile.gettempdir()) / "CYViewer" / "print"
@@ -1026,17 +1045,17 @@ class CyViewer(TkinterDnD.Tk):
             request_path = request_directory / f"CYViewer_print_{uuid.uuid4().hex}.pdf"
             self.document.save(str(request_path))
             os.startfile(f"cyviewer-print:?path={quote(str(request_path), safe='')}")
-            self.status.config(text="Windows 인쇄 미리보기를 준비하고 있습니다…")
+            self.status.config(text=tr('Windows 인쇄 미리보기를 준비하고 있습니다…'))
         except Exception as error:
-            messagebox.showerror("CY뷰어", f"Windows 인쇄 미리보기를 열 수 없습니다.\n\n{error}")
+            messagebox.showerror(tr('CY뷰어'), tr('Windows 인쇄 미리보기를 열 수 없습니다.\n\n{0}', f'{error}'))
 
     def _legacy_print_preview(self) -> None:
         if not self.document:
-            messagebox.showinfo("CY뷰어", "먼저 PDF를 열어 주세요.")
+            messagebox.showinfo(tr('CY뷰어'), tr('먼저 PDF를 열어 주세요.'))
             return
 
         preview = tk.Toplevel(self)
-        preview.title("인쇄 미리보기 | CY뷰어")
+        preview.title(tr('인쇄 미리보기 | CY뷰어'))
         preview.geometry("980x760")
         preview.minsize(680, 520)
         preview.configure(bg=COLORS["canvas"])
@@ -1044,7 +1063,7 @@ class CyViewer(TkinterDnD.Tk):
 
         header = tk.Frame(preview, bg=COLORS["ink"], padx=20, pady=14)
         header.pack(fill="x")
-        tk.Label(header, text="인쇄 미리보기", bg=COLORS["ink"], fg="white", font=("Malgun Gothic", 16, "bold")).pack(side="left")
+        tk.Label(header, text=tr('인쇄 미리보기'), bg=COLORS["ink"], fg="white", font=("Malgun Gothic", 16, "bold")).pack(side="left")
         page_label = tk.Label(header, text="", bg=COLORS["ink"], fg="#CBD5E1", font=("Malgun Gothic", 10))
         page_label.pack(side="left", padx=18)
 
@@ -1069,7 +1088,7 @@ class CyViewer(TkinterDnD.Tk):
             y = max((preview_canvas.winfo_height() - pixmap.height) // 2, 24)
             preview_canvas.create_rectangle(x - 1, y - 1, x + pixmap.width + 1, y + pixmap.height + 1, fill="white", outline="#CBD5E1")
             preview_canvas.create_image(x, y, anchor="nw", image=state["image"])
-            page_label.config(text=f"{state['page'] + 1} / {len(self.document)} 페이지 · {int(state['zoom'] * 100)}%")
+            page_label.config(text=tr('{0} / {1} 페이지 · {2}%', f"{state['page'] + 1}", f'{len(self.document)}', f"{int(state['zoom'] * 100)}"))
 
         def move_page(change: int) -> None:
             state["page"] = max(0, min(len(self.document) - 1, state["page"] + change))
@@ -1079,8 +1098,8 @@ class CyViewer(TkinterDnD.Tk):
             state["zoom"] = max(0.5, min(2.0, round(state["zoom"] + change, 1)))
             draw_preview()
 
-        self._button(controls, "◀ 이전", lambda: move_page(-1)).pack(side="left", padx=(0, 8))
-        self._button(controls, "다음 ▶", lambda: move_page(1)).pack(side="left", padx=(0, 16))
+        self._button(controls, tr('◀ 이전'), lambda: move_page(-1)).pack(side="left", padx=(0, 8))
+        self._button(controls, tr('다음 ▶'), lambda: move_page(1)).pack(side="left", padx=(0, 16))
         self._button(controls, "−", lambda: change_preview_zoom(-0.1)).pack(side="left", padx=(0, 6))
         self._button(controls, "+", lambda: change_preview_zoom(0.1)).pack(side="left")
 
@@ -1088,10 +1107,10 @@ class CyViewer(TkinterDnD.Tk):
             if self._show_print_dialog():
                 preview.destroy()
 
-        print_button = self._button(controls, "프린터 설정 및 인쇄", open_printer_settings, "Primary.TButton")
+        print_button = self._button(controls, tr('프린터 설정 및 인쇄'), open_printer_settings, "Primary.TButton")
         print_button.configure(width=170)
         print_button.pack(side="right")
-        close_button = self._button(controls, "닫기", preview.destroy)
+        close_button = self._button(controls, tr('닫기'), preview.destroy)
         close_button.configure(width=80)
         close_button.pack(side="right", padx=(0, 8))
         preview_canvas.bind("<Configure>", draw_preview)
@@ -1151,25 +1170,25 @@ class CyViewer(TkinterDnD.Tk):
             if not print_dialog(ctypes.byref(dialog)):
                 error = ctypes.windll.comdlg32.CommDlgExtendedError()
                 if error:
-                    raise RuntimeError(f"Windows 인쇄 대화상자 오류: {error}")
-                self.status.config(text="인쇄가 취소됐습니다.")
+                    raise RuntimeError(tr('Windows 인쇄 대화상자 오류: {0}', f'{error}'))
+                self.status.config(text=tr('인쇄가 취소됐습니다.'))
                 return False
 
             first_page = dialog.nFromPage if dialog.Flags & pd_page_nums else 1
             last_page = dialog.nToPage if dialog.Flags & pd_page_nums else len(self.document)
             printer_dc = win32ui.CreateDCFromHandle(int(dialog.hDC))
-            document_name = f"CY뷰어 - {self.document_path.name if self.document_path else 'PDF 문서'}"
+            document_name = tr('CY뷰어 - {0}', f"{(self.document_path.name if self.document_path else tr('PDF 문서'))}")
             job_id = printer_dc.StartDoc(document_name)
             # pywin32의 CDC.StartDoc는 프린터 드라이버에 따라 성공 시에도
             # 작업 번호 대신 None을 반환한다. 음수/0이 명시적으로 반환된
             # 경우만 실패이며, None은 정상으로 보고 페이지 전송을 계속한다.
             if isinstance(job_id, int) and job_id <= 0:
-                raise RuntimeError("Windows 인쇄 대기열에 작업을 만들지 못했습니다.")
+                raise RuntimeError(tr('Windows 인쇄 대기열에 작업을 만들지 못했습니다.'))
             try:
                 printable_width = printer_dc.GetDeviceCaps(8)
                 printable_height = printer_dc.GetDeviceCaps(10)
                 if printable_width <= 0 or printable_height <= 0:
-                    raise RuntimeError("선택한 프린터의 인쇄 가능 영역을 확인할 수 없습니다.")
+                    raise RuntimeError(tr('선택한 프린터의 인쇄 가능 영역을 확인할 수 없습니다.'))
                 for page_number in range(first_page - 1, last_page):
                     page = self.document[page_number]
                     pixmap = page.get_pixmap(matrix=pymupdf.Matrix(2, 2), alpha=False)
@@ -1181,24 +1200,24 @@ class CyViewer(TkinterDnD.Tk):
                     top = (printable_height - draw_height) // 2
                     start_page_result = printer_dc.StartPage()
                     if isinstance(start_page_result, int) and start_page_result <= 0:
-                        raise RuntimeError(f"{page_number + 1}페이지 인쇄 작업을 시작하지 못했습니다.")
+                        raise RuntimeError(tr('{0}페이지 인쇄 작업을 시작하지 못했습니다.', f'{page_number + 1}'))
                     ImageWin.Dib(image).draw(printer_dc.GetHandleOutput(), (left, top, left + draw_width, top + draw_height))
                     end_page_result = printer_dc.EndPage()
                     if isinstance(end_page_result, int) and end_page_result <= 0:
-                        raise RuntimeError(f"{page_number + 1}페이지를 인쇄 대기열에 보내지 못했습니다.")
+                        raise RuntimeError(tr('{0}페이지를 인쇄 대기열에 보내지 못했습니다.', f'{page_number + 1}'))
             except Exception:
                 printer_dc.AbortDoc()
                 raise
             else:
                 printer_dc.EndDoc()
-                job_text = f"작업 #{job_id} · " if isinstance(job_id, int) else ""
-                self.status.config(text=f"인쇄 대기열 전송 완료 · {job_text}{first_page}~{last_page}페이지")
-                messagebox.showinfo("CY뷰어", f"인쇄 작업을 Windows 대기열에 보냈습니다.\n\n{job_text}페이지: {first_page}~{last_page}")
+                job_text = tr('작업 #{0} · ', f'{job_id}') if isinstance(job_id, int) else ""
+                self.status.config(text=tr('인쇄 대기열 전송 완료 · {0}{1}~{2}페이지', f'{job_text}', f'{first_page}', f'{last_page}'))
+                messagebox.showinfo(tr('CY뷰어'), tr('인쇄 작업을 Windows 대기열에 보냈습니다.\n\n{0}페이지: {1}~{2}', f'{job_text}', f'{first_page}', f'{last_page}'))
                 return True
             finally:
                 printer_dc.DeleteDC()
         except Exception as error:
-            messagebox.showerror("CY뷰어", f"인쇄를 시작할 수 없습니다.\n\n{error}")
+            messagebox.showerror(tr('CY뷰어'), tr('인쇄를 시작할 수 없습니다.\n\n{0}', f'{error}'))
             return False
         finally:
             if dialog.hDevMode:
@@ -1248,7 +1267,7 @@ class CyViewer(TkinterDnD.Tk):
         if not self.document:
             return
         value = simpledialog.askinteger(
-            "페이지 이동", f"이동할 페이지 번호를 입력하세요. (1~{len(self.document)})", parent=self
+            tr('페이지 이동'), tr('이동할 페이지 번호를 입력하세요. (1~{0})', f'{len(self.document)}'), parent=self
         )
         if value and 1 <= value <= len(self.document):
             self.page_number = value - 1
@@ -1267,10 +1286,10 @@ class CyViewer(TkinterDnD.Tk):
         if not self.document:
             return
         if not self.bookmarks:
-            messagebox.showinfo("CY뷰어", "저장된 책갈피가 없습니다.")
+            messagebox.showinfo(tr('CY뷰어'), tr('저장된 책갈피가 없습니다.'))
             return
         options = ", ".join(str(page + 1) for page in sorted(self.bookmarks))
-        value = simpledialog.askinteger("책갈피 목록", f"저장된 페이지: {options}\n이동할 페이지 번호:", parent=self)
+        value = simpledialog.askinteger(tr('책갈피 목록'), tr('저장된 페이지: {0}\n이동할 페이지 번호:', f'{options}'), parent=self)
         if value and value - 1 in self.bookmarks:
             self.page_number = value - 1
             self.draw_page()
@@ -1293,7 +1312,7 @@ class CyViewer(TkinterDnD.Tk):
                 )
             self.search_index = -1
         if not self.search_matches:
-            self.search_status.config(text="결과 없음")
+            self.search_status.config(text=tr('결과 없음'))
             self.draw_page()
             return
         self.search_index = (self.search_index + 1) % len(self.search_matches)
