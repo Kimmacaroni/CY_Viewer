@@ -4,6 +4,7 @@ from __future__ import annotations
 
 from cy_localization import tr, MODE, save_mode
 from recent_files import load_recent, remember
+from drive_ui import DriveUI
 
 import tkinter as tk
 import tkinter.font as tkfont
@@ -170,7 +171,9 @@ class CyViewer(TkinterDnD.Tk):
         self.save_state = tr('새 문서 없음')
 
         self.recent_files = load_recent()
+        self.drive_ui = DriveUI(self)
         language_menu = tk.Menu(self, tearoff=0)
+        language_menu.add_command(label=tr("Google Drive 동기화"), command=self.drive_ui.show)
         self.recent_menu = tk.Menu(language_menu, tearoff=0)
         language_menu.add_cascade(label=tr('최근 열어본 파일'), menu=self.recent_menu)
         self._refresh_recent_menu()
@@ -466,7 +469,7 @@ class CyViewer(TkinterDnD.Tk):
         label(panel, tr('이 기기에 있는 PDF 파일을 선택하세요.'), color=COLORS["muted"], background=COLORS["surface"])
         self._button(panel, tr('＋  PDF 열기'), self.open_pdf, "Primary.TButton").pack(fill="x", pady=(12, 24))
         tk.Frame(panel, bg=COLORS["line"], height=1).pack(fill="x", pady=(0, 16))
-        label(panel, tr('문서는 이 기기에서만 처리합니다.'), 10, color=COLORS["muted"], background=COLORS["surface"])
+        label(panel, tr('기본적으로 문서는 이 기기에서 처리합니다. Drive 연결 후에는 개인 Drive에도 저장합니다.'), 10, color=COLORS["muted"], background=COLORS["surface"])
         # 자식 위에서도 파일을 놓을 수 있도록 같은 파일 열기 동작을 연결한다.
         def register_drop(widget):
             widget.drop_target_register(DND_FILES)
@@ -557,6 +560,7 @@ class CyViewer(TkinterDnD.Tk):
             self.workspace.pack(fill="both", expand=True)
             self.save_badge.grid()
             self.draw_page()
+            self.drive_ui.opened(selected)
             try:
                 self.recent_files = remember(selected)
                 self._refresh_recent_menu()
@@ -1274,6 +1278,7 @@ class CyViewer(TkinterDnD.Tk):
             self._show_current_page()
 
     def _show_current_page(self) -> None:
+        self.drive_ui.changed()
         self.draw_page()
         self.update_idletasks()
         if self.view_mode == "scroll" and self.page_number in self.page_layouts:
@@ -1294,7 +1299,9 @@ class CyViewer(TkinterDnD.Tk):
             self.canvas.yview_scroll(-3 if event.delta > 0 else 3, "units")
             center_y = self.canvas.canvasy(self.canvas.winfo_height() // 2)
             nearest = min(self.page_layouts, key=lambda page: abs(self.page_layouts[page][1] + self.page_layouts[page][3] / 2 - center_y), default=self.page_number)
-            self.page_number = nearest
+            if self.page_number != nearest:
+                self.page_number = nearest
+                self.drive_ui.changed()
             return "break"
         elif event.delta > 0:
             self.previous_page()
@@ -1309,6 +1316,7 @@ class CyViewer(TkinterDnD.Tk):
         )
         if value and 1 <= value <= len(self.document):
             self.page_number = value - 1
+            self.drive_ui.changed()
             self.draw_page()
 
     def toggle_bookmark(self) -> None:
@@ -1318,6 +1326,7 @@ class CyViewer(TkinterDnD.Tk):
             self.bookmarks.remove(self.page_number)
         else:
             self.bookmarks.add(self.page_number)
+        self.drive_ui.changed()
         self.draw_page()
 
     def show_bookmarks(self) -> None:
@@ -1330,6 +1339,7 @@ class CyViewer(TkinterDnD.Tk):
         value = simpledialog.askinteger(tr('책갈피 목록'), tr('저장된 페이지: {0}\n이동할 페이지 번호:', f'{options}'), parent=self)
         if value and value - 1 in self.bookmarks:
             self.page_number = value - 1
+            self.drive_ui.changed()
             self.draw_page()
 
     def find_next(self) -> None:
@@ -1355,6 +1365,7 @@ class CyViewer(TkinterDnD.Tk):
             return
         self.search_index = (self.search_index + 1) % len(self.search_matches)
         self.page_number = self.search_matches[self.search_index][0]
+        self.drive_ui.changed()
         self.search_status.config(text=f"{self.search_index + 1}/{len(self.search_matches)}")
         self.draw_page()
 

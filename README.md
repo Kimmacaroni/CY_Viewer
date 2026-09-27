@@ -74,3 +74,14 @@ CY Viewer supports **한국어 and English**. It follows the device language by 
 ## 최근 열어본 파일
 
 웹·Mac·Windows에서 최근 열어본 파일을 최대 5개 표시합니다. 다시 연 파일은 맨 위로 이동합니다. 웹은 브라우저 안에 PDF 사본을 저장해 다시 열며, 목록의 제거 버튼으로 사본을 삭제할 수 있습니다. 목록은 기기·브라우저별로 관리되고 자동 동기화하지 않습니다. [보관 방식과 제한](docs/RECENT_FILES.md)을 참고하세요.
+
+## Google 계정과 개인 Drive 동기화
+
+문서함의 구름 아이콘(Windows: Google Drive 동기화 메뉴)에서 Google 계정을 연결하세요.
+연결 후 여는 PDF 원본, 책갈피, 읽던 페이지가 개인 Google Drive에 저장됩니다.
+같은 Google 계정으로 다른 플랫폼에 연결하면 Drive 최근 파일에서 최대 5개를 이어 읽을 수 있습니다.
+이전 PDF는 Drive에 남으며 앱을 닫기 전에 동기화 완료를 확인해 주세요.
+
+별도 유료 서버나 결제 등록은 필요하지 않습니다. 개인 Drive의 남은 저장 공간을 사용하며,
+앱 재실행 또는 연결 만료 시 다시 연결합니다. 연결하지 않아도 기존 로컬 기능을 사용할 수 있습니다.
+[개인정보 안내](https://kimmacaroni.github.io/CY_Viewer/privacy/) · [동기화 구성과 제한](docs/GOOGLE_DRIVE_SYNC.md)

@@ -36,6 +36,17 @@ jobs:
           if (-not $version) { throw '설치 버전이 없습니다.' }
           if ($env:RELEASE_REF.StartsWith('refs/tags/') -and $env:RELEASE_TAG -ne "windows-v$version") { throw '태그와 설치 버전이 다릅니다.' }
           "version=$version" >> $env:GITHUB_OUTPUT
+      - name: Prepare desktop OAuth build configuration
+        shell: python
+        env:
+          CY_VIEWER_DESKTOP_CLIENT_SECRET: ${{ secrets.CY_VIEWER_DESKTOP_CLIENT_SECRET }}
+        run: |
+          import os
+          from pathlib import Path
+          value = os.environ.get('CY_VIEWER_DESKTOP_CLIENT_SECRET', '')
+          if os.environ['GITHUB_REF'].startswith('refs/tags/') and not value:
+              raise SystemExit('데스크톱 OAuth 빌드 설정이 없습니다.')
+          Path('native_windows/drive_build_config.py').write_text('CLIENT_SECRET = ' + repr(value) + '\n', encoding='utf-8')
       - name: Build executable and installer
         run: |
           python -m PyInstaller --noconfirm --distpath dist_titleicon4 CYViewer.spec

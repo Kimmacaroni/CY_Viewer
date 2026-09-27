@@ -1,3 +1,5 @@
+import 'drive_sync.dart';
+import 'drive_panel.dart';
 import 'cy_localization.dart';
 
 import 'dart:async';
@@ -175,6 +177,10 @@ class _WebLibraryPageState extends State<_WebLibraryPage> {
     appBar: AppBar(
       title: CyBrand(),
       actions: [
+        DriveButton(
+          onOpen: (name, bytes) =>
+              _openPickedPdf(PickedWebPdf(name: name, bytes: bytes)),
+        ),
         const CyLanguageButton(),
         IconButton(
           tooltip: tr(context, "설치 방법"),
@@ -290,6 +296,43 @@ class _WebReaderPageState extends State<_WebReaderPage> {
   bool _printActive = false;
   _ViewMode _viewMode = _ViewMode.scroll;
   List<int> _bookmarks = [];
+  DriveReading? _drive;
+  bool _driveStarted = false;
+
+  Future<void> _startDrive() async {
+    if (_driveStarted) return;
+    _driveStarted = true;
+    final oldPage = _currentPage;
+    final oldMarks = List<int>.from(_bookmarks);
+    final reading = await DriveReading.open(widget.name, widget.bytes);
+    if (!mounted || reading == null) return;
+    _drive = reading;
+    if (jsonEncode(oldMarks) == jsonEncode(_bookmarks)) {
+      if (reading.file.state["marks"] == null) {
+        reading.bookmarks([], _bookmarks);
+      } else {
+        setState(
+          () => _bookmarks = reading.file.bookmarks
+              .where((p) => p <= _pageCount)
+              .toList(),
+        );
+        await _saveBookmarks();
+      }
+    } else {
+      reading.bookmarks(oldMarks, _bookmarks);
+    }
+    if (!mounted) return;
+    if (_currentPage == oldPage &&
+        reading.file.state.containsKey('page') &&
+        reading.file.page > 0 &&
+        _controller.isReady) {
+      await _controller.goToPage(
+        pageNumber: reading.file.page.clamp(1, _pageCount),
+      );
+    } else {
+      reading.page(_currentPage);
+    }
+  }
 
   String get _bookmarkKey =>
       'web_pdf_bookmarks_${base64Url.encode(utf8.encode('${widget.name}:${widget.bytes.length}'))}';
@@ -322,12 +365,14 @@ class _WebReaderPageState extends State<_WebReaderPage> {
 
   Future<void> _toggleBookmark() async {
     if (_pageCount == 0) return;
+    final previousMarks = List<int>.from(_bookmarks);
     setState(() {
       _bookmarks.contains(_currentPage)
           ? _bookmarks.remove(_currentPage)
           : _bookmarks.add(_currentPage);
       _bookmarks.sort();
     });
+    _drive?.bookmarks(previousMarks, _bookmarks);
     await _saveBookmarks();
     _message(
       _bookmarks.contains(_currentPage)
@@ -558,6 +603,7 @@ class _WebReaderPageState extends State<_WebReaderPage> {
 
   @override
   void dispose() {
+    _drive?.flush();
     _searchInput.dispose();
     _searcher?.dispose();
     super.dispose();
@@ -589,6 +635,7 @@ class _WebReaderPageState extends State<_WebReaderPage> {
               ),
         actions: _searching && _searcher != null
             ? [
+                const DriveStatus(),
                 IconButton(
                   tooltip: tr(context, "이전 결과"),
                   onPressed: _searcher!.goToPrevMatch,
@@ -606,6 +653,7 @@ class _WebReaderPageState extends State<_WebReaderPage> {
                 ),
               ]
             : [
+                const DriveStatus(),
                 IconButton(
                   tooltip: tr(context, "검색"),
                   onPressed: _searcher == null ? null : _showSearch,
@@ -713,10 +761,12 @@ class _WebReaderPageState extends State<_WebReaderPage> {
                       _searcher = searcher;
                       _bookmarks.removeWhere((page) => page > _pageCount);
                     });
+                    unawaited(_startDrive());
                   },
                   onPageChanged: (page) {
                     if (page != null && mounted) {
                       setState(() => _currentPage = page);
+                      _drive?.page(page);
                     }
                   },
                   pagePaintCallbacks: [

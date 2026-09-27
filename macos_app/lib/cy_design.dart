@@ -278,9 +278,12 @@ class CyDocumentWelcome extends StatelessWidget {
                         web
                             ? tr(
                                 context,
-                                "문서는 서버로 전송되지 않습니다.\n최근 PDF 5개의 사본을 이 브라우저에 저장합니다.",
+                                "기본적으로 최근 PDF 5개의 사본을 이 브라우저에 저장합니다.\nDrive를 연결하면 이후 여는 PDF를 개인 Drive에도 저장합니다.",
                               )
-                            : tr(context, "문서와 최근 열람 목록은\n이 기기에서만 관리합니다."),
+                            : tr(
+                                context,
+                                "기본적으로 문서를 이 기기에서 관리합니다.\nDrive를 연결하면 이후 여는 PDF를 개인 Drive에도 저장합니다.",
+                              ),
                         style: theme.textTheme.bodySmall,
                       ),
                     ),

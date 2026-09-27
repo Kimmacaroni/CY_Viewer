@@ -13,3 +13,6 @@ release/
 __pycache__/
 *.pyc
 tests/node_modules/
+
+# 배포용 OAuth 설정은 CI에서만 생성
+native_windows/drive_build_config.py
