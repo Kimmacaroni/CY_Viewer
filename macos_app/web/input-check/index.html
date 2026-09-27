@@ -1,0 +1,23 @@
+<!doctype html>
+<html lang="ko">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="theme-color" content="#245edb">
+<link rel="apple-touch-icon" href="../apple-touch-icon.png">
+<title>CY뷰어 입력 점검</title>
+<style>
+:root{font-family:-apple-system,BlinkMacSystemFont,system-ui,sans-serif;color:#182235;background:#f4f6f9;line-height:1.6}
+body{margin:0;padding:24px;max-width:640px;margin-inline:auto}header{margin-bottom:24px}h1{font-size:26px;margin:12px 0}h2{font-size:20px;margin:0 0 12px}p{margin:12px 0}section{background:white;border:1px solid #dce2eb;border-radius:16px;padding:24px;margin:20px 0}button,input{font:inherit;max-width:100%;box-sizing:border-box}button{min-height:48px;padding:10px 20px;border:0;border-radius:10px;background:#245edb;color:white;cursor:pointer}input{display:block;width:100%;min-height:52px;padding:8px;border:1px solid #dce2eb;border-radius:10px;background:white;color:#182235}input::file-selector-button{font:inherit;min-height:44px;padding:8px 12px;margin-right:8px}a{color:#245edb}output{display:block;margin-top:16px;overflow-wrap:anywhere;font-weight:600}.note{color:#526174;font-size:14px}button:focus-visible,input:focus-visible,a:focus-visible{outline:3px solid #245edb;outline-offset:3px}#sheets{display:none}
+@media print{@page{size:A4;margin:15mm}body{max-width:none;padding:0;margin:0}body>:not(#sheets){display:none!important}#sheets{display:block!important}#sheets article{height:255mm;break-after:page;page-break-after:always}#sheets article:last-child{break-after:auto;page-break-after:auto}}
+</style>
+</head>
+<body>
+<header><a href="../">← CY뷰어로 돌아가기</a><h1>파일 선택·인쇄 점검</h1><p>앱 화면을 거치지 않는 기본 버튼으로 확인합니다.</p><p class="note" id="environment"></p><p class="note">점검 버전: 2026-09-27 A</p></header>
+<section><h2>1. 아이폰 파일 선택</h2><p>아래 기본 입력을 눌러 PDF를 선택해 주세요. 목록이 열리는지만 확인해도 됩니다.</p><input id="file" type="file" accept="application/pdf,.pdf" aria-label="점검할 PDF 선택"><output id="file-status" aria-live="polite">아직 선택하지 않았습니다.</output><p class="note">파일 내용은 읽거나 업로드하지 않습니다. 선택한 이름만 이 화면에 표시합니다.</p></section>
+<section><h2>2. 아이패드 인쇄</h2><p>아래 버튼을 누르고 시스템 인쇄 창이 열리는지 확인해 주세요. 실제 출력은 하지 말고 취소해도 됩니다.</p><button id="print" type="button">시스템 인쇄 창 열기</button><output id="print-status" aria-live="polite">아직 누르지 않았습니다.</output><p class="note">미리보기에는 점검용 문서 2쪽이 나옵니다. 이벤트가 감지돼도 실제 창이 보였는지는 별도로 확인해야 합니다.</p></section>
+<section><h2>결과 알려주기</h2><p>아이폰: 파일 목록이 열림 / 안 열림<br>아이패드: 시스템 인쇄 창이 열림 / 안 열림</p><p class="note">이 페이지에서만 된다면 앱 화면의 터치 전달을 더 좁혀 확인할 수 있습니다. Safari와 홈 화면 웹앱은 동작이 다를 수 있으므로 아래 실행 환경도 함께 알려 주세요.</p><output id="summary" aria-live="polite"></output></section>
+<div id="sheets"><article><h1>CY뷰어 인쇄 점검 · 1 / 2</h1><p>시스템 인쇄 미리보기 확인용 문서입니다.</p></article><article><h1>CY뷰어 인쇄 점검 · 2 / 2</h1><p>두 번째 페이지가 표시되는지 확인합니다.</p></article></div>
+<script src="check.js"></script>
+</body></html>
