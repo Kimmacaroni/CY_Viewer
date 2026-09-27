@@ -8,14 +8,14 @@ PDF를 읽고, 찾고, 표시하고, 저장하고, 인쇄할 수 있는 개인�
 
 | 사용 환경 | 다운로드 및 실행 |
 | --- | --- |
-| Windows 10·11 64비트 | [Windows 설치 파일 v1.2.0](https://github.com/Kimmacaroni/CY_Viewer/releases/download/windows-v1.2.0/CYViewer-Setup-v1.2.0.exe) |
-| macOS | [macOS 설치 파일 v1.5.0](https://github.com/Kimmacaroni/CY_Viewer/releases/download/macos-v1.5.0/CYViewer-macOS-v1.5.0.dmg) |
+| Windows 10·11 64비트 | [Windows 설치 파일 v1.3.0](https://github.com/Kimmacaroni/CY_Viewer/releases/download/windows-v1.3.0/CYViewer-Setup-v1.3.0.exe) |
+| macOS | [macOS 설치 파일 v1.6.0](https://github.com/Kimmacaroni/CY_Viewer/releases/download/macos-v1.6.0/CYViewer-macOS-v1.6.0.dmg) |
 | iPhone·iPad·웹 | [CY뷰어 웹앱 열기](https://kimmacaroni.github.io/CY_Viewer/) |
 
 아이폰에서는 Safari로 웹앱을 연 뒤 `공유` → `홈 화면에 추가`를 선택하면
 CY뷰어 아이콘으로 실행할 수 있습니다. 개발자 모드나 유선 연결은 필요하지 않습니다.
 
-Windows 10·11 64비트 환경을 지원합니다. Release에서 `CYViewer-Setup-v1.2.0.exe`를 내려받아 설치하세요. 설치 마법사에서 설치 위치와 바탕화면 바로가기 생성 여부를 선택할 수 있습니다.
+Windows 10·11 64비트 환경을 지원합니다. Release에서 `CYViewer-Setup-v1.3.0.exe`를 내려받아 설치하세요. 설치 마법사에서 설치 위치와 바탕화면 바로가기 생성 여부를 선택할 수 있습니다.
 
 ## 업데이트
 
