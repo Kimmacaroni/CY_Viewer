@@ -1,3 +1,5 @@
+import 'cy_localization.dart';
+
 import 'package:flutter/material.dart';
 
 /// Apple 앱과 웹앱에서 함께 쓰는 문서 작업 공간의 색상·간격·타이포그래피.
@@ -6,34 +8,24 @@ abstract final class CyDesign {
     final dark = brightness == Brightness.dark;
     final scheme =
         ColorScheme.fromSeed(
-          seedColor: const Color(0xff245edb),
+          seedColor: Color(0xff245edb),
           brightness: brightness,
         ).copyWith(
-          primary: dark ? const Color(0xffa9c5ff) : const Color(0xff245edb),
-          onPrimary: dark ? const Color(0xff132746) : Colors.white,
-          primaryContainer: dark
-              ? const Color(0xff223754)
-              : const Color(0xffeaf1ff),
-          onPrimaryContainer: dark
-              ? const Color(0xffcbdcff)
-              : const Color(0xff194da8),
-          surface: dark ? const Color(0xff191f2a) : Colors.white,
-          onSurface: dark ? const Color(0xffe8edf5) : const Color(0xff182235),
-          onSurfaceVariant: dark
-              ? const Color(0xffacb8ca)
-              : const Color(0xff526174),
-          outlineVariant: dark
-              ? const Color(0xff354154)
-              : const Color(0xffdce2eb),
+          primary: dark ? Color(0xffa9c5ff) : Color(0xff245edb),
+          onPrimary: dark ? Color(0xff132746) : Colors.white,
+          primaryContainer: dark ? Color(0xff223754) : Color(0xffeaf1ff),
+          onPrimaryContainer: dark ? Color(0xffcbdcff) : Color(0xff194da8),
+          surface: dark ? Color(0xff191f2a) : Colors.white,
+          onSurface: dark ? Color(0xffe8edf5) : Color(0xff182235),
+          onSurfaceVariant: dark ? Color(0xffacb8ca) : Color(0xff526174),
+          outlineVariant: dark ? Color(0xff354154) : Color(0xffdce2eb),
         );
     final base = ThemeData(useMaterial3: true, colorScheme: scheme);
     final shape = RoundedRectangleBorder(
       borderRadius: BorderRadius.circular(10),
     );
     return base.copyWith(
-      scaffoldBackgroundColor: dark
-          ? const Color(0xff10141c)
-          : const Color(0xfff4f6f9),
+      scaffoldBackgroundColor: dark ? Color(0xff10141c) : Color(0xfff4f6f9),
       textTheme: base.textTheme.copyWith(
         headlineMedium: TextStyle(
           fontSize: 28,
@@ -97,35 +89,29 @@ abstract final class CyDesign {
       ),
       filledButtonTheme: FilledButtonThemeData(
         style: FilledButton.styleFrom(
-          minimumSize: const Size(44, 48),
-          padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 12),
+          minimumSize: Size(44, 48),
+          padding: EdgeInsets.symmetric(horizontal: 20, vertical: 12),
           shape: shape,
         ),
       ),
       outlinedButtonTheme: OutlinedButtonThemeData(
         style: OutlinedButton.styleFrom(
           foregroundColor: scheme.onSurface,
-          minimumSize: const Size(44, 44),
+          minimumSize: Size(44, 44),
           shape: shape,
           side: BorderSide(color: scheme.outlineVariant),
         ),
       ),
       textButtonTheme: TextButtonThemeData(
-        style: TextButton.styleFrom(
-          minimumSize: const Size(44, 44),
-          shape: shape,
-        ),
+        style: TextButton.styleFrom(minimumSize: Size(44, 44), shape: shape),
       ),
       iconButtonTheme: IconButtonThemeData(
-        style: IconButton.styleFrom(minimumSize: const Size(44, 44)),
+        style: IconButton.styleFrom(minimumSize: Size(44, 44)),
       ),
       inputDecorationTheme: InputDecorationTheme(
         filled: true,
         fillColor: scheme.surface,
-        contentPadding: const EdgeInsets.symmetric(
-          horizontal: 16,
-          vertical: 14,
-        ),
+        contentPadding: EdgeInsets.symmetric(horizontal: 16, vertical: 14),
         border: OutlineInputBorder(
           borderRadius: BorderRadius.circular(10),
           borderSide: BorderSide(color: scheme.outlineVariant),
@@ -146,11 +132,9 @@ abstract final class CyDesign {
         side: BorderSide(color: scheme.outlineVariant),
         labelStyle: TextStyle(color: scheme.onSurface),
         checkmarkColor: scheme.onPrimaryContainer,
-        padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 8),
+        padding: EdgeInsets.symmetric(horizontal: 8, vertical: 8),
       ),
-      snackBarTheme: const SnackBarThemeData(
-        behavior: SnackBarBehavior.floating,
-      ),
+      snackBarTheme: SnackBarThemeData(behavior: SnackBarBehavior.floating),
     );
   }
 }
@@ -171,8 +155,10 @@ class CyBrand extends StatelessWidget {
           excludeFromSemantics: true,
         ),
       ),
-      const SizedBox(width: 10),
-      const Text('CY뷰어'),
+      SizedBox(width: 10),
+      Flexible(
+        child: Text(tr(context, "CY뷰어"), overflow: TextOverflow.ellipsis),
+      ),
     ],
   );
 }
@@ -196,39 +182,48 @@ class CyDocumentWelcome extends StatelessWidget {
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             Text(
-              '문서 작업 공간',
+              tr(context, "문서 작업 공간"),
               style: theme.textTheme.labelLarge?.copyWith(
                 color: scheme.primary,
               ),
             ),
-            const SizedBox(height: 16),
-            Text('문서를 열고,\n바로 읽으세요.', style: theme.textTheme.headlineMedium),
-            const SizedBox(height: 12),
+            SizedBox(height: 16),
+            Text(
+              tr(context, "문서를 열고,\n바로 읽으세요."),
+              style: theme.textTheme.headlineMedium,
+            ),
+            SizedBox(height: 12),
             Text(
               web
-                  ? '설치 없이, 파일 하나로 시작하세요.\n필요한 문구를 찾고 중요한 페이지를 남겨 보세요.'
-                  : '최근 문서와 읽던 페이지를 한곳에서.\nPDF를 선택하거나 이 창에 끌어놓으세요.',
+                  ? tr(
+                      context,
+                      "설치 없이, 파일 하나로 시작하세요.\n필요한 문구를 찾고 중요한 페이지를 남겨 보세요.",
+                    )
+                  : tr(
+                      context,
+                      "최근 문서와 읽던 페이지를 한곳에서.\nPDF를 선택하거나 이 창에 끌어놓으세요.",
+                    ),
               style: theme.textTheme.bodyLarge,
             ),
-            const SizedBox(height: 28),
+            SizedBox(height: 28),
             _Feature(
               icon: Icons.search,
-              title: '찾고 읽기',
-              description: '문서 검색 · 확대 · 보기 방식 변경',
+              title: tr(context, "찾고 읽기"),
+              description: tr(context, "문서 검색 · 확대 · 보기 방식 변경"),
             ),
-            const SizedBox(height: 16),
+            SizedBox(height: 16),
             _Feature(
               icon: Icons.bookmark_border,
-              title: '중요한 페이지 남기기',
-              description: '책갈피로 필요한 곳을 빠르게 찾기',
+              title: tr(context, "중요한 페이지 남기기"),
+              description: tr(context, "책갈피로 필요한 곳을 빠르게 찾기"),
             ),
-            const SizedBox(height: 16),
+            SizedBox(height: 16),
             _Feature(
               icon: Icons.ios_share_outlined,
-              title: web ? '저장하고 공유하기' : '표시하고 저장하기',
+              title: web ? tr(context, "저장하고 공유하기") : tr(context, "표시하고 저장하기"),
               description: web
-                  ? 'PDF 사본 저장 · 공유 · 인쇄'
-                  : '텍스트 표시 · OCR · PDF와 이미지 저장',
+                  ? tr(context, "PDF 사본 저장 · 공유 · 인쇄")
+                  : tr(context, "텍스트 표시 · OCR · PDF와 이미지 저장"),
             ),
           ],
         );
@@ -241,7 +236,7 @@ class CyDocumentWelcome extends StatelessWidget {
                 Align(
                   alignment: Alignment.centerLeft,
                   child: Container(
-                    padding: const EdgeInsets.all(16),
+                    padding: EdgeInsets.all(16),
                     decoration: BoxDecoration(
                       color: scheme.primaryContainer,
                       borderRadius: BorderRadius.circular(14),
@@ -253,15 +248,22 @@ class CyDocumentWelcome extends StatelessWidget {
                     ),
                   ),
                 ),
-                const SizedBox(height: 24),
-                Text('어떤 문서를 읽을까요?', style: theme.textTheme.titleLarge),
-                const SizedBox(height: 8),
-                Text(web ? '이 기기에 있는 PDF 파일을 선택하세요.' : '파일을 선택하면 문서함에 추가됩니다.'),
-                const SizedBox(height: 24),
+                SizedBox(height: 24),
+                Text(
+                  tr(context, "어떤 문서를 읽을까요?"),
+                  style: theme.textTheme.titleLarge,
+                ),
+                SizedBox(height: 8),
+                Text(
+                  web
+                      ? tr(context, "이 기기에 있는 PDF 파일을 선택하세요.")
+                      : tr(context, "파일을 선택하면 문서함에 추가됩니다."),
+                ),
+                SizedBox(height: 24),
                 action,
-                const SizedBox(height: 24),
-                const Divider(),
-                const SizedBox(height: 16),
+                SizedBox(height: 24),
+                Divider(),
+                SizedBox(height: 16),
                 Row(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
@@ -270,12 +272,15 @@ class CyDocumentWelcome extends StatelessWidget {
                       size: 17,
                       color: scheme.onSurfaceVariant,
                     ),
-                    const SizedBox(width: 8),
+                    SizedBox(width: 8),
                     Expanded(
                       child: Text(
                         web
-                            ? '문서는 서버로 전송되지 않습니다.\n웹앱을 닫으면 PDF 원본은 남지 않습니다.'
-                            : '문서와 최근 열람 목록은\n이 기기에서만 관리합니다.',
+                            ? tr(
+                                context,
+                                "문서는 서버로 전송되지 않습니다.\n웹앱을 닫으면 PDF 원본은 남지 않습니다.",
+                              )
+                            : tr(context, "문서와 최근 열람 목록은\n이 기기에서만 관리합니다."),
                         style: theme.textTheme.bodySmall,
                       ),
                     ),
@@ -290,13 +295,13 @@ class CyDocumentWelcome extends StatelessWidget {
                 crossAxisAlignment: CrossAxisAlignment.center,
                 children: [
                   Expanded(child: intro),
-                  const SizedBox(width: 56),
+                  SizedBox(width: 56),
                   Expanded(child: panel),
                 ],
               )
             : Column(
                 crossAxisAlignment: CrossAxisAlignment.stretch,
-                children: [panel, const SizedBox(height: 32), intro],
+                children: [panel, SizedBox(height: 32), intro],
               );
       },
     );
@@ -322,13 +327,13 @@ class _Feature extends StatelessWidget {
         size: 20,
         color: Theme.of(context).colorScheme.onSurfaceVariant,
       ),
-      const SizedBox(width: 12),
+      SizedBox(width: 12),
       Expanded(
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             Text(title, style: Theme.of(context).textTheme.titleSmall),
-            const SizedBox(height: 2),
+            SizedBox(height: 2),
             Text(description, style: Theme.of(context).textTheme.bodySmall),
           ],
         ),
@@ -376,15 +381,15 @@ class CyReaderWorkspace extends StatelessWidget {
     Widget section(String title, List<Widget> children) => Column(
       crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [
-        const SizedBox(height: 24),
+        SizedBox(height: 24),
         Text(title, style: theme.textTheme.labelLarge),
-        const SizedBox(height: 8),
+        SizedBox(height: 8),
         ...children,
       ],
     );
     Widget action(String label, IconData icon, VoidCallback? callback) =>
         Padding(
-          padding: const EdgeInsets.only(bottom: 8),
+          padding: EdgeInsets.only(bottom: 8),
           child: OutlinedButton.icon(
             onPressed: callback,
             icon: Icon(icon, size: 18),
@@ -402,37 +407,49 @@ class CyReaderWorkspace extends StatelessWidget {
             ),
           ),
           child: ListView(
-            padding: const EdgeInsets.all(16),
+            padding: EdgeInsets.all(16),
             children: [
               FilledButton.icon(
                 onPressed: onOpen,
-                icon: const Icon(Icons.add),
-                label: const Text('PDF 열기'),
+                icon: Icon(Icons.add),
+                label: Text(tr(context, "PDF 열기")),
               ),
-              section('01  문서 탐색', [
-                action('문서 검색', Icons.search, onSearch),
-                action('페이지 이동', Icons.find_in_page_outlined, onPage),
-                action('이 페이지 책갈피', Icons.bookmark_border, onBookmark),
+              section(tr(context, "01  문서 탐색"), [
+                action(tr(context, "문서 검색"), Icons.search, onSearch),
+                action(
+                  tr(context, "페이지 이동"),
+                  Icons.find_in_page_outlined,
+                  onPage,
+                ),
+                action(
+                  tr(context, "이 페이지 책갈피"),
+                  Icons.bookmark_border,
+                  onBookmark,
+                ),
                 Row(
                   children: [
-                    Expanded(child: action('축소', Icons.remove, onZoomOut)),
-                    const SizedBox(width: 8),
-                    Expanded(child: action('확대', Icons.add, onZoomIn)),
+                    Expanded(
+                      child: action(tr(context, "축소"), Icons.remove, onZoomOut),
+                    ),
+                    SizedBox(width: 8),
+                    Expanded(
+                      child: action(tr(context, "확대"), Icons.add, onZoomIn),
+                    ),
                   ],
                 ),
-                action('보기 방식 · 책갈피 목록', Icons.tune, onTools),
+                action(tr(context, "보기 방식 · 책갈피 목록"), Icons.tune, onTools),
               ]),
-              section('02  선택·편집', [
+              section(tr(context, "02  선택·편집"), [
                 editing ??
                     Text(
-                      '문구를 드래그해 선택하고 복사하세요.',
+                      tr(context, "문구를 드래그해 선택하고 복사하세요."),
                       style: theme.textTheme.bodySmall,
                     ),
               ]),
-              section('03  저장·내보내기', [
-                action('PDF로 저장', Icons.save_alt, onSave),
+              section(tr(context, "03  저장·내보내기"), [
+                action(tr(context, "PDF로 저장"), Icons.save_alt, onSave),
                 ?exports,
-                action('인쇄', Icons.print_outlined, onPrint),
+                action(tr(context, "인쇄"), Icons.print_outlined, onPrint),
               ]),
             ],
           ),

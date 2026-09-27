@@ -26,14 +26,17 @@
   if (typeof module !== 'undefined') module.exports=api;
   root.CyDownloads=api;
   if (typeof document === 'undefined') return;
+  const t = root.CyLanguage ? root.CyLanguage.t : (s,...args) => s.replace(/\{(\d+)\}/g, (_,i) => args[i]);
+  let statusMessage = '아래에서 기기에 맞는 버전을 선택하세요.';
   const device=platform(navigator), names={mac:'Mac',windows:'Windows'};
   function recommend() {
     if (device==='web') return;
-    document.getElementById('device-label').textContent=`이 기기에 추천 · ${names[device]}`;
+    document.getElementById('device-label').textContent=t('이 기기에 추천 · {0}', names[device]);
     const source=document.getElementById(`${device}-download`), primary=document.getElementById('primary-download');
-    primary.href=source.href; primary.textContent=`${names[device]}용 CY뷰어 다운로드 ↓`;
+    primary.href=source.href; primary.textContent=t('{0}용 CY뷰어 다운로드 ↓', names[device]);
     document.getElementById('primary-detail').textContent=document.getElementById(`${device}-version`).textContent;
   }
+  root.addEventListener('cylanguagechange', () => { recommend(); document.getElementById('release-status').textContent=t(statusMessage); });
   recommend();
   const controller = new AbortController();
   const timeout = setTimeout(() => controller.abort(), 10000);
@@ -50,8 +53,8 @@
         found++;
       }
       if(found!==2) throw Error('incomplete');
-      recommend(); document.getElementById('release-status').textContent='공개된 최신 정식 버전을 확인했습니다.';
+      recommend(); statusMessage='공개된 최신 정식 버전을 확인했습니다.'; document.getElementById('release-status').textContent=t(statusMessage);
     }).catch(() => {
-      recommend(); document.getElementById('release-status').textContent='최신 버전을 확인하지 못했습니다. 아래 배포본을 받거나 모든 릴리스에서 확인해 주세요.';
+      recommend(); statusMessage='최신 버전을 확인하지 못했습니다. 아래 배포본을 받거나 모든 릴리스에서 확인해 주세요.'; document.getElementById('release-status').textContent=t(statusMessage);
     }).finally(() => clearTimeout(timeout));
 })(globalThis);

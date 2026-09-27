@@ -1,3 +1,5 @@
+import 'cy_localization.dart';
+
 import 'dart:async';
 
 import 'package:flutter/material.dart';
@@ -73,34 +75,38 @@ class _WebPdfLoadGuardState extends State<WebPdfLoadGuard> {
           color: Theme.of(context).colorScheme.surface,
           child: Center(
             child: SingleChildScrollView(
-              padding: const EdgeInsets.all(24),
+              padding: EdgeInsets.all(24),
               child: Semantics(
                 liveRegion: true,
                 child: Column(
                   mainAxisSize: MainAxisSize.min,
                   children: [
                     if (_failed)
-                      const Icon(Icons.error_outline, size: 40)
+                      Icon(Icons.error_outline, size: 40)
                     else
-                      const CircularProgressIndicator(),
-                    const SizedBox(height: 20),
-                    Text(_failed ? 'PDF 읽기를 완료하지 못했습니다.' : 'PDF를 준비하고 있습니다.'),
-                    const SizedBox(height: 8),
+                      CircularProgressIndicator(),
+                    SizedBox(height: 20),
                     Text(
                       _failed
-                          ? '브라우저 기본 뷰어로 열거나 다른 PDF를 선택해 주세요.'
-                          : '처음에는 읽기 도구를 내려받는 데 시간이 걸릴 수 있습니다.',
+                          ? tr(context, "PDF 읽기를 완료하지 못했습니다.")
+                          : tr(context, "PDF를 준비하고 있습니다."),
+                    ),
+                    SizedBox(height: 8),
+                    Text(
+                      _failed
+                          ? tr(context, "브라우저 기본 뷰어로 열거나 다른 PDF를 선택해 주세요.")
+                          : tr(context, "처음에는 읽기 도구를 내려받는 데 시간이 걸릴 수 있습니다."),
                       textAlign: TextAlign.center,
                     ),
-                    const SizedBox(height: 20),
+                    SizedBox(height: 20),
                     FilledButton.icon(
                       onPressed: widget.onOpenInBrowser,
-                      icon: const Icon(Icons.open_in_new),
-                      label: const Text('브라우저로 PDF 열기'),
+                      icon: Icon(Icons.open_in_new),
+                      label: Text(tr(context, "브라우저로 PDF 열기")),
                     ),
                     TextButton(
                       onPressed: widget.onChooseAnother,
-                      child: const Text('다른 PDF 선택'),
+                      child: Text(tr(context, "다른 PDF 선택")),
                     ),
                   ],
                 ),

@@ -1,11 +1,11 @@
 {
-  "name": "CY뷰어",
-  "short_name": "CY뷰어",
-  "start_url": ".",
+  "name": "CY Viewer",
+  "short_name": "CY Viewer",
+  "start_url": ".?lang=en",
   "display": "standalone",
   "background_color": "#e2e8f0",
   "theme_color": "#0f172a",
-  "description": "아이폰과 웹에서 사용하는 한국어 PDF 뷰어",
+  "description": "Read PDFs on your device with CY Viewer",
   "orientation": "any",
   "icons": [
     {
@@ -21,5 +21,6 @@
       "purpose": "any"
     }
   ],
-  "id": "."
+  "id": ".",
+  "lang": "en"
 }
