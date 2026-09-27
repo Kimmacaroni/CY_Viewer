@@ -155,7 +155,7 @@ void main() {
         await renderPrintPages(
           source,
           [1, 2, 3, 4],
-          cancelledSurface,
+          surface,
           () => active,
           (_) {},
         );
@@ -166,11 +166,15 @@ void main() {
         }
         surface.dispose();
         final cancelledSurface = PrintSurface();
-        await renderPrintPages(source, [1, 2, 3, 4], surface, () => active, (
-          _,
-        ) {
-          active = false;
-        });
+        await renderPrintPages(
+          source,
+          [1, 2, 3, 4],
+          cancelledSurface,
+          () => active,
+          (_) {
+            active = false;
+          },
+        );
         expect(cancelledSurface.pages.length, 1);
         cancelledSurface.dispose();
         final bytes = await createPrintPdf(source, [2, 4]);
