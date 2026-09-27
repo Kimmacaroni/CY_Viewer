@@ -26,7 +26,9 @@ Future<void> main() async {
 }
 
 class CyViewerWebApp extends StatelessWidget {
-  const CyViewerWebApp({super.key});
+  const CyViewerWebApp({super.key, this.saveRecent = recentWebSave});
+
+  final Future<void> Function(String, Uint8List) saveRecent;
 
   @override
   Widget build(BuildContext context) => CyLanguageScope(
@@ -41,14 +43,16 @@ class CyViewerWebApp extends StatelessWidget {
         theme: CyDesign.theme(Brightness.light),
         darkTheme: CyDesign.theme(Brightness.dark),
         themeMode: ThemeMode.system,
-        home: _WebLibraryPage(),
+        home: _WebLibraryPage(saveRecent: saveRecent),
       ),
     ),
   );
 }
 
 class _WebLibraryPage extends StatefulWidget {
-  const _WebLibraryPage();
+  const _WebLibraryPage({required this.saveRecent});
+
+  final Future<void> Function(String, Uint8List) saveRecent;
 
   @override
   State<_WebLibraryPage> createState() => _WebLibraryPageState();
@@ -58,7 +62,6 @@ class _WebLibraryPageState extends State<_WebLibraryPage> {
   bool _opening = false;
   String? _error;
   List<Map<String, dynamic>> _recent = [];
-  Future<void>? _savingRecent;
 
   @override
   void initState() {
@@ -68,7 +71,7 @@ class _WebLibraryPageState extends State<_WebLibraryPage> {
 
   Future<void> _loadRecent() async {
     try {
-      final rows = await recentWebList();
+      final rows = await recentWebList().timeout(const Duration(seconds: 10));
       if (mounted) setState(() => _recent = rows);
     } on Object {
       if (mounted) {
@@ -81,7 +84,10 @@ class _WebLibraryPageState extends State<_WebLibraryPage> {
 
   Future<void> _remember(PickedWebPdf file) async {
     try {
-      await recentWebSave(file.name, file.bytes);
+      await recentWebSave(
+        file.name,
+        file.bytes,
+      ).timeout(const Duration(seconds: 15));
       await _loadRecent();
     } on Object {
       if (mounted) {
@@ -101,7 +107,8 @@ class _WebLibraryPageState extends State<_WebLibraryPage> {
       _error = null;
     });
     try {
-      final bytes = await recentWebRead(row['id'] as String);
+      final bytes = await recentWebRead(row['id'] as String)
+          .timeout(const Duration(seconds: 15));
       if (bytes == null) {
         throw StateError(trNow('저장된 사본을 찾을 수 없습니다. PDF를 다시 선택해 주세요.'));
       }
@@ -117,7 +124,7 @@ class _WebLibraryPageState extends State<_WebLibraryPage> {
 
   Future<void> _removeRecent(String id) async {
     try {
-      await recentWebRemove(id);
+      await recentWebRemove(id).timeout(const Duration(seconds: 10));
       await _loadRecent();
     } on Object catch (error) {
       _handlePickError(error);
@@ -134,20 +141,25 @@ class _WebLibraryPageState extends State<_WebLibraryPage> {
       _opening = true;
       _error = null;
     });
-    await Navigator.of(context).push<void>(
-      MaterialPageRoute(
-        builder: (_) => _WebReaderPage(
-          name: file.name,
-          bytes: file.bytes,
-          onOpened: () {
-            _savingRecent = _remember(file);
-          },
+    try {
+      await Navigator.of(context).push<void>(
+        MaterialPageRoute(
+          builder: (_) => _WebReaderPage(
+            name: file.name,
+            bytes: file.bytes,
+            onOpened: () => unawaited(_remember(file)),
+          ),
         ),
-      ),
-    );
-    await _savingRecent;
-    if (mounted) setState(() => _opening = false);
+      );
+    } finally {
+      // 최근 사본 저장은 백그라운드 작업이다. 복귀 후 파일 선택을 막지 않는다.
+      if (mounted) setState(() => _opening = false);
+    }
   }
+
+  Widget _filePicker() => _opening
+      ? const Center(child: CircularProgressIndicator())
+      : WebPdfPickRegion(onPicked: _openPickedPdf, onError: _handlePickError);
 
   void _handlePickError(Object error) {
     if (!mounted) return;
@@ -200,11 +212,7 @@ class _WebLibraryPageState extends State<_WebLibraryPage> {
                       52,
                       MediaQuery.textScalerOf(context).scale(16) + 28,
                     ),
-                    child: WebPdfPickRegion(
-                      enabled: !_opening,
-                      onPicked: _openPickedPdf,
-                      onError: _handlePickError,
-                    ),
+                    child: _filePicker(),
                   ),
                   const SizedBox(height: 20),
                   CyRecentFiles(
@@ -221,11 +229,7 @@ class _WebLibraryPageState extends State<_WebLibraryPage> {
                         52,
                         MediaQuery.textScalerOf(context).scale(16) + 28,
                       ),
-                      child: WebPdfPickRegion(
-                        enabled: !_opening,
-                        onPicked: _openPickedPdf,
-                        onError: _handlePickError,
-                      ),
+                      child: _filePicker(),
                     ),
                   ),
                 if (_error != null) ...[
@@ -281,7 +285,7 @@ class _WebReaderPageState extends State<_WebReaderPage> {
   int _pageCount = 0;
   int _currentPage = 1;
   bool _searching = false;
-  bool _busy = false;
+  bool _sharing = false;
   bool _printActive = false;
   _ViewMode _viewMode = _ViewMode.scroll;
   List<int> _bookmarks = [];
@@ -331,8 +335,11 @@ class _WebReaderPageState extends State<_WebReaderPage> {
     );
   }
 
-  void _message(String text) =>
+  void _message(String text) {
+    if (mounted) {
       ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(text)));
+    }
+  }
 
   Future<void> _showBookmarks() async {
     await showModalBottomSheet<void>(
@@ -393,7 +400,11 @@ class _WebReaderPageState extends State<_WebReaderPage> {
   }
 
   Future<void> _print() async {
-    if (_busy || _printActive || !_controller.isReady || _pageCount < 1) return;
+    if (_printActive) return;
+    if (!_controller.isReady || _pageCount < 1) {
+      _message(tr(context, 'PDF 페이지를 불러오고 있습니다.'));
+      return;
+    }
     _printActive = true;
     try {
       await showDialog<void>(
@@ -412,15 +423,18 @@ class _WebReaderPageState extends State<_WebReaderPage> {
   }
 
   Future<void> _saveCopy() async {
-    if (_busy) return;
-    setState(() => _busy = true);
+    if (_sharing) return;
+    _sharing = true;
     try {
-      await Printing.sharePdf(bytes: widget.bytes, filename: widget.name);
+      await Printing.sharePdf(
+        bytes: widget.bytes,
+        filename: widget.name,
+      ).timeout(const Duration(seconds: 45));
       if (mounted) _message(tr(context, "공유 또는 파일 저장 화면을 열었습니다."));
     } on Object catch (error) {
       _message(trNow("PDF 복사본을 내보낼 수 없습니다: {0}", [error]));
     } finally {
-      if (mounted) setState(() => _busy = false);
+      _sharing = false;
     }
   }
 
@@ -764,13 +778,6 @@ class _WebReaderPageState extends State<_WebReaderPage> {
                 right: 12,
                 bottom: 12,
                 child: Chip(label: Text('$_currentPage / $_pageCount')),
-              ),
-            if (_busy)
-              Positioned.fill(
-                child: ColoredBox(
-                  color: Color(0x33000000),
-                  child: Center(child: CircularProgressIndicator()),
-                ),
               ),
           ],
         ),
