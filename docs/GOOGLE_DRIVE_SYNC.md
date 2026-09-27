@@ -6,7 +6,7 @@
 - Google Drive API 사용. Firebase Storage/Firestore에는 PDF나 읽기 상태를 저장하지 않는다.
 - 웹: Google Identity Services token model, 승인 출처 `https://kimmacaroni.github.io`.
 - Mac/Windows: 데스크톱 OAuth, 시스템 브라우저 + 임의 포트의 127.0.0.1 callback, state 및 PKCE S256.
-- 공개 클라이언트 ID만 소스에 둔다. 토큰, 인증 코드, 웹 클라이언트 secret을 저장소나 로그에 기록하지 않는다.
+- 공개 클라이언트 ID만 소스에 둔다. Google 데스크톱 인증 서버가 요구하는 client_secret은 GitHub Actions secret에서 빌드 시 주입한다. 설치형 공개 클라이언트의 특성상 배포 바이너리에서는 추출 가능하며 서버 자격 증명의 비밀성을 제공하는 값으로 취급하지 않는다. PKCE 및 state 검증은 별도로 유지한다. 토큰, 인증 코드, 웹 클라이언트 secret을 저장소나 로그에 기록하지 않는다.
 - `drive.file` 범위만 요청한다. 사용자가 연결하기 전에는 업로드하지 않으며, 연결 후 여는 PDF부터 동기화한다.
 - 현재 세션의 토큰만 메모리에 보관한다. 재실행/만료 후 재연결이 필요하다.
 

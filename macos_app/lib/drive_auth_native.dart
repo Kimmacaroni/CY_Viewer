@@ -9,10 +9,14 @@ import 'package:url_launcher/url_launcher.dart';
 
 const _clientId =
     '99146066883-tr494pci27mpsvc9fhdr7skp8p9o6j1n.apps.googleusercontent.com';
+const _clientSecret = String.fromEnvironment('CY_VIEWER_DESKTOP_CLIENT_SECRET');
 String _random() => base64Url
     .encode(List.generate(32, (_) => Random.secure().nextInt(256)))
     .replaceAll('=', '');
 Future<String> driveAuthorize() async {
+  if (_clientSecret.isEmpty) {
+    throw StateError('배포용 Google 연결 설정이 없습니다. 최신 설치 파일을 사용해 주세요.');
+  }
   final server = await HttpServer.bind(InternetAddress.loopbackIPv4, 0);
   final state = _random(), verifier = _random();
   final redirect = 'http://127.0.0.1:${server.port}/oauth/callback';
@@ -62,6 +66,7 @@ Future<String> driveAuthorize() async {
           Uri.https('oauth2.googleapis.com', '/token'),
           body: {
             'client_id': _clientId,
+            'client_secret': _clientSecret,
             'code': code,
             'code_verifier': verifier,
             'redirect_uri': redirect,

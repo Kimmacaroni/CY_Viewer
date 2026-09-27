@@ -10,6 +10,10 @@ import urllib.error
 import urllib.parse
 import urllib.request
 import webbrowser
+try:
+    from drive_build_config import CLIENT_SECRET
+except ImportError:
+    CLIENT_SECRET = ""
 
 CLIENT_ID = '99146066883-tr494pci27mpsvc9fhdr7skp8p9o6j1n.apps.googleusercontent.com'
 SCOPE = 'https://www.googleapis.com/auth/drive.file'
@@ -53,6 +57,8 @@ class Drive:
         self.pending = {}
 
     def connect(self):
+        if not CLIENT_SECRET:
+            raise RuntimeError('배포용 Google 연결 설정이 없습니다. 최신 설치 파일을 사용해 주세요.')
         state, verifier = secrets.token_urlsafe(32), secrets.token_urlsafe(32)
         result = {}
         class Handler(http.server.BaseHTTPRequestHandler):
@@ -83,7 +89,7 @@ class Drive:
                 server.handle_request()
         if not result.get('code'):
             raise RuntimeError('Google 연결을 완료하지 못했습니다. 다시 연결해 주세요.')
-        body = urllib.parse.urlencode({'client_id': CLIENT_ID, 'code': result['code'], 'code_verifier': verifier,
+        body = urllib.parse.urlencode({'client_id': CLIENT_ID, 'client_secret': CLIENT_SECRET, 'code': result['code'], 'code_verifier': verifier,
             'redirect_uri': redirect, 'grant_type': 'authorization_code'}).encode()
         try:
             with urllib.request.urlopen(urllib.request.Request('https://oauth2.googleapis.com/token', data=body), timeout=30) as response:
