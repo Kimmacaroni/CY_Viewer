@@ -473,4 +473,41 @@ const cyEnglish = <String, String>{
   "전체 페이지가 기본입니다. 인쇄를 누르면 시스템 인쇄 창이 열립니다.": "All pages are selected by default. Select Print to open the system print dialog.",
   "범위 변경": "Change range",
   "인쇄가 안 되면 원본 PDF 열기": "If printing fails, open the original PDF",
+  "Google Drive 동기화": "Google Drive sync",
+  "Google 계정으로 Drive 연결": "Connect Google Drive",
+  "개인 Google Drive": "Personal Google Drive",
+  "Drive 최근 파일 · 최대 5개": "Recent Drive files · Up to 5",
+  "새로고침": "Refresh",
+  "연결 해제": "Disconnect",
+  "{0}페이지에서 이어 읽기": "Continue on page {0}",
+  "Drive 연결 전": "Drive not connected",
+  "Drive 동기화 중…": "Syncing with Drive…",
+  "Drive 동기화 완료": "Synced with Drive",
+  "Drive 연결 완료. 이후 여는 PDF를 동기화합니다.":
+      "Drive connected. PDFs opened from now on will sync.",
+  "Drive 최근 파일을 불러왔습니다.": "Recent Drive files loaded.",
+  "Drive 연결을 해제했습니다. 저장된 파일은 Drive에 남습니다.":
+      "Disconnected. Saved files remain in Drive.",
+  "Google 계정을 연결하면 이후 여는 PDF와 책갈피·읽던 페이지를 개인 Drive에 저장합니다.": "Connect your Google account to save PDFs opened from now on, bookmarks and reading position to your personal Drive.",
+  "Google 계정을 연결하면 이후 여는 PDF와 책갈피·읽던 페이지를 개인 Drive에 저장합니다. 기존 Drive 파일 전체에 접근하지 않습니다.": "Connect your Google account to save PDFs opened from now on, bookmarks and reading position to your personal Drive. CY Viewer cannot access all your existing Drive files.",
+  "연결 후 여는 PDF와 책갈피·읽던 페이지를 개인 Drive에 저장합니다. 최근 5개를 표시하며, 이전 PDF는 Drive에 남습니다.": "PDFs opened after connecting, bookmarks and reading position are saved in your personal Drive. The 5 most recent files are shown; older PDFs remain in Drive.",
+  "아직 동기화한 PDF가 없습니다. 이 창을 닫고 PDF를 열어 주세요.":
+      "No synced PDFs yet. Close this window and open a PDF.",
+  "앱을 다시 실행하거나 연결이 만료되면 다시 연결해 주세요. 이전 PDF는 Drive에 남습니다.": "Reconnect after restarting the app or when access expires. Older PDFs remain in Drive.",
+  "앱을 다시 실행하거나 연결이 만료되면 다시 연결해 주세요. Drive 용량이 부족해도 로컬 PDF는 계속 사용할 수 있습니다.": "Reconnect after restarting the app or when access expires. You can still use local PDFs when Drive is full.",
+  "Drive 파일을 열지 못했습니다. 연결을 확인해 주세요.":
+      "Could not open the Drive file. Check your connection.",
+  "Google Drive 연결을 완료하지 못했습니다. 다시 연결해 주세요.":
+      "Could not connect Google Drive. Please reconnect.",
+  "Drive 목록을 불러오지 못했습니다. 다시 연결하거나 새로고침해 주세요.":
+      "Could not load Drive files. Reconnect or refresh.",
+  "읽기 상태를 Drive에 저장하지 못했습니다. 연결을 확인해 주세요.":
+      "Could not save reading progress to Drive. Check your connection.",
+  "PDF를 Drive에 동기화하지 못했습니다. 원본은 이 기기에서 계속 읽을 수 있습니다.": "Could not sync the PDF to Drive. You can still read the original on this device.",
+  "Drive 동기화에 실패했습니다. 연결과 저장 공간을 확인해 주세요.":
+      "Drive sync failed. Check your connection and available storage.",
+  "기본적으로 최근 PDF 5개의 사본을 이 브라우저에 저장합니다.\nDrive를 연결하면 이후 여는 PDF를 개인 Drive에도 저장합니다.": "By default, copies of your 5 most recent PDFs are stored in this browser.\nAfter connecting Drive, PDFs you open are also saved to your personal Drive.",
+  "기본적으로 문서를 이 기기에서 관리합니다.\nDrive를 연결하면 이후 여는 PDF를 개인 Drive에도 저장합니다.": "By default, documents are managed on this device.\nAfter connecting Drive, PDFs you open are also saved to your personal Drive.",
+  "기본적으로 문서는 이 기기에서 처리합니다. Drive 연결 후에는 개인 Drive에도 저장합니다.": "By default, documents are processed on this device. After connecting Drive, they are also saved to your personal Drive.",
+  "개인정보 안내": "Privacy notice",
 };

@@ -1,3 +1,6 @@
+import 'package:crypto/crypto.dart';
+
+import 'drive_panel.dart';
 import 'cy_localization.dart';
 
 import 'dart:async';
@@ -582,6 +585,16 @@ class _LibraryPageState extends State<LibraryPage> {
       appBar: AppBar(
         title: CyBrand(),
         actions: [
+          DriveButton(
+            onOpen: (name, bytes) async {
+              final directory = await getApplicationSupportDirectory();
+              final file = File(
+                '${directory.path}/drive-${sha256.convert(bytes)}.pdf',
+              );
+              await file.writeAsBytes(bytes, flush: true);
+              await _addAndOpen(file.path, name);
+            },
+          ),
           const CyLanguageButton(),
           if (Platform.isMacOS)
             IconButton(

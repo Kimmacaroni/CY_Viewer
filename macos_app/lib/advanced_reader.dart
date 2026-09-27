@@ -1,3 +1,5 @@
+import 'drive_panel.dart';
+import 'drive_sync.dart';
 import 'cy_localization.dart';
 
 import 'dart:async';
@@ -66,6 +68,43 @@ class _AdvancedPdfReaderPageState extends State<AdvancedPdfReaderPage> {
   int _pageCount = 0;
   int _currentPage = 1;
   List<int> _bookmarks = [];
+  DriveReading? _drive;
+  bool _driveStarted = false;
+  Future<void> _startDrive() async {
+    if (_driveStarted || _pdfData == null) return;
+    _driveStarted = true;
+    final oldPage = _currentPage;
+    final oldMarks = List<int>.from(_bookmarks);
+    final reading = await DriveReading.open(widget.name, _pdfData!);
+    if (!mounted || reading == null) return;
+    if (jsonEncode(oldMarks) == jsonEncode(_bookmarks)) {
+      if (reading.file.state['marks'] == null) {
+        reading.bookmarks([], _bookmarks);
+      } else {
+        setState(
+          () => _bookmarks = reading.file.bookmarks
+              .where((p) => p <= _pageCount)
+              .toList(),
+        );
+        await _saveBookmarks();
+      }
+    } else {
+      reading.bookmarks(oldMarks, _bookmarks);
+    }
+    if (!mounted) return;
+    _drive = reading;
+    if (_currentPage == oldPage &&
+        reading.file.state.containsKey('page') &&
+        reading.file.page > 0 &&
+        _controller.isReady) {
+      await _controller.goToPage(
+        pageNumber: reading.file.page.clamp(1, _pageCount),
+      );
+    } else {
+      reading.page(_currentPage);
+    }
+  }
+
   bool _searching = false;
   final List<_TextMark> _marks = [];
   bool _hasSelectedText = false;
@@ -194,8 +233,18 @@ class _AdvancedPdfReaderPageState extends State<AdvancedPdfReaderPage> {
     }
   }
 
-  Future<void> _saveBookmarks() async => (await SharedPreferences.getInstance())
-      .setStringList(_bookmarkKey, _bookmarks.map((e) => '$e').toList());
+  Future<void> _saveBookmarks() async {
+    final prefs = await SharedPreferences.getInstance();
+    final before = (prefs.getStringList(_bookmarkKey) ?? [])
+        .map(int.tryParse)
+        .whereType<int>()
+        .toList();
+    _drive?.bookmarks(before, _bookmarks);
+    await prefs.setStringList(
+      _bookmarkKey,
+      _bookmarks.map((e) => '$e').toList(),
+    );
+  }
 
   Future<void> _toggleBookmark() async {
     if (_pageCount == 0 || !mounted) return;
@@ -679,6 +728,7 @@ class _AdvancedPdfReaderPageState extends State<AdvancedPdfReaderPage> {
 
   @override
   void dispose() {
+    _drive?.flush();
     AppCommandDispatcher.unregister(_commandHandlers);
     _searchInput.dispose();
     _searcher?.dispose();
@@ -723,6 +773,7 @@ class _AdvancedPdfReaderPageState extends State<AdvancedPdfReaderPage> {
                 ),
           actions: _searching && _searcher != null
               ? [
+                  const DriveStatus(),
                   if (!compact)
                     AnimatedBuilder(
                       animation: _searcher!,
@@ -747,6 +798,7 @@ class _AdvancedPdfReaderPageState extends State<AdvancedPdfReaderPage> {
                   ),
                 ]
               : [
+                  const DriveStatus(),
                   IconButton(
                     tooltip: tr(context, "검색"),
                     onPressed: _searcher == null ? null : _showSearch,
@@ -899,10 +951,12 @@ class _AdvancedPdfReaderPageState extends State<AdvancedPdfReaderPage> {
                       if (initial > 1) {
                         await _controller.goToPage(pageNumber: initial);
                       }
+                      unawaited(_startDrive());
                     },
                     onPageChanged: (page) {
                       if (mounted && page != null) {
                         setState(() => _currentPage = page);
+                        _drive?.page(page);
                       }
                     },
                     pagePaintCallbacks: [
