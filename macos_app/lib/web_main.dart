@@ -16,6 +16,8 @@ import 'web_pdf_load_guard.dart';
 import 'cy_design.dart';
 import 'recent_web_store.dart';
 import 'cy_recent_files.dart';
+import 'web_print.dart';
+import 'web_print_platform.dart';
 
 Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -390,13 +392,52 @@ class _WebReaderPageState extends State<_WebReaderPage> {
   }
 
   Future<void> _print() async {
-    if (_busy) return;
+    if (_busy || !_controller.isReady || _pageCount < 1) return;
+    final pages = await choosePrintPages(context, _pageCount, _currentPage);
+    if (pages == null || !mounted) return;
     setState(() => _busy = true);
     try {
-      await Printing.layoutPdf(
-        name: widget.name,
-        onLayout: (_) async => widget.bytes,
-      );
+      final bytes = await createPrintPdf(_controller.document, pages);
+      if (!mounted) return;
+      setState(() => _busy = false);
+      if (useNativePdfPrint) {
+        await showDialog<void>(
+          context: context,
+          builder: (dialogContext) => AlertDialog(
+            title: Text(tr(context, '인쇄용 PDF 준비 완료')),
+            content: Text(
+              tr(
+                context,
+                '선택한 {0}페이지가 준비되었습니다. PDF를 연 다음 공유 메뉴에서 인쇄를 선택하세요. 인쇄 창의 페이지 번호는 선택한 PDF 안에서 다시 매겨집니다.',
+                [pages.length],
+              ),
+            ),
+            actions: [
+              TextButton(
+                onPressed: () => Navigator.pop(dialogContext),
+                child: Text(tr(context, '취소')),
+              ),
+              FilledButton(
+                onPressed: () {
+                  if (openPrintPdf(bytes)) {
+                    Navigator.pop(dialogContext);
+                  } else {
+                    _message(
+                      tr(context, 'PDF 창이 차단되었습니다. 팝업을 허용한 뒤 다시 눌러 주세요.'),
+                    );
+                  }
+                },
+                child: Text(tr(context, 'PDF 열고 인쇄하기')),
+              ),
+            ],
+          ),
+        );
+      } else {
+        await Printing.layoutPdf(
+          name: widget.name,
+          onLayout: (_) async => bytes,
+        );
+      }
     } on Object catch (error) {
       _message(trNow("인쇄 창을 열 수 없습니다: {0}", [error]));
     } finally {

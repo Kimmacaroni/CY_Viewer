@@ -448,4 +448,19 @@ const cyEnglish = <String, String>{
       "Discard unsaved changes and open another PDF?",
   "문서는 서버로 전송되지 않습니다.\n최근 PDF 5개의 사본을 이 브라우저에 저장합니다.": "Documents are not uploaded to a server.\nCopies of your last 5 PDFs are saved in this browser.",
   "설치 파일은 CY뷰어의 공식 GitHub 릴리스에서 받습니다. PDF 문서는 기기에서 처리합니다. 웹앱은 최근 PDF 5개의 사본을 이 브라우저에 저장합니다. 최근 목록에서 제거하면 사본도 삭제됩니다. 브라우저 데이터 삭제나 저장 공간 정리로 사라질 수 있으므로 원본은 별도로 보관해 주세요.": "Installers come from official CY Viewer GitHub releases. PDFs are processed on your device. The web app saves copies of your last 5 PDFs in this browser. Removing a recent file also deletes its saved copy. Browser data clearing or storage cleanup may remove these copies, so keep your originals separately.",
+  "인쇄 범위": "Print range",
+  "인쇄할 페이지": "Pages to print",
+  "전체 페이지": "All pages",
+  "전체 {0}페이지": "{0} pages total",
+  "현재 페이지 ({0})": "Current page ({0})",
+  "페이지 직접 지정": "Custom pages",
+  "페이지 범위": "Page range",
+  "인쇄용 PDF 준비": "Prepare print PDF",
+  "인쇄용 PDF 준비 완료": "Print PDF ready",
+  "PDF 열고 인쇄하기": "Open PDF to print",
+  "1~{0} 사이의 페이지를 입력하세요. 예: 2-5, 8":
+      "Enter pages from 1 to {0}. Example: 2-5, 8",
+  "선택한 {0}페이지가 준비되었습니다. PDF를 연 다음 공유 메뉴에서 인쇄를 선택하세요. 인쇄 창의 페이지 번호는 선택한 PDF 안에서 다시 매겨집니다.": "Your {0} selected pages are ready. Open the PDF, then choose Print from the Share menu. Page numbers in the print dialog refer to this selected PDF.",
+  "PDF 창이 차단되었습니다. 팝업을 허용한 뒤 다시 눌러 주세요.":
+      "The PDF window was blocked. Allow pop-ups and try again.",
 };
