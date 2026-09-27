@@ -45,11 +45,13 @@ class AdvancedPdfReaderPage extends StatefulWidget {
     required this.path,
     required this.name,
     required this.initialPage,
+    this.onOpened,
   });
 
   final String path;
   final String name;
   final int initialPage;
+  final VoidCallback? onOpened;
 
   @override
   State<AdvancedPdfReaderPage> createState() => _AdvancedPdfReaderPageState();
@@ -60,6 +62,7 @@ class _AdvancedPdfReaderPageState extends State<AdvancedPdfReaderPage> {
   final _controller = PdfViewerController();
   final _searchInput = TextEditingController();
   PdfTextSearcher? _searcher;
+  bool _reportedOpened = false;
   int _pageCount = 0;
   int _currentPage = 1;
   List<int> _bookmarks = [];
@@ -874,6 +877,10 @@ class _AdvancedPdfReaderPageState extends State<AdvancedPdfReaderPage> {
                       },
                     ),
                     onViewerReady: (document, _) async {
+                      if (!_reportedOpened) {
+                        _reportedOpened = true;
+                        widget.onOpened?.call();
+                      }
                       if (!mounted) return;
                       final pageCount = document.pages.length;
                       _searcher?.dispose();

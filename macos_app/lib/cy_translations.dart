@@ -431,4 +431,21 @@ const cyEnglish = <String, String>{
   "CYViewer 종료": "Quit CY Viewer",
   "CY뷰어 가리기": "Hide CY Viewer",
   "CY뷰어 종료": "Quit CY Viewer",
+  "최근 열어본 파일": "Recent files",
+  "최근 열어본 파일이 없습니다.": "No recent files yet.",
+  "최근 5개 · 이 기기에 저장됨": "Last 5 files · On this device",
+  "최근 5개 · 이 브라우저에만 저장됨": "Last 5 files · In this browser only",
+  "최근 목록에서 제거": "Remove from recent files",
+  "최근 파일 목록을 불러오지 못했습니다. PDF 열기는 계속 사용할 수 있습니다.":
+      "Could not load recent files. You can still open a PDF.",
+  "최근 파일을 저장하지 못했습니다. 브라우저 저장 공간을 확인해 주세요.":
+      "Could not save the recent PDF. Check your browser storage.",
+  "저장된 사본을 찾을 수 없습니다. PDF를 다시 선택해 주세요.":
+      "The saved copy is unavailable. Select the PDF again.",
+  "PDF는 열렸지만 최근 목록을 저장하지 못했습니다.":
+      "The PDF opened, but the recent files list could not be saved.",
+  "저장하지 않은 변경을 버리고 다른 PDF를 열까요?":
+      "Discard unsaved changes and open another PDF?",
+  "문서는 서버로 전송되지 않습니다.\n최근 PDF 5개의 사본을 이 브라우저에 저장합니다.": "Documents are not uploaded to a server.\nCopies of your last 5 PDFs are saved in this browser.",
+  "설치 파일은 CY뷰어의 공식 GitHub 릴리스에서 받습니다. PDF 문서는 기기에서 처리합니다. 웹앱은 최근 PDF 5개의 사본을 이 브라우저에 저장합니다. 최근 목록에서 제거하면 사본도 삭제됩니다. 브라우저 데이터 삭제나 저장 공간 정리로 사라질 수 있으므로 원본은 별도로 보관해 주세요.": "Installers come from official CY Viewer GitHub releases. PDFs are processed on your device. The web app saves copies of your last 5 PDFs in this browser. Removing a recent file also deletes its saved copy. Browser data clearing or storage cleanup may remove these copies, so keep your originals separately.",
 };

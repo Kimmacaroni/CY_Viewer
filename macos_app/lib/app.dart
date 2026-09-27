@@ -46,6 +46,7 @@ class SavedPdf {
     required this.name,
     required this.openedAt,
     this.favorite = false,
+    this.hasOpened = true,
     this.lastPage = 1,
     this.bookmark,
   });
@@ -53,11 +54,13 @@ class SavedPdf {
   final String name;
   final DateTime openedAt;
   final bool favorite;
+  final bool hasOpened;
   final int lastPage;
   final String? bookmark;
   SavedPdf copyWith({
     DateTime? openedAt,
     bool? favorite,
+    bool? hasOpened,
     int? lastPage,
     String? bookmark,
   }) => SavedPdf(
@@ -65,6 +68,7 @@ class SavedPdf {
     name: name,
     openedAt: openedAt ?? this.openedAt,
     favorite: favorite ?? this.favorite,
+    hasOpened: hasOpened ?? this.hasOpened,
     lastPage: lastPage ?? this.lastPage,
     bookmark: bookmark ?? this.bookmark,
   );
@@ -73,6 +77,7 @@ class SavedPdf {
     'name': name,
     'openedAt': openedAt.toIso8601String(),
     'favorite': favorite,
+    'hasOpened': hasOpened,
     'lastPage': lastPage,
     if (bookmark != null) 'bookmark': bookmark,
   };
@@ -81,6 +86,7 @@ class SavedPdf {
     name: map['name'] as String,
     openedAt: DateTime.parse(map['openedAt'] as String),
     favorite: map['favorite'] as bool? ?? false,
+    hasOpened: map['hasOpened'] as bool? ?? true,
     lastPage: math.max(map['lastPage'] as int? ?? 1, 1),
     bookmark: map['bookmark'] as String?,
   );
@@ -100,6 +106,7 @@ class _LibraryPageState extends State<LibraryPage> {
   List<SavedPdf> _items = [];
   bool _loading = true;
   bool _favoritesOnly = false;
+  bool _recentOnly = true;
   bool _dragging = false;
   late final Future<void> _initialLoad;
   late final Future<void> _firstFrame;
@@ -300,6 +307,8 @@ class _LibraryPageState extends State<LibraryPage> {
     }
     final oldIndex = _items.indexWhere((e) => e.path == path);
     final favorite = oldIndex < 0 ? false : _items[oldIndex].favorite;
+    final hasOpened = oldIndex >= 0 && _items[oldIndex].hasOpened;
+    final openedAt = oldIndex < 0 ? DateTime.now() : _items[oldIndex].openedAt;
     final lastPage = oldIndex < 0 ? 1 : _items[oldIndex].lastPage;
     final oldBookmark = oldIndex < 0 ? null : _items[oldIndex].bookmark;
     final bookmark = await _createBookmark(path) ?? oldBookmark;
@@ -307,12 +316,14 @@ class _LibraryPageState extends State<LibraryPage> {
     final item = SavedPdf(
       path: path,
       name: name,
-      openedAt: DateTime.now(),
+      openedAt: openedAt,
       favorite: favorite,
+      hasOpened: hasOpened,
       lastPage: lastPage,
       bookmark: bookmark,
     );
     _items.insert(0, item);
+    _items.sort((a, b) => b.openedAt.compareTo(a.openedAt));
     try {
       await _save();
     } on Object catch (error) {
@@ -337,10 +348,7 @@ class _LibraryPageState extends State<LibraryPage> {
       }
       return;
     }
-    _items.removeWhere((e) => e.path == item.path);
-    final refreshed = item.copyWith(openedAt: DateTime.now());
-    _items.insert(0, refreshed);
-    await _save();
+    final refreshed = item;
     if (!mounted) return;
     final lastPage = await Navigator.of(context).push<int>(
       MaterialPageRoute(
@@ -348,6 +356,7 @@ class _LibraryPageState extends State<LibraryPage> {
           path: refreshed.path,
           name: refreshed.name,
           initialPage: refreshed.lastPage,
+          onOpened: () => unawaited(_recordOpened(refreshed.path)),
         ),
       ),
     );
@@ -357,6 +366,21 @@ class _LibraryPageState extends State<LibraryPage> {
         _items[index] = _items[index].copyWith(lastPage: lastPage);
       }
       await _save();
+    }
+    if (mounted) setState(() {});
+  }
+
+  Future<void> _recordOpened(String path) async {
+    final index = _items.indexWhere((item) => item.path == path);
+    if (index < 0) return;
+    final item = _items
+        .removeAt(index)
+        .copyWith(openedAt: DateTime.now(), hasOpened: true);
+    _items.insert(0, item);
+    try {
+      await _save();
+    } on Object catch (error) {
+      _showMessage(trNow('최근 문서 목록을 저장하지 못했습니다: {0}', [error]));
     }
     if (mounted) setState(() {});
   }
@@ -394,7 +418,11 @@ class _LibraryPageState extends State<LibraryPage> {
                       style: theme.textTheme.headlineSmall,
                     ),
                     Text(
-                      tr(context, "{0}개의 문서 · 이 기기에 저장됨", [_items.length]),
+                      _recentOnly
+                          ? tr(context, '최근 5개 · 이 기기에 저장됨')
+                          : tr(context, "{0}개의 문서 · 이 기기에 저장됨", [
+                              _items.length,
+                            ]),
                       style: theme.textTheme.bodySmall,
                     ),
                   ],
@@ -405,15 +433,29 @@ class _LibraryPageState extends State<LibraryPage> {
                   runSpacing: 8,
                   children: [
                     ChoiceChip(
+                      label: Text(tr(context, '최근 열어본 파일')),
+                      selected: _recentOnly,
+                      onSelected: (_) => setState(() {
+                        _recentOnly = true;
+                        _favoritesOnly = false;
+                      }),
+                    ),
+                    ChoiceChip(
                       label: Text(tr(context, "전체 문서")),
-                      selected: !_favoritesOnly,
-                      onSelected: (_) => setState(() => _favoritesOnly = false),
+                      selected: !_favoritesOnly && !_recentOnly,
+                      onSelected: (_) => setState(() {
+                        _favoritesOnly = false;
+                        _recentOnly = false;
+                      }),
                     ),
                     ChoiceChip(
                       avatar: Icon(Icons.star_outline, size: 18),
                       label: Text(tr(context, "즐겨찾기")),
                       selected: _favoritesOnly,
-                      onSelected: (_) => setState(() => _favoritesOnly = true),
+                      onSelected: (_) => setState(() {
+                        _favoritesOnly = true;
+                        _recentOnly = false;
+                      }),
                     ),
                   ],
                 ),
@@ -531,7 +573,9 @@ class _LibraryPageState extends State<LibraryPage> {
 
   @override
   Widget build(BuildContext context) {
-    final shown = _favoritesOnly
+    final shown = _recentOnly
+        ? _items.where((item) => item.hasOpened).take(5).toList()
+        : _favoritesOnly
         ? _items.where((e) => e.favorite).toList()
         : _items;
     return Scaffold(

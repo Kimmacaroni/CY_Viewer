@@ -2,6 +2,8 @@
 from pathlib import Path
 import sys
 import tempfile
+import shutil
+import tkinter as tk
 from tkinter import messagebox
 
 sys.stdout.reconfigure(encoding="utf-8")
@@ -36,6 +38,37 @@ try:
         assert app.page_number == 1
         app.toggle_bookmark()
         assert 1 in app.bookmarks
+        for number in range(6):
+            another = Path(directory) / f"recent-{number}.pdf"
+            shutil.copyfile(path, another)
+            app.load_pdf(another)
+        assert len(app.recent_files) == 5
+        assert Path(app.recent_files[0]).name == "recent-5.pdf"
+        app.load_pdf(Path(app.recent_files[2]))
+        assert Path(app.recent_files[0]).name == "recent-3.pdf"
+        assert len(app.recent_files) == 5
+        previous = app.document_path
+        app.is_dirty = True
+        ask = messagebox.askyesno
+        messagebox.askyesno = lambda *args, **kwargs: False
+        try:
+            app.load_pdf(path)
+            assert app.document_path == previous
+        finally:
+            messagebox.askyesno = ask
+            app.is_dirty = False
+        app.geometry("780x560")
+        app.welcome.destroy()
+        app._make_welcome()
+        app.update()
+        def buttons(widget):
+            return ([widget] if isinstance(widget, tk.Button) else []) + [item for child in widget.winfo_children() for item in buttons(child)]
+        recent_buttons = buttons(app.welcome)
+        assert len(recent_buttons) == 5
+        for button in recent_buttons:
+            assert button.winfo_ismapped()
+            assert button.winfo_rooty() >= app.winfo_rooty()
+            assert button.winfo_rooty() + button.winfo_height() <= app.winfo_rooty() + app.winfo_height()
         app.document.close()
         app.document = None
 finally:
