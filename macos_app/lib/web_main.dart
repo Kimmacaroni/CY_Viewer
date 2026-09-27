@@ -10,6 +10,7 @@ import 'package:printing/printing.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 import 'web_pdf_picker.dart';
+import 'web_pdf_load_guard.dart';
 import 'cy_design.dart';
 
 void main() => runApp(const CyViewerWebApp());
@@ -430,6 +431,14 @@ class _WebReaderPageState extends State<_WebReaderPage> {
                 onTap: () => run(_saveCopy),
               ),
               const Divider(),
+              ListTile(
+                leading: const Icon(Icons.open_in_new),
+                title: const Text('브라우저로 PDF 열기'),
+                onTap: () {
+                  Navigator.pop(context);
+                  openWebPdfInBrowser(widget.bytes);
+                },
+              ),
               const ListTile(
                 leading: Icon(Icons.info_outline),
                 title: Text('웹 버전 안내'),
@@ -523,111 +532,140 @@ class _WebReaderPageState extends State<_WebReaderPage> {
         onPrint: _print,
         child: Stack(
           children: [
-            PdfViewer.data(
-              widget.bytes,
-              sourceName: '${widget.name}:${widget.bytes.length}',
-              key: ValueKey(_viewMode),
-              controller: _controller,
-              params: PdfViewerParams(
-                errorBannerBuilder: (context, error, _, _) => Center(
-                  child: Card(
-                    margin: const EdgeInsets.all(24),
-                    child: Padding(
-                      padding: const EdgeInsets.all(24),
-                      child: Column(
-                        mainAxisSize: MainAxisSize.min,
-                        children: [
-                          const Icon(
-                            Icons.error_outline,
-                            size: 48,
-                            color: Color(0xffdc2626),
-                          ),
-                          const SizedBox(height: 12),
-                          const Text('PDF를 표시할 수 없습니다.'),
-                          const SizedBox(height: 12),
-                          FilledButton(
-                            onPressed: () => Navigator.pop(context),
-                            child: const Text('다른 PDF 선택'),
-                          ),
-                        ],
+            WebPdfLoadGuard(
+              initialize: pdfrxFlutterInitialize,
+              onOpenInBrowser: () => openWebPdfInBrowser(widget.bytes),
+              onChooseAnother: () => Navigator.of(context).pop(),
+              viewerBuilder: (onReady) => PdfViewer.data(
+                widget.bytes,
+                sourceName: '${widget.name}:${widget.bytes.length}',
+                key: ValueKey(_viewMode),
+                controller: _controller,
+                params: PdfViewerParams(
+                  loadingBannerBuilder: (context, _, _) => const Center(
+                    child: Column(
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        CircularProgressIndicator(),
+                        SizedBox(height: 16),
+                        Text('PDF 페이지를 불러오고 있습니다.'),
+                      ],
+                    ),
+                  ),
+                  onDocumentLoadFinished: (documentRef, succeeded) {
+                    if (!succeeded) onReady();
+                  },
+                  errorBannerBuilder: (context, error, _, _) => Center(
+                    child: Card(
+                      margin: const EdgeInsets.all(24),
+                      child: Padding(
+                        padding: const EdgeInsets.all(24),
+                        child: Column(
+                          mainAxisSize: MainAxisSize.min,
+                          children: [
+                            const Icon(
+                              Icons.error_outline,
+                              size: 48,
+                              color: Color(0xffdc2626),
+                            ),
+                            const SizedBox(height: 12),
+                            const Text('PDF를 표시할 수 없습니다.'),
+                            const SizedBox(height: 12),
+                            FilledButton(
+                              onPressed: () =>
+                                  openWebPdfInBrowser(widget.bytes),
+                              child: const Text('브라우저로 PDF 열기'),
+                            ),
+                            const SizedBox(height: 12),
+                            FilledButton(
+                              onPressed: () => Navigator.pop(context),
+                              child: const Text('다른 PDF 선택'),
+                            ),
+                          ],
+                        ),
                       ),
                     ),
                   ),
-                ),
-                onViewerReady: (document, _) {
-                  _searcher?.dispose();
-                  final searcher = PdfTextSearcher(_controller);
-                  if (!mounted) {
-                    return;
-                  }
-                  setState(() {
-                    _pageCount = document.pages.length;
-                    _searcher = searcher;
-                    _bookmarks.removeWhere((page) => page > _pageCount);
-                  });
-                },
-                onPageChanged: (page) {
-                  if (page != null && mounted) {
-                    setState(() => _currentPage = page);
-                  }
-                },
-                pagePaintCallbacks: [
-                  if (_searcher != null) _searcher!.pageTextMatchPaintCallback,
-                ],
-                layoutPages: _viewMode == _ViewMode.scroll
-                    ? null
-                    : (pages, params) {
-                        if (_viewMode == _ViewMode.horizontal) {
-                          final height = pages.fold<double>(
+                  onViewerReady: (document, _) {
+                    onReady();
+                    _searcher?.dispose();
+                    final searcher = PdfTextSearcher(_controller);
+                    if (!mounted) {
+                      return;
+                    }
+                    setState(() {
+                      _pageCount = document.pages.length;
+                      _searcher = searcher;
+                      _bookmarks.removeWhere((page) => page > _pageCount);
+                    });
+                  },
+                  onPageChanged: (page) {
+                    if (page != null && mounted) {
+                      setState(() => _currentPage = page);
+                    }
+                  },
+                  pagePaintCallbacks: [
+                    if (_searcher != null)
+                      _searcher!.pageTextMatchPaintCallback,
+                  ],
+                  layoutPages: _viewMode == _ViewMode.scroll
+                      ? null
+                      : (pages, params) {
+                          if (_viewMode == _ViewMode.horizontal) {
+                            final height = pages.fold<double>(
+                              0,
+                              (value, page) => math.max(value, page.height),
+                            );
+                            var x = params.margin;
+                            final layouts = <Rect>[];
+                            for (final page in pages) {
+                              layouts.add(
+                                Rect.fromLTWH(
+                                  x,
+                                  params.margin,
+                                  page.width,
+                                  page.height,
+                                ),
+                              );
+                              x += page.width + params.margin;
+                            }
+                            return PdfPageLayout(
+                              pageLayouts: layouts,
+                              documentSize: Size(x, height + params.margin * 2),
+                            );
+                          }
+                          final width = pages.fold<double>(
                             0,
-                            (value, page) => math.max(value, page.height),
+                            (value, page) => math.max(value, page.width),
                           );
-                          var x = params.margin;
+                          var y = params.margin;
                           final layouts = <Rect>[];
-                          for (final page in pages) {
+                          for (var index = 0; index < pages.length; index++) {
+                            final page = pages[index];
+                            final left = index.isOdd;
                             layouts.add(
                               Rect.fromLTWH(
-                                x,
-                                params.margin,
+                                left
+                                    ? params.margin * 2 + width
+                                    : params.margin + width - page.width,
+                                y,
                                 page.width,
                                 page.height,
                               ),
                             );
-                            x += page.width + params.margin;
+                            if (left || index == pages.length - 1) {
+                              y += page.height + params.margin;
+                            }
                           }
                           return PdfPageLayout(
                             pageLayouts: layouts,
-                            documentSize: Size(x, height + params.margin * 2),
-                          );
-                        }
-                        final width = pages.fold<double>(
-                          0,
-                          (value, page) => math.max(value, page.width),
-                        );
-                        var y = params.margin;
-                        final layouts = <Rect>[];
-                        for (var index = 0; index < pages.length; index++) {
-                          final page = pages[index];
-                          final left = index.isOdd;
-                          layouts.add(
-                            Rect.fromLTWH(
-                              left
-                                  ? params.margin * 2 + width
-                                  : params.margin + width - page.width,
+                            documentSize: Size(
+                              width * 2 + params.margin * 3,
                               y,
-                              page.width,
-                              page.height,
                             ),
                           );
-                          if (left || index == pages.length - 1) {
-                            y += page.height + params.margin;
-                          }
-                        }
-                        return PdfPageLayout(
-                          pageLayouts: layouts,
-                          documentSize: Size(width * 2 + params.margin * 3, y),
-                        );
-                      },
+                        },
+                ),
               ),
             ),
             if (_pageCount > 0)
