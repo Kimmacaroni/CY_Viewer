@@ -16,7 +16,7 @@ import 'web_pdf_load_guard.dart';
 import 'cy_design.dart';
 import 'recent_web_store.dart';
 import 'cy_recent_files.dart';
-import 'web_print.dart';
+import 'web_inline_print.dart';
 import 'web_print_platform.dart';
 
 Future<void> main() async {
@@ -283,7 +283,6 @@ class _WebReaderPageState extends State<_WebReaderPage> {
   bool _searching = false;
   bool _busy = false;
   bool _printActive = false;
-  Future<Uint8List>? _printPreparation;
   _ViewMode _viewMode = _ViewMode.scroll;
   List<int> _bookmarks = [];
 
@@ -397,64 +396,14 @@ class _WebReaderPageState extends State<_WebReaderPage> {
     if (_busy || _printActive || !_controller.isReady || _pageCount < 1) return;
     _printActive = true;
     try {
-      final pages = await choosePrintPages(context, _pageCount, _currentPage);
-      if (pages == null || !mounted) return;
-      final bytes = await preparePrintPdf(context, () async {
-        // 전체 인쇄는 원본을 그대로 사용한다. 뷰어의 PDF 작업 큐를 막지 않는다.
-        if (pages.length == _pageCount) return widget.bytes;
-        // PDF 엔진 작업은 취소할 수 없으므로 진행 중인 조립을 중복 실행하지 않는다.
-        if (_printPreparation != null) {
-          throw StateError(tr(context, '이전 인쇄 준비가 진행 중입니다. 잠시 후 다시 시도해 주세요.'));
-        }
-        if (!mounted) throw StateError('Reader closed');
-        final task = createPrintPdf(_controller.document, pages);
-        _printPreparation = task;
-        try {
-          return await task;
-        } finally {
-          if (identical(_printPreparation, task)) _printPreparation = null;
-        }
-      });
-      if (bytes == null || !mounted) return;
-      if (useNativePdfPrint) {
-        await showDialog<void>(
-          context: context,
-          builder: (dialogContext) => AlertDialog(
-            title: Text(tr(context, '인쇄용 PDF 준비 완료')),
-            content: Text(
-              tr(
-                context,
-                '선택한 {0}페이지가 준비되었습니다. PDF를 연 다음 공유 메뉴에서 인쇄를 선택하세요. 인쇄 창의 페이지 번호는 선택한 PDF 안에서 다시 매겨집니다.',
-                [pages.length],
-              ),
-            ),
-            actions: [
-              TextButton(
-                onPressed: () => Navigator.pop(dialogContext),
-                child: Text(tr(context, '취소')),
-              ),
-              FilledButton(
-                onPressed: () {
-                  if (ModalRoute.of(dialogContext)?.isCurrent != true) return;
-                  if (openPrintPdf(bytes)) {
-                    Navigator.pop(dialogContext);
-                  } else {
-                    _message(
-                      tr(context, 'PDF 창이 차단되었습니다. 팝업을 허용한 뒤 다시 눌러 주세요.'),
-                    );
-                  }
-                },
-                child: Text(tr(context, 'PDF 열고 인쇄하기')),
-              ),
-            ],
-          ),
-        );
-      } else {
-        await Printing.layoutPdf(
-          name: widget.name,
-          onLayout: (_) async => bytes,
-        ).timeout(const Duration(seconds: 60));
-      }
+      await showDialog<void>(
+        context: context,
+        builder: (_) => InlinePrintDialog(
+          document: _controller.document,
+          current: _currentPage,
+          openOriginal: () => openPrintPdf(widget.bytes),
+        ),
+      );
     } on Object catch (error) {
       _message(trNow("인쇄 창을 열 수 없습니다: {0}", [error]));
     } finally {
