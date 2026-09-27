@@ -1,3 +1,5 @@
+import 'dart:async';
+import 'dart:typed_data';
 import 'dart:io';
 
 import 'package:cy_viewer/web_print.dart';
@@ -51,20 +53,21 @@ void main() {
     }
 
     await start();
-    await tester.tap(find.text('인쇄용 PDF 준비'));
+    final submit = tester
+        .widget<FilledButton>(find.widgetWithText(FilledButton, '인쇄용 PDF 준비'))
+        .onPressed!;
+    submit();
+    submit();
     await tester.pumpAndSettle();
+    expect(find.text('start'), findsOneWidget);
     expect(selected, List.generate(16, (i) => i + 1));
     await start();
-    await tester.tap(find.byType(DropdownButtonFormField<String>));
-    await tester.pumpAndSettle();
     await tester.tap(find.text('현재 페이지 (2)').last);
     await tester.pumpAndSettle();
     await tester.tap(find.text('인쇄용 PDF 준비'));
     await tester.pumpAndSettle();
     expect(selected, [2]);
     await start();
-    await tester.tap(find.byType(DropdownButtonFormField<String>));
-    await tester.pumpAndSettle();
     await tester.tap(find.text('페이지 직접 지정').last);
     await tester.pumpAndSettle();
     await tester.enterText(find.byType(TextField), '17');
@@ -75,6 +78,63 @@ void main() {
     await tester.tap(find.text('인쇄용 PDF 준비'));
     await tester.pumpAndSettle();
     expect(selected, [2, 3, 4, 5, 8]);
+    expect(tester.takeException(), isNull);
+  });
+  testWidgets('준비 취소·지연 완료·실패·시간 초과 뒤 다른 버튼 사용', (tester) async {
+    final pending = Completer<Uint8List>();
+    Future<Uint8List> Function() prepare = () => pending.future;
+    var clicks = 0;
+    await tester.pumpWidget(
+      MaterialApp(
+        home: Builder(
+          builder: (context) => Scaffold(
+            body: Column(
+              children: [
+                TextButton(
+                  onPressed: () => preparePrintPdf(
+                    context,
+                    prepare,
+                    timeout: const Duration(seconds: 2),
+                  ),
+                  child: const Text('prepare'),
+                ),
+                TextButton(
+                  onPressed: () {
+                    clicks++;
+                  },
+                  child: const Text('other'),
+                ),
+              ],
+            ),
+          ),
+        ),
+      ),
+    );
+    await tester.tap(find.text('prepare'));
+    await tester.pump();
+    await tester.pump(const Duration(milliseconds: 300));
+    await tester.tap(find.text('취소'));
+    await tester.pumpAndSettle();
+    pending.complete(Uint8List(1));
+    await tester.pumpAndSettle();
+    await tester.tap(find.text('other'));
+    expect(clicks, 1);
+    prepare = () => Future.error(StateError('failed'));
+    await tester.tap(find.text('prepare'));
+    await tester.pumpAndSettle();
+    expect(find.textContaining('failed'), findsOneWidget);
+    await tester.tap(find.text('취소'));
+    await tester.pumpAndSettle();
+    prepare = () => Completer<Uint8List>().future;
+    await tester.tap(find.text('prepare'));
+    await tester.pump();
+    await tester.pump(const Duration(seconds: 3));
+    await tester.pumpAndSettle();
+    expect(find.textContaining('TimeoutException'), findsOneWidget);
+    await tester.tap(find.text('취소'));
+    await tester.pumpAndSettle();
+    await tester.tap(find.text('other'));
+    expect(clicks, 2);
     expect(tester.takeException(), isNull);
   });
   test(

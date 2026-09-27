@@ -463,4 +463,5 @@ const cyEnglish = <String, String>{
   "선택한 {0}페이지가 준비되었습니다. PDF를 연 다음 공유 메뉴에서 인쇄를 선택하세요. 인쇄 창의 페이지 번호는 선택한 PDF 안에서 다시 매겨집니다.": "Your {0} selected pages are ready. Open the PDF, then choose Print from the Share menu. Page numbers in the print dialog refer to this selected PDF.",
   "PDF 창이 차단되었습니다. 팝업을 허용한 뒤 다시 눌러 주세요.":
       "The PDF window was blocked. Allow pop-ups and try again.",
+  "이전 인쇄 준비가 진행 중입니다. 잠시 후 다시 시도해 주세요.": "The previous print preparation is still running. Please try again shortly.",
 };

@@ -282,6 +282,8 @@ class _WebReaderPageState extends State<_WebReaderPage> {
   int _currentPage = 1;
   bool _searching = false;
   bool _busy = false;
+  bool _printActive = false;
+  Future<Uint8List>? _printPreparation;
   _ViewMode _viewMode = _ViewMode.scroll;
   List<int> _bookmarks = [];
 
@@ -392,14 +394,28 @@ class _WebReaderPageState extends State<_WebReaderPage> {
   }
 
   Future<void> _print() async {
-    if (_busy || !_controller.isReady || _pageCount < 1) return;
-    final pages = await choosePrintPages(context, _pageCount, _currentPage);
-    if (pages == null || !mounted) return;
-    setState(() => _busy = true);
+    if (_busy || _printActive || !_controller.isReady || _pageCount < 1) return;
+    _printActive = true;
     try {
-      final bytes = await createPrintPdf(_controller.document, pages);
-      if (!mounted) return;
-      setState(() => _busy = false);
+      final pages = await choosePrintPages(context, _pageCount, _currentPage);
+      if (pages == null || !mounted) return;
+      final bytes = await preparePrintPdf(context, () async {
+        // 전체 인쇄는 원본을 그대로 사용한다. 뷰어의 PDF 작업 큐를 막지 않는다.
+        if (pages.length == _pageCount) return widget.bytes;
+        // PDF 엔진 작업은 취소할 수 없으므로 진행 중인 조립을 중복 실행하지 않는다.
+        if (_printPreparation != null) {
+          throw StateError(tr(context, '이전 인쇄 준비가 진행 중입니다. 잠시 후 다시 시도해 주세요.'));
+        }
+        if (!mounted) throw StateError('Reader closed');
+        final task = createPrintPdf(_controller.document, pages);
+        _printPreparation = task;
+        try {
+          return await task;
+        } finally {
+          if (identical(_printPreparation, task)) _printPreparation = null;
+        }
+      });
+      if (bytes == null || !mounted) return;
       if (useNativePdfPrint) {
         await showDialog<void>(
           context: context,
@@ -419,6 +435,7 @@ class _WebReaderPageState extends State<_WebReaderPage> {
               ),
               FilledButton(
                 onPressed: () {
+                  if (ModalRoute.of(dialogContext)?.isCurrent != true) return;
                   if (openPrintPdf(bytes)) {
                     Navigator.pop(dialogContext);
                   } else {
@@ -436,12 +453,12 @@ class _WebReaderPageState extends State<_WebReaderPage> {
         await Printing.layoutPdf(
           name: widget.name,
           onLayout: (_) async => bytes,
-        );
+        ).timeout(const Duration(seconds: 60));
       }
     } on Object catch (error) {
       _message(trNow("인쇄 창을 열 수 없습니다: {0}", [error]));
     } finally {
-      if (mounted) setState(() => _busy = false);
+      _printActive = false;
     }
   }
 

@@ -1,3 +1,4 @@
+import 'dart:async';
 import 'dart:typed_data';
 
 import 'package:flutter/material.dart';
@@ -67,6 +68,7 @@ class _PrintRangeDialogState extends State<PrintRangeDialog> {
   String _mode = 'all';
   final _range = TextEditingController();
   String? _error;
+  bool _submitted = false;
   @override
   void dispose() {
     _range.dispose();
@@ -74,12 +76,14 @@ class _PrintRangeDialogState extends State<PrintRangeDialog> {
   }
 
   void _submit() {
+    if (_submitted) return;
     try {
       final pages = switch (_mode) {
         'all' => List.generate(widget.count, (i) => i + 1),
         'current' => [widget.current.clamp(1, widget.count)],
         _ => parsePrintPages(_range.text, widget.count),
       };
+      _submitted = true;
       Navigator.pop(context, pages);
     } on FormatException {
       setState(
@@ -102,28 +106,29 @@ class _PrintRangeDialogState extends State<PrintRangeDialog> {
           children: [
             Text(tr(context, '전체 {0}페이지', [widget.count])),
             const SizedBox(height: 16),
-            DropdownButtonFormField<String>(
-              initialValue: _mode,
-              isExpanded: true,
-              decoration: InputDecoration(labelText: tr(context, '인쇄할 페이지')),
-              items: [
-                DropdownMenuItem(
-                  value: 'all',
-                  child: Text(tr(context, '전체 페이지')),
-                ),
-                DropdownMenuItem(
-                  value: 'current',
-                  child: Text(tr(context, '현재 페이지 ({0})', [widget.current])),
-                ),
-                DropdownMenuItem(
-                  value: 'range',
-                  child: Text(tr(context, '페이지 직접 지정')),
-                ),
-              ],
+            RadioGroup<String>(
+              groupValue: _mode,
               onChanged: (value) => setState(() {
                 _mode = value!;
                 _error = null;
               }),
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  RadioListTile<String>(
+                    value: 'all',
+                    title: Text(tr(context, '전체 페이지')),
+                  ),
+                  RadioListTile<String>(
+                    value: 'current',
+                    title: Text(tr(context, '현재 페이지 ({0})', [widget.current])),
+                  ),
+                  RadioListTile<String>(
+                    value: 'range',
+                    title: Text(tr(context, '페이지 직접 지정')),
+                  ),
+                ],
+              ),
             ),
             if (_mode == 'range') ...[
               const SizedBox(height: 16),
@@ -145,10 +150,75 @@ class _PrintRangeDialogState extends State<PrintRangeDialog> {
     ),
     actions: [
       TextButton(
-        onPressed: () => Navigator.pop(context),
+        onPressed: () {
+          if (_submitted) return;
+          _submitted = true;
+          Navigator.pop(context);
+        },
         child: Text(tr(context, '취소')),
       ),
       FilledButton(onPressed: _submit, child: Text(tr(context, '인쇄용 PDF 준비'))),
+    ],
+  );
+}
+
+/// 준비 실패·취소 후 늦게 도착한 결과가 다른 화면을 닫지 않도록
+/// 준비 대화상자 자체가 작업의 수명을 소유한다.
+Future<Uint8List?> preparePrintPdf(
+  BuildContext context,
+  Future<Uint8List> Function() prepare, {
+  Duration timeout = const Duration(seconds: 45),
+}) => showDialog<Uint8List>(
+  context: context,
+  builder: (_) => _PrintPreparation(prepare: prepare, timeout: timeout),
+);
+
+class _PrintPreparation extends StatefulWidget {
+  const _PrintPreparation({required this.prepare, required this.timeout});
+  final Future<Uint8List> Function() prepare;
+  final Duration timeout;
+  @override
+  State<_PrintPreparation> createState() => _PrintPreparationState();
+}
+
+class _PrintPreparationState extends State<_PrintPreparation> {
+  Object? _error;
+  bool _closed = false;
+  @override
+  void initState() {
+    super.initState();
+    _prepare();
+  }
+
+  Future<void> _prepare() async {
+    try {
+      final bytes = await Future.sync(widget.prepare).timeout(widget.timeout);
+      if (mounted && !_closed && ModalRoute.of(context)?.isCurrent == true) {
+        _closed = true;
+        Navigator.pop(context, bytes);
+      }
+    } on Object catch (error) {
+      if (mounted && !_closed) setState(() => _error = error);
+    }
+  }
+
+  @override
+  Widget build(BuildContext context) => AlertDialog(
+    title: Text(tr(context, '인쇄용 PDF 준비')),
+    content: _error == null
+        ? const SizedBox(
+            height: 64,
+            child: Center(child: CircularProgressIndicator()),
+          )
+        : Text(tr(context, '인쇄 창을 열 수 없습니다: {0}', [_error!])),
+    actions: [
+      TextButton(
+        onPressed: () {
+          _closed = true;
+          Navigator.pop(context);
+        },
+        child: Text(tr(context, '취소')),
+      ),
     ],
   );
 }
