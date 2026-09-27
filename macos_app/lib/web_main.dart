@@ -43,29 +43,6 @@ class _WebLibraryPageState extends State<_WebLibraryPage> {
   bool _opening = false;
   String? _error;
 
-  Future<void> _pickPdf() async {
-    if (_opening) return;
-    setState(() {
-      _opening = true;
-      _error = null;
-    });
-    try {
-      final file = await pickWebPdf();
-      if (file == null) {
-        return;
-      }
-      await _openPickedPdf(file);
-    } on Object catch (error) {
-      if (mounted) {
-        setState(() => _error = 'PDF를 열 수 없습니다. 다시 선택해 주세요. ($error)');
-      }
-    } finally {
-      if (mounted) {
-        setState(() => _opening = false);
-      }
-    }
-  }
-
   Future<void> _openPickedPdf(PickedWebPdf file) async {
     if (file.bytes.isEmpty) {
       _handlePickError(const FormatException('선택한 PDF를 읽지 못했습니다.'));
@@ -135,30 +112,10 @@ class _WebLibraryPageState extends State<_WebLibraryPage> {
                       52,
                       MediaQuery.textScalerOf(context).scale(16) + 28,
                     ),
-                    child: Stack(
-                      fit: StackFit.expand,
-                      children: [
-                        FilledButton.icon(
-                          onPressed: _opening ? null : _pickPdf,
-                          icon: _opening
-                              ? const SizedBox.square(
-                                  dimension: 18,
-                                  child: CircularProgressIndicator(
-                                    strokeWidth: 2,
-                                  ),
-                                )
-                              : const Icon(
-                                  Icons.folder_open_outlined,
-                                  size: 20,
-                                ),
-                          label: Text(_opening ? 'PDF 여는 중…' : 'PDF 열기'),
-                        ),
-                        if (!_opening)
-                          WebPdfPickRegion(
-                            onPicked: _openPickedPdf,
-                            onError: _handlePickError,
-                          ),
-                      ],
+                    child: WebPdfPickRegion(
+                      enabled: !_opening,
+                      onPicked: _openPickedPdf,
+                      onError: _handlePickError,
                     ),
                   ),
                 ),

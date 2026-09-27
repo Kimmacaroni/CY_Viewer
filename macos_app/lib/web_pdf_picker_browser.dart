@@ -1,7 +1,6 @@
 import 'dart:async';
 import 'dart:js_interop';
 import 'dart:typed_data';
-import 'dart:ui_web' as ui_web;
 
 import 'package:flutter/material.dart';
 import 'package:web/web.dart';
@@ -13,135 +12,101 @@ class PickedWebPdf {
   final Uint8List bytes;
 }
 
-/// iPhone Safari에서 파일 선택이 끝나기 전에 input이 제거되지 않도록 직접 관리한다.
-Future<PickedWebPdf?> pickWebPdf() async {
-  final completer = Completer<PickedWebPdf?>();
-  final input = HTMLInputElement()
-    ..type = 'file'
-    ..accept = 'application/pdf,.pdf'
-    ..multiple = false
-    ..setAttribute('aria-hidden', 'true');
-  input.style
-    ..position = 'fixed'
-    ..left = '-10000px'
-    ..width = '1px'
-    ..height = '1px'
-    ..opacity = '0';
-
-  late final JSFunction changeListener;
-  late final JSFunction cancelListener;
-
-  void cleanup() {
-    input.removeEventListener('change', changeListener);
-    input.removeEventListener('cancel', cancelListener);
-    input.remove();
-  }
-
-  Future<void> processChange(Event _) async {
-    try {
-      final file = input.files?.item(0);
-      if (file == null) {
-        if (!completer.isCompleted) completer.complete(null);
-        return;
-      }
-      final bytes = await _readFile(file);
-      if (!completer.isCompleted) {
-        completer.complete(PickedWebPdf(name: file.name, bytes: bytes));
-      }
-    } on Object catch (error, stackTrace) {
-      if (!completer.isCompleted) {
-        completer.completeError(error, stackTrace);
-      }
-    } finally {
-      cleanup();
-    }
-  }
-
-  void handleChange(Event event) {
-    unawaited(processChange(event));
-  }
-
-  void handleCancel(Event _) {
-    if (!completer.isCompleted) completer.complete(null);
-    cleanup();
-  }
-
-  changeListener = handleChange.toJS;
-  cancelListener = handleCancel.toJS;
-  input.addEventListener('change', changeListener);
-  input.addEventListener('cancel', cancelListener);
-  document.body!.append(input);
-
-  // 반드시 사용자의 탭 이벤트 안에서 동기적으로 호출해야 Safari가 허용한다.
-  input.click();
-  return completer.future;
-}
-
-/// 투명한 실제 HTML 파일 입력을 Flutter 버튼 위에 올려 Safari의 직접 탭을 받는다.
+/// 표시와 파일 선택을 하나의 HTML 컨트롤로 처리한다.
+/// Flutter 버튼과 투명 입력을 겹치거나 합성 click으로 선택기를 열지 않는다.
 class WebPdfPickRegion extends StatefulWidget {
   const WebPdfPickRegion({
     super.key,
     required this.onPicked,
     required this.onError,
+    this.enabled = true,
   });
 
   final ValueChanged<PickedWebPdf> onPicked;
   final ValueChanged<Object> onError;
+  final bool enabled;
 
   @override
   State<WebPdfPickRegion> createState() => _WebPdfPickRegionState();
 }
 
 class _WebPdfPickRegionState extends State<WebPdfPickRegion> {
-  static int _nextId = 0;
-  late final String _viewType;
+  late final HTMLLabelElement _label;
   late final HTMLInputElement _input;
+  late final HTMLSpanElement _caption;
   late final JSFunction _changeListener;
   late final JSFunction _focusListener;
   late final JSFunction _blurListener;
-  bool _focused = false;
+  bool _reading = false;
 
   @override
   void initState() {
     super.initState();
-    _viewType = 'cy-pdf-input-${_nextId++}';
+    _label = HTMLLabelElement();
+    _label.style
+      ..display = 'flex'
+      ..alignItems = 'center'
+      ..justifyContent = 'center'
+      ..position = 'relative'
+      ..width = '100%'
+      ..height = '100%'
+      ..boxSizing = 'border-box'
+      ..borderRadius = '10px'
+      ..overflow = 'hidden'
+      ..fontFamily = '-apple-system, BlinkMacSystemFont, sans-serif'
+      ..fontWeight = '600';
+    _caption = HTMLSpanElement()..textContent = 'PDF 열기';
+    _caption.style.pointerEvents = 'none';
     _input = HTMLInputElement()
       ..type = 'file'
       ..accept = 'application/pdf,.pdf'
       ..multiple = false
-      ..setAttribute('aria-label', 'PDF 선택');
+      ..setAttribute('aria-label', 'PDF 열기');
+    // 실제 입력이 전체 버튼의 터치를 직접 받는다. 레이아웃에서 숨기지 않는다.
     _input.style
+      ..position = 'absolute'
+      ..inset = '0'
       ..width = '100%'
       ..height = '100%'
-      ..opacity = '0'
+      ..margin = '0'
+      ..padding = '0'
+      ..opacity = '0.01'
+      ..fontSize = '16px'
       ..cursor = 'pointer';
-    _changeListener = _handleChange.toJS;
-    _input.addEventListener('change', _changeListener);
+    _label.append(_caption);
+    _label.append(_input);
+    _changeListener = ((Event _) => unawaited(_processSelection())).toJS;
     _focusListener = ((Event _) {
-      if (mounted) setState(() => _focused = true);
+      _label.style.outline = '2px solid currentColor';
+      _label.style.outlineOffset = '-4px';
     }).toJS;
-    _blurListener = ((Event _) {
-      if (mounted) setState(() => _focused = false);
-    }).toJS;
+    _blurListener = ((Event _) => _label.style.outline = 'none').toJS;
+    _input.addEventListener('change', _changeListener);
     _input.addEventListener('focus', _focusListener);
     _input.addEventListener('blur', _blurListener);
-    ui_web.platformViewRegistry.registerViewFactory(_viewType, (_) => _input);
   }
 
-  void _handleChange(Event _) {
-    unawaited(_processSelection());
+  void _updateAvailability() {
+    _input.disabled = !widget.enabled || _reading;
+    _caption.textContent = _reading ? 'PDF 읽는 중…' : 'PDF 열기';
+    _label.setAttribute('aria-busy', '$_reading');
   }
 
   Future<void> _processSelection() async {
+    if (_reading || !widget.enabled) return;
+    final file = _input.files?.item(0);
+    if (file == null) return;
+    _reading = true;
+    _updateAvailability();
     try {
-      final file = _input.files?.item(0);
-      if (file == null) return;
-      final bytes = await _readFile(file);
+      final bytes = await _readFile(file).timeout(const Duration(seconds: 60));
       if (mounted) widget.onPicked(PickedWebPdf(name: file.name, bytes: bytes));
     } on Object catch (error) {
       if (mounted) widget.onError(error);
     } finally {
+      _reading = false;
       _input.value = '';
+      if (mounted) _updateAvailability();
     }
   }
 
@@ -154,27 +119,27 @@ class _WebPdfPickRegionState extends State<WebPdfPickRegion> {
   }
 
   @override
-  Widget build(BuildContext context) => Stack(
-    fit: StackFit.expand,
-    children: [
-      HtmlElementView(viewType: _viewType),
-      if (_focused)
-        IgnorePointer(
-          child: Padding(
-            padding: const EdgeInsets.all(3),
-            child: DecoratedBox(
-              decoration: BoxDecoration(
-                border: Border.all(
-                  color: Theme.of(context).colorScheme.onPrimary,
-                  width: 2,
-                ),
-                borderRadius: BorderRadius.circular(8),
-              ),
-            ),
-          ),
-        ),
-    ],
-  );
+  Widget build(BuildContext context) {
+    final colors = Theme.of(context).colorScheme;
+    String cssColor(Color color) =>
+        '#${color.toARGB32().toRadixString(16).substring(2)}';
+    _label.style
+      ..backgroundColor = cssColor(colors.primary)
+      ..color = cssColor(colors.onPrimary)
+      ..fontSize = '${MediaQuery.textScalerOf(context).scale(16)}px';
+    _updateAvailability();
+    return HtmlElementView.fromTagName(
+      tagName: 'div',
+      onElementCreated: (element) {
+        final host = element as HTMLDivElement;
+        host.style
+          ..width = '100%'
+          ..height = '100%'
+          ..pointerEvents = 'auto';
+        host.append(_label);
+      },
+    );
+  }
 }
 
 Future<Uint8List> _readFile(File file) {
