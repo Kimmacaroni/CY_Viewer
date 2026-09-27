@@ -12,3 +12,4 @@ release/
 
 __pycache__/
 *.pyc
+tests/node_modules/

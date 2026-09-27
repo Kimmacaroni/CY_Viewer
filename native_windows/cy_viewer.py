@@ -3,8 +3,10 @@
 from __future__ import annotations
 
 from cy_localization import tr, MODE, save_mode
+from recent_files import load_recent, remember
 
 import tkinter as tk
+import tkinter.font as tkfont
 import csv
 import ctypes
 import io
@@ -167,7 +169,11 @@ class CyViewer(TkinterDnD.Tk):
         self.is_dirty = False
         self.save_state = tr('새 문서 없음')
 
+        self.recent_files = load_recent()
         language_menu = tk.Menu(self, tearoff=0)
+        self.recent_menu = tk.Menu(language_menu, tearoff=0)
+        language_menu.add_cascade(label=tr('최근 열어본 파일'), menu=self.recent_menu)
+        self._refresh_recent_menu()
         choices = tk.Menu(language_menu, tearoff=0)
         self.language_mode = tk.StringVar(value=MODE)
         for value, label in [('system', '기기 언어 / System'), ('ko', '한국어'), ('en', 'English')]:
@@ -179,6 +185,13 @@ class CyViewer(TkinterDnD.Tk):
         self.after(300, self._apply_windows_title_icon)
         self.drop_target_register(DND_FILES)
         self.dnd_bind("<<Drop>>", self.drop_pdf)
+
+    def _refresh_recent_menu(self):
+        self.recent_menu.delete(0, 'end')
+        if not self.recent_files:
+            self.recent_menu.add_command(label=tr('최근 열어본 파일이 없습니다.'), state='disabled')
+        for path in self.recent_files:
+            self.recent_menu.add_command(label=Path(path).name, command=lambda value=path: self.load_pdf(Path(value)))
 
     def _save_language(self):
         try:
@@ -418,15 +431,33 @@ class CyViewer(TkinterDnD.Tk):
             parent.bind("<Configure>", lambda event, item=widget: item.configure(wraplength=max(120, event.width - 16)), add="+")
             return widget
         label(intro, tr('문서 작업 공간'), bold=True, color=COLORS["blue"])
-        label(intro, tr('문서를 열고,\n바로 읽으세요.'), 24, True)
-        label(intro, tr('PDF를 선택하거나 이 창에 끌어놓으세요.'), color=COLORS["muted"])
-        for title, detail in [
-            (tr('찾고 읽기'), tr('문서 검색 · 확대 · 보기 방식 변경')),
-            (tr('중요한 페이지 남기기'), tr('책갈피로 필요한 곳을 빠르게 찾기')),
-            (tr('표시하고 저장하기'), tr('텍스트 표시 · OCR · PDF와 이미지 저장')),
-        ]:
-            label(intro, title, 11, True)
-            label(intro, detail, 10, color=COLORS["muted"])
+        if not self.recent_files:
+            label(intro, tr('문서를 열고,\n바로 읽으세요.'), 24, True)
+            label(intro, tr('PDF를 선택하거나 이 창에 끌어놓으세요.'), color=COLORS["muted"])
+        if self.recent_files:
+            label(intro, tr('최근 열어본 파일'), 12, True)
+            for path in self.recent_files:
+                button = tk.Button(intro, text=Path(path).name, anchor='w', relief='flat',
+                    bg=COLORS['surface'], fg=COLORS['ink'], padx=12, pady=10,
+                    font=('Malgun Gothic', 10), cursor='hand2', takefocus=True,
+                    command=lambda value=path: self.load_pdf(Path(value)))
+                button.pack(fill='x', pady=(0, 5))
+                def fit_name(event, item=button, name=Path(path).name):
+                    font = tkfont.Font(font=item.cget('font'))
+                    available = max(40, event.width - 30)
+                    text = name
+                    while text and font.measure(text + ('…' if text != name else '')) > available:
+                        text = text[:-1]
+                    item.configure(text=text + ('…' if text != name else ''))
+                intro.bind('<Configure>', fit_name, add='+')
+        else:
+            for title, detail in [
+                (tr('찾고 읽기'), tr('문서 검색 · 확대 · 보기 방식 변경')),
+                (tr('중요한 페이지 남기기'), tr('책갈피로 필요한 곳을 빠르게 찾기')),
+                (tr('표시하고 저장하기'), tr('텍스트 표시 · OCR · PDF와 이미지 저장')),
+            ]:
+                label(intro, title, 11, True)
+                label(intro, detail, 10, color=COLORS["muted"])
         panel = tk.Frame(layout, bg=COLORS["surface"], padx=28, pady=28,
             highlightbackground=COLORS["line"], highlightthickness=1)
         panel.grid(row=0, column=1, sticky="ew", padx=(28, 0))
@@ -499,6 +530,8 @@ class CyViewer(TkinterDnD.Tk):
         return "break"
 
     def load_pdf(self, selected: Path) -> None:
+        if self.is_dirty and not messagebox.askyesno(tr('CY뷰어'), tr('저장하지 않은 변경을 버리고 다른 PDF를 열까요?'), parent=self):
+            return
         try:
             opened_document = pymupdf.open(str(selected))
             if self.document:
@@ -524,6 +557,11 @@ class CyViewer(TkinterDnD.Tk):
             self.workspace.pack(fill="both", expand=True)
             self.save_badge.grid()
             self.draw_page()
+            try:
+                self.recent_files = remember(selected)
+                self._refresh_recent_menu()
+            except OSError:
+                self.status.config(text=tr('PDF는 열렸지만 최근 목록을 저장하지 못했습니다.'))
         except Exception as error:
             messagebox.showerror(tr('CY뷰어'), tr('PDF를 열 수 없습니다.\n\n{0}', f'{error}'))
 

@@ -1,0 +1,6 @@
+{
+  "name": "cyviewer-web-tests",
+  "private": true,
+  "scripts": {"test": "node --test downloads.test.cjs recent-pdfs.test.cjs"},
+  "devDependencies": {"fake-indexeddb": "6.2.5"}
+}

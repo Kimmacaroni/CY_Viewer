@@ -14,6 +14,8 @@ import 'package:shared_preferences/shared_preferences.dart';
 import 'web_pdf_picker.dart';
 import 'web_pdf_load_guard.dart';
 import 'cy_design.dart';
+import 'recent_web_store.dart';
+import 'cy_recent_files.dart';
 
 Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -53,6 +55,72 @@ class _WebLibraryPage extends StatefulWidget {
 class _WebLibraryPageState extends State<_WebLibraryPage> {
   bool _opening = false;
   String? _error;
+  List<Map<String, dynamic>> _recent = [];
+  Future<void>? _savingRecent;
+
+  @override
+  void initState() {
+    super.initState();
+    unawaited(_loadRecent());
+  }
+
+  Future<void> _loadRecent() async {
+    try {
+      final rows = await recentWebList();
+      if (mounted) setState(() => _recent = rows);
+    } on Object {
+      if (mounted) {
+        setState(
+          () => _error = trNow('최근 파일 목록을 불러오지 못했습니다. PDF 열기는 계속 사용할 수 있습니다.'),
+        );
+      }
+    }
+  }
+
+  Future<void> _remember(PickedWebPdf file) async {
+    try {
+      await recentWebSave(file.name, file.bytes);
+      await _loadRecent();
+    } on Object {
+      if (mounted) {
+        setState(
+          () => _error = trNow('최근 파일을 저장하지 못했습니다. 브라우저 저장 공간을 확인해 주세요.'),
+        );
+        ScaffoldMessenger.of(context)
+            .showSnackBar(SnackBar(content: Text(_error!)));
+      }
+    }
+  }
+
+  Future<void> _openRecent(Map<String, dynamic> row) async {
+    if (_opening) return;
+    setState(() {
+      _opening = true;
+      _error = null;
+    });
+    try {
+      final bytes = await recentWebRead(row['id'] as String);
+      if (bytes == null) {
+        throw StateError(trNow('저장된 사본을 찾을 수 없습니다. PDF를 다시 선택해 주세요.'));
+      }
+      if (mounted) {
+        await _openPickedPdf(
+          PickedWebPdf(name: row['name'] as String, bytes: bytes),
+        );
+      }
+    } on Object catch (error) {
+      _handlePickError(error);
+    }
+  }
+
+  Future<void> _removeRecent(String id) async {
+    try {
+      await recentWebRemove(id);
+      await _loadRecent();
+    } on Object catch (error) {
+      _handlePickError(error);
+    }
+  }
 
   Future<void> _openPickedPdf(PickedWebPdf file) async {
     if (file.bytes.isEmpty) {
@@ -66,9 +134,16 @@ class _WebLibraryPageState extends State<_WebLibraryPage> {
     });
     await Navigator.of(context).push<void>(
       MaterialPageRoute(
-        builder: (_) => _WebReaderPage(name: file.name, bytes: file.bytes),
+        builder: (_) => _WebReaderPage(
+          name: file.name,
+          bytes: file.bytes,
+          onOpened: () {
+            _savingRecent = _remember(file);
+          },
+        ),
       ),
     );
+    await _savingRecent;
     if (mounted) setState(() => _opening = false);
   }
 
@@ -117,9 +192,8 @@ class _WebLibraryPageState extends State<_WebLibraryPage> {
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.stretch,
               children: [
-                CyDocumentWelcome(
-                  web: true,
-                  action: SizedBox(
+                if (_recent.isNotEmpty) ...[
+                  SizedBox(
                     height: math.max(
                       52,
                       MediaQuery.textScalerOf(context).scale(16) + 28,
@@ -130,7 +204,28 @@ class _WebLibraryPageState extends State<_WebLibraryPage> {
                       onError: _handlePickError,
                     ),
                   ),
-                ),
+                  const SizedBox(height: 20),
+                  CyRecentFiles(
+                    files: _recent,
+                    enabled: !_opening,
+                    onOpen: _openRecent,
+                    onRemove: _removeRecent,
+                  ),
+                ] else
+                  CyDocumentWelcome(
+                    web: true,
+                    action: SizedBox(
+                      height: math.max(
+                        52,
+                        MediaQuery.textScalerOf(context).scale(16) + 28,
+                      ),
+                      child: WebPdfPickRegion(
+                        enabled: !_opening,
+                        onPicked: _openPickedPdf,
+                        onError: _handlePickError,
+                      ),
+                    ),
+                  ),
                 if (_error != null) ...[
                   SizedBox(height: 24),
                   Semantics(
@@ -162,10 +257,15 @@ class _WebLibraryPageState extends State<_WebLibraryPage> {
 enum _ViewMode { scroll, horizontal, facing }
 
 class _WebReaderPage extends StatefulWidget {
-  const _WebReaderPage({required this.name, required this.bytes});
+  const _WebReaderPage({
+    required this.name,
+    required this.bytes,
+    required this.onOpened,
+  });
 
   final String name;
   final Uint8List bytes;
+  final VoidCallback onOpened;
 
   @override
   State<_WebReaderPage> createState() => _WebReaderPageState();
@@ -175,6 +275,7 @@ class _WebReaderPageState extends State<_WebReaderPage> {
   final _controller = PdfViewerController();
   final _searchInput = TextEditingController();
   PdfTextSearcher? _searcher;
+  bool _remembered = false;
   int _pageCount = 0;
   int _currentPage = 1;
   bool _searching = false;
@@ -566,6 +667,10 @@ class _WebReaderPageState extends State<_WebReaderPage> {
                     ),
                   ),
                   onViewerReady: (document, _) {
+                    if (!_remembered) {
+                      _remembered = true;
+                      widget.onOpened();
+                    }
                     onReady();
                     _searcher?.dispose();
                     final searcher = PdfTextSearcher(_controller);

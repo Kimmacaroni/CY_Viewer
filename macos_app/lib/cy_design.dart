@@ -278,7 +278,7 @@ class CyDocumentWelcome extends StatelessWidget {
                         web
                             ? tr(
                                 context,
-                                "문서는 서버로 전송되지 않습니다.\n웹앱을 닫으면 PDF 원본은 남지 않습니다.",
+                                "문서는 서버로 전송되지 않습니다.\n최근 PDF 5개의 사본을 이 브라우저에 저장합니다.",
                               )
                             : tr(context, "문서와 최근 열람 목록은\n이 기기에서만 관리합니다."),
                         style: theme.textTheme.bodySmall,
