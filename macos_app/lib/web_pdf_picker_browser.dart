@@ -201,3 +201,15 @@ Future<Uint8List> _readFile(File file) {
   reader.readAsArrayBuffer(file);
   return completer.future;
 }
+
+/// 탭 이벤트 안에서 바로 열어 Safari 팝업 차단을 피한다. 파일은 업로드하지 않는다.
+void openWebPdfInBrowser(Uint8List bytes) {
+  final blob = Blob(
+    [bytes.toJS].toJS,
+    BlobPropertyBag(type: 'application/pdf'),
+  );
+  final url = URL.createObjectURL(blob);
+  window.open(url, '_blank');
+  // 새 탭이 데이터를 읽기 전에 해제하지 않고, 임시 URL의 수명은 제한한다.
+  Timer(const Duration(minutes: 10), () => URL.revokeObjectURL(url));
+}

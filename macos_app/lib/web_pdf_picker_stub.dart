@@ -24,3 +24,5 @@ class WebPdfPickRegion extends StatelessWidget {
   @override
   Widget build(BuildContext context) => const SizedBox.expand();
 }
+
+void openWebPdfInBrowser(Uint8List bytes) {}
