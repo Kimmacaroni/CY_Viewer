@@ -3,6 +3,8 @@ import 'dart:typed_data';
 import 'dart:io';
 
 import 'package:cy_viewer/web_print.dart';
+import 'package:cy_viewer/web_inline_print.dart';
+import 'package:cy_viewer/web_print_platform.dart';
 import 'package:cy_viewer/cy_localization.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
@@ -148,6 +150,33 @@ void main() {
         sourceName: 'print-source',
       );
       try {
+        final surface = PrintSurface();
+        var active = true;
+        await renderPrintPages(
+          source,
+          [1, 2, 3, 4],
+          surface,
+          () => active,
+          (_) {},
+        );
+        expect(surface.pages.length, 4);
+        for (final png in surface.pages) {
+          expect(png.take(8), [137, 80, 78, 71, 13, 10, 26, 10]);
+          expect(png.length, greaterThan(1000));
+        }
+        surface.dispose();
+        final cancelledSurface = PrintSurface();
+        await renderPrintPages(
+          source,
+          [1, 2, 3, 4],
+          cancelledSurface,
+          () => active,
+          (_) {
+            active = false;
+          },
+        );
+        expect(cancelledSurface.pages.length, 1);
+        cancelledSurface.dispose();
         final bytes = await createPrintPdf(source, [2, 4]);
         final subset = await PdfDocument.openData(
           bytes,
