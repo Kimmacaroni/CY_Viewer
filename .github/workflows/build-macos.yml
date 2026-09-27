@@ -65,7 +65,14 @@ jobs:
           echo "version=$version" >> "$GITHUB_OUTPUT"
 
       - name: Build macOS app
-        run: flutter build macos --release
+        env:
+          CY_VIEWER_DESKTOP_CLIENT_SECRET: ${{ secrets.CY_VIEWER_DESKTOP_CLIENT_SECRET }}
+        run: |
+          if [[ "$GITHUB_REF" == refs/tags/* && -z "$CY_VIEWER_DESKTOP_CLIENT_SECRET" ]]; then
+            echo "데스크톱 OAuth 빌드 설정이 없습니다."
+            exit 1
+          fi
+          flutter build macos --release --dart-define="CY_VIEWER_DESKTOP_CLIENT_SECRET=$CY_VIEWER_DESKTOP_CLIENT_SECRET"
 
       - name: Create DMG
         env:
