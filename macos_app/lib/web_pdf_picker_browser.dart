@@ -31,65 +31,28 @@ class WebPdfPickRegion extends StatefulWidget {
 }
 
 class _WebPdfPickRegionState extends State<WebPdfPickRegion> {
-  late final HTMLLabelElement _label;
   late final HTMLInputElement _input;
-  late final HTMLSpanElement _caption;
   late final JSFunction _changeListener;
-  late final JSFunction _focusListener;
-  late final JSFunction _blurListener;
   bool _reading = false;
 
   @override
   void initState() {
     super.initState();
-    _label = HTMLLabelElement();
-    _label.style
-      ..display = 'flex'
-      ..alignItems = 'center'
-      ..justifyContent = 'center'
-      ..position = 'relative'
-      ..width = '100%'
-      ..height = '100%'
-      ..boxSizing = 'border-box'
-      ..borderRadius = '10px'
-      ..overflow = 'hidden'
-      ..fontFamily = '-apple-system, BlinkMacSystemFont, sans-serif'
-      ..fontWeight = '600';
-    _caption = HTMLSpanElement()..textContent = 'PDF 열기';
-    _caption.style.pointerEvents = 'none';
     _input = HTMLInputElement()
       ..type = 'file'
       ..accept = 'application/pdf,.pdf'
       ..multiple = false
+      ..className = 'cy-pdf-file-input'
       ..setAttribute('aria-label', 'PDF 열기');
-    // 실제 입력이 전체 버튼의 터치를 직접 받는다. 레이아웃에서 숨기지 않는다.
-    _input.style
-      ..position = 'absolute'
-      ..inset = '0'
-      ..width = '100%'
-      ..height = '100%'
-      ..margin = '0'
-      ..padding = '0'
-      ..opacity = '0.01'
-      ..fontSize = '16px'
-      ..cursor = 'pointer';
-    _label.append(_caption);
-    _label.append(_input);
+    // 기본 파일 선택 버튼 자체를 표시한다. 투명 입력이나 대체 문구를 겹치지 않는다.
     _changeListener = ((Event _) => unawaited(_processSelection())).toJS;
-    _focusListener = ((Event _) {
-      _label.style.outline = '2px solid currentColor';
-      _label.style.outlineOffset = '-4px';
-    }).toJS;
-    _blurListener = ((Event _) => _label.style.outline = 'none').toJS;
     _input.addEventListener('change', _changeListener);
-    _input.addEventListener('focus', _focusListener);
-    _input.addEventListener('blur', _blurListener);
   }
 
   void _updateAvailability() {
     _input.disabled = !widget.enabled || _reading;
-    _caption.textContent = _reading ? 'PDF 읽는 중…' : 'PDF 열기';
-    _label.setAttribute('aria-busy', '$_reading');
+    _input.setAttribute('aria-busy', '$_reading');
+    _input.setAttribute('aria-label', _reading ? 'PDF 읽는 중' : 'PDF 열기');
   }
 
   Future<void> _processSelection() async {
@@ -113,8 +76,6 @@ class _WebPdfPickRegionState extends State<WebPdfPickRegion> {
   @override
   void dispose() {
     _input.removeEventListener('change', _changeListener);
-    _input.removeEventListener('focus', _focusListener);
-    _input.removeEventListener('blur', _blurListener);
     super.dispose();
   }
 
@@ -123,7 +84,7 @@ class _WebPdfPickRegionState extends State<WebPdfPickRegion> {
     final colors = Theme.of(context).colorScheme;
     String cssColor(Color color) =>
         '#${color.toARGB32().toRadixString(16).substring(2)}';
-    _label.style
+    _input.style
       ..backgroundColor = cssColor(colors.primary)
       ..color = cssColor(colors.onPrimary)
       ..fontSize = '${MediaQuery.textScalerOf(context).scale(16)}px';
@@ -136,7 +97,7 @@ class _WebPdfPickRegionState extends State<WebPdfPickRegion> {
           ..width = '100%'
           ..height = '100%'
           ..pointerEvents = 'auto';
-        host.append(_label);
+        host.append(_input);
       },
     );
   }

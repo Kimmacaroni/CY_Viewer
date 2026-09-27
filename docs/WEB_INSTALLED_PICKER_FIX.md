@@ -10,3 +10,12 @@ Flutter 공식 문서의 HTML platform view 포인터 및 합성 레이어 동�
 https://docs.flutter.dev/platform-integration/web/web-content-in-flutter
 
 iPhone 홈 화면 웹앱에서 파일 선택창을 직접 여는 검증은 아직 필요하다. 일반 Flutter 위젯 테스트 및 웹 컴파일 성공을 실제 iPhone 검증으로 간주하지 않는다.
+
+## 2026-09-27 후속 확인
+
+사용자 사진에서 폴더 아이콘 없는 최신 버튼이 확인됐다. 앞선 변경 뒤에도 선택창이 열리지 않았으므로 이전 화면 캐시로 단정하지 않는다.
+
+기존 구현은 입력 상자만 전체 크기로 만들고 기본 파일 선택 버튼을 투명하게 숨겼다. 이번 변경은 대체 문구와 투명도를 제거하고 기본 버튼 자체를 표시한다. `::file-selector-button`과 WebKit 선택자로 실제 버튼의 폭·높이를 전체 영역에 맞춘다. 표시 문구는 브라우저의 기본 파일 선택 문구를 따른다. 원래 파일 읽기 및 리더 연결은 유지한다.
+
+아이폰 실기기의 선택창 동작은 여전히 미검증이다. 입력 영역을 정상적으로 눌렀다는 사실과 선택창이 실제로 열렸다는 사실은 별도로 확인해야 한다.
+참고: https://developer.mozilla.org/en-US/docs/Learn_web_development/Extensions/Forms/Styling_web_forms
