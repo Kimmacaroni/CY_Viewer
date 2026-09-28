@@ -1,0 +1,50 @@
+[
+  {
+    "tag": "v1.1.0",
+    "file": "CYViewer-macOS-v1.1.0.dmg",
+    "old_sha256": "e35e3862abec9365e4708cca9f26a8f76988ee927c85052c774850e18fd50c34",
+    "main_sha256": "e35e3862abec9365e4708cca9f26a8f76988ee927c85052c774850e18fd50c34",
+    "checksum_format_corrected": false,
+    "main_url": "https://github.com/Kimmacaroni/CY_Viewer/releases/download/v1.1.0/CYViewer-macOS-v1.1.0.dmg"
+  },
+  {
+    "tag": "v1.1.0",
+    "file": "SHA256SUMS-v1.1.0.txt",
+    "old_sha256": "579262ca887f8fc5ac886f0b8dcd1e618d236842ec368f9c85bf8f84626cadb7",
+    "main_sha256": "579262ca887f8fc5ac886f0b8dcd1e618d236842ec368f9c85bf8f84626cadb7",
+    "checksum_format_corrected": false,
+    "main_url": "https://github.com/Kimmacaroni/CY_Viewer/releases/download/v1.1.0/SHA256SUMS-v1.1.0.txt"
+  },
+  {
+    "tag": "v1.0.0",
+    "file": "CYViewer-macOS-v1.0.0.dmg",
+    "old_sha256": "a4f4e9640b5881b678f6e847772c8688ffd71accea820e130e76a4660333bdd2",
+    "main_sha256": "a4f4e9640b5881b678f6e847772c8688ffd71accea820e130e76a4660333bdd2",
+    "checksum_format_corrected": false,
+    "main_url": "https://github.com/Kimmacaroni/CY_Viewer/releases/download/v1.0.0/CYViewer-macOS-v1.0.0.dmg"
+  },
+  {
+    "tag": "v1.0.0",
+    "file": "CYViewer-Setup-v1.0.0.exe",
+    "old_sha256": "cbc0de342b0870f6c1dad92537ce796a188a3bf81b31fc9852fad1a4095c42a7",
+    "main_sha256": "cbc0de342b0870f6c1dad92537ce796a188a3bf81b31fc9852fad1a4095c42a7",
+    "checksum_format_corrected": false,
+    "main_url": "https://github.com/Kimmacaroni/CY_Viewer/releases/download/v1.0.0/CYViewer-Setup-v1.0.0.exe"
+  },
+  {
+    "tag": "v1.0.0",
+    "file": "SHA256SUMS-v1.0.0.txt",
+    "old_sha256": "f294e309e2bfeb52c6f13a6aa8be21bbf8647de92f518bd291268a36d4d3f439",
+    "main_sha256": "db190abda434989940bdccd92bfdbaf431827d4726d57fabb8cd5ef64faefb3f",
+    "checksum_format_corrected": true,
+    "main_url": "https://github.com/Kimmacaroni/CY_Viewer/releases/download/v1.0.0/SHA256SUMS-v1.0.0.txt"
+  },
+  {
+    "tag": "ios-v1.3.0-build7",
+    "file": "CYViewer-iOS-v1.3.0-build7-unsigned.ipa",
+    "old_sha256": "fca2294ef344da10d5b0cbbce3ba76a92190228b77822f109e2e00e37cbff5b3",
+    "main_sha256": "fca2294ef344da10d5b0cbbce3ba76a92190228b77822f109e2e00e37cbff5b3",
+    "checksum_format_corrected": false,
+    "main_url": "https://github.com/Kimmacaroni/CY_Viewer/releases/download/ios-v1.3.0-build7/CYViewer-iOS-v1.3.0-build7-unsigned.ipa"
+  }
+]
