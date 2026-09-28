@@ -5,7 +5,7 @@
 ## 다운로드 주소
 
 - 설치 파일 및 이전 버전: https://github.com/Kimmacaroni/CY_Viewer/releases
-- Windows v1.2.0: https://github.com/Kimmacaroni/CY_Viewer/releases/tag/windows-v1.2.0
+- OS별 최신 다운로드·Mac 실행 안내: https://kimmacaroni.github.io/CY_Viewer/download/
 - 아이폰 웹앱: https://kimmacaroni.github.io/CY_Viewer/
 
 Windows, macOS, iOS는 릴리스 버전이 다를 수 있습니다. Windows 링크는
@@ -35,10 +35,14 @@ PR에서는 빌드만 확인하고 배포하지 않습니다.
 
 ## 이전 다운로드 저장소
 
-`CY_Viewer_Download`의 기존 릴리스 파일은 원본과 SHA-256을 비교하여
-본 저장소로 통합합니다. 기존 Windows 릴리스에 같은 이름의 파일이 있으면
-내용이 같은지 확인하고 재사용합니다. 통합 이후 새 배포는 본 저장소에서만
-진행하며, 이전 저장소는 기존 주소를 사용하는 사람을 위한 이전 안내로 유지합니다.
+별도 다운로드 저장소의 릴리스 3개와 파일 6개는 본 저장소의 Release에 통합되어 있습니다. 2026-09-28에 양쪽의 실제 파일을 다시 내려받아 SHA-256을 검증했습니다. `v1.0.0`의 검증 파일은 원본에서 한 줄에 이어 붙은 두 해시를 정상적인 두 줄로 수정했으며, 설치 파일의 해시는 동일합니다.
+
+- [통합 검증 기록](archive/download-repository/verification.json)
+- [원본 v1.0.0 검증 파일](archive/download-repository/SHA256SUMS-v1.0.0-original.txt)
+- [이전 안내와 전체 소스 기록](https://github.com/Kimmacaroni/CY_Viewer/tree/codex/archive-download-history)
+- [이전 웹 배포 기록](https://github.com/Kimmacaroni/CY_Viewer/tree/codex/archive-download-pages)
+
+두 보존 브랜치는 과거 기록 확인용이며 배포하지 않습니다. 앞으로 소스·안내·설치 파일·웹앱은 본 프로젝트에서만 관리합니다. 별도 다운로드 저장소를 삭제하면 기존 저장소와 릴리스 주소는 사용할 수 없으므로 위의 본 프로젝트 주소를 사용하세요.
 
 이전 웹앱 주소에서 새 주소로 이동하면 브라우저 저장소 경로가 달라집니다.
 기존 홈 화면 아이콘은 새 웹앱 주소에서 다시 추가해 주세요.
