@@ -218,3 +218,125 @@ class DriveStatus extends StatelessWidget {
     },
   );
 }
+
+/// 연결한 계정의 최근 문서를 홈에서 바로 연다. 로컬 원본은 삭제하지 않는다.
+class DriveHomeRecent extends StatefulWidget {
+  const DriveHomeRecent({super.key, required this.onOpen, this.sync});
+  final Future<void> Function(String, Uint8List) onOpen;
+  final DriveSync? sync;
+  @override
+  State<DriveHomeRecent> createState() => _DriveHomeRecentState();
+}
+
+class _DriveHomeRecentState extends State<DriveHomeRecent> {
+  bool _opening = false;
+  bool _refreshing = false;
+  String? _error;
+  DriveSync get sync => widget.sync ?? DriveSync.instance;
+  Future<void> _refresh() async {
+    if (_refreshing) return;
+    setState(() {
+      _refreshing = true;
+      _error = null;
+    });
+    try {
+      await sync.refresh();
+    } finally {
+      if (mounted) setState(() => _refreshing = false);
+    }
+  }
+
+  Future<void> _open(DrivePdf file) async {
+    if (_opening || !sync.connected) return;
+    final account = sync.account;
+    setState(() {
+      _opening = true;
+      _error = null;
+    });
+    try {
+      final bytes = await sync.download(file);
+      if (!mounted || !sync.connected || sync.account != account) return;
+      await widget.onOpen(file.name, bytes);
+    } catch (_) {
+      if (mounted) setState(() => _error = 'Drive 파일을 열지 못했습니다. 연결을 확인해 주세요.');
+    } finally {
+      if (mounted) setState(() => _opening = false);
+    }
+  }
+
+  @override
+  Widget build(BuildContext context) => ListenableBuilder(
+    listenable: sync,
+    builder: (context, _) {
+      if (!sync.connected) return const SizedBox.shrink();
+      return Card(
+        child: Padding(
+          padding: const EdgeInsets.all(20),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.stretch,
+            children: [
+              Text(
+                tr(context, 'Drive 최근 파일 · 최대 5개'),
+                style: Theme.of(context).textTheme.titleMedium,
+              ),
+              const SizedBox(height: 8),
+              Text(
+                tr(context, '개인 Google Drive'),
+                style: Theme.of(context).textTheme.bodySmall,
+              ),
+              if (sync.busy || _opening || _refreshing)
+                const Padding(
+                  padding: EdgeInsets.symmetric(vertical: 12),
+                  child: LinearProgressIndicator(),
+                ),
+              if (_error != null || sync.error != null)
+                Semantics(
+                  liveRegion: true,
+                  child: Padding(
+                    padding: const EdgeInsets.symmetric(vertical: 12),
+                    child: Text(
+                      tr(context, _error ?? sync.error!),
+                      style: TextStyle(
+                        color: Theme.of(context).colorScheme.error,
+                      ),
+                    ),
+                  ),
+                ),
+              if (sync.files.isEmpty && !sync.busy)
+                Padding(
+                  padding: const EdgeInsets.symmetric(vertical: 20),
+                  child: Text(tr(context, '아직 동기화한 PDF가 없습니다. PDF를 열어 주세요.')),
+                ),
+              for (final file in sync.files.take(5))
+                ListTile(
+                  contentPadding: EdgeInsets.zero,
+                  leading: const Icon(Icons.cloud_outlined),
+                  title: Text(
+                    file.name,
+                    maxLines: 2,
+                    overflow: TextOverflow.ellipsis,
+                  ),
+                  subtitle: Text(
+                    tr(context, '{0}페이지에서 이어 읽기', ['${file.page}']),
+                  ),
+                  onTap: _opening || _refreshing || sync.busy
+                      ? null
+                      : () => _open(file),
+                ),
+              Align(
+                alignment: Alignment.centerRight,
+                child: TextButton.icon(
+                  onPressed: _opening || _refreshing || sync.busy
+                      ? null
+                      : _refresh,
+                  icon: const Icon(Icons.refresh),
+                  label: Text(tr(context, '새로고침')),
+                ),
+              ),
+            ],
+          ),
+        ),
+      );
+    },
+  );
+}

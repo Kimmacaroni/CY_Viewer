@@ -1,6 +1,8 @@
 import 'package:crypto/crypto.dart';
 
 import 'drive_panel.dart';
+import 'drive_sync.dart';
+
 import 'cy_localization.dart';
 
 import 'dart:async';
@@ -123,13 +125,26 @@ class _LibraryPageState extends State<LibraryPage> {
     _firstFrame = WidgetsBinding.instance.endOfFrame;
     _initialLoad = _load();
     _receivePendingFiles();
+    DriveSync.instance.addListener(_driveChanged);
   }
 
   @override
   void dispose() {
+    DriveSync.instance.removeListener(_driveChanged);
     AppCommandDispatcher.unregister(_commandHandlers);
     _fileAccessChannel.setMethodCallHandler(null);
     super.dispose();
+  }
+
+  void _driveChanged() {
+    if (mounted) setState(() {});
+  }
+
+  Future<void> _openDrive(String name, Uint8List bytes) async {
+    final directory = await getApplicationSupportDirectory();
+    final file = File('${directory.path}/drive-${sha256.convert(bytes)}.pdf');
+    await file.writeAsBytes(bytes, flush: true);
+    await _addAndOpen(file.path, name);
   }
 
   Future<dynamic> _handleFileAccessCall(MethodCall call) async {
@@ -363,6 +378,7 @@ class _LibraryPageState extends State<LibraryPage> {
         ),
       ),
     );
+    if (DriveSync.instance.connected) unawaited(DriveSync.instance.refresh());
     if (lastPage != null) {
       final index = _items.indexWhere((e) => e.path == refreshed.path);
       if (index >= 0) {
@@ -422,7 +438,12 @@ class _LibraryPageState extends State<LibraryPage> {
                     ),
                     Text(
                       _recentOnly
-                          ? tr(context, '최근 5개 · 이 기기에 저장됨')
+                          ? tr(
+                              context,
+                              DriveSync.instance.connected
+                                  ? 'Drive 최근 파일 · 최대 5개'
+                                  : '최근 5개 · 이 기기에 저장됨',
+                            )
                           : tr(context, "{0}개의 문서 · 이 기기에 저장됨", [
                               _items.length,
                             ]),
@@ -464,7 +485,22 @@ class _LibraryPageState extends State<LibraryPage> {
                 ),
                 SizedBox(height: 20),
                 Expanded(
-                  child: shown.isEmpty
+                  child: _recentOnly && DriveSync.instance.connected
+                      ? SingleChildScrollView(
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.stretch,
+                            children: [
+                              FilledButton.icon(
+                                onPressed: _pick,
+                                icon: const Icon(Icons.folder_open_outlined),
+                                label: Text(tr(context, 'PDF 열기')),
+                              ),
+                              const SizedBox(height: 16),
+                              DriveHomeRecent(onOpen: _openDrive),
+                            ],
+                          ),
+                        )
+                      : shown.isEmpty
                       ? SingleChildScrollView(
                           padding: EdgeInsets.only(top: 12, bottom: 32),
                           child: _favoritesOnly
@@ -585,16 +621,7 @@ class _LibraryPageState extends State<LibraryPage> {
       appBar: AppBar(
         title: CyBrand(),
         actions: [
-          DriveButton(
-            onOpen: (name, bytes) async {
-              final directory = await getApplicationSupportDirectory();
-              final file = File(
-                '${directory.path}/drive-${sha256.convert(bytes)}.pdf',
-              );
-              await file.writeAsBytes(bytes, flush: true);
-              await _addAndOpen(file.path, name);
-            },
-          ),
+          DriveButton(onOpen: _openDrive),
           const CyLanguageButton(),
           if (Platform.isMacOS)
             IconButton(
