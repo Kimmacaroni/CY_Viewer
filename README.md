@@ -8,14 +8,14 @@ PDF를 읽고, 찾고, 표시하고, 저장하고, 인쇄할 수 있는 개인�
 
 | 사용 환경 | 다운로드 및 실행 |
 | --- | --- |
-| Windows 10·11 64비트 | [Windows 설치 파일 v1.4.0](https://github.com/Kimmacaroni/CY_Viewer/releases/download/windows-v1.4.0/CYViewer-Setup-v1.4.0.exe) |
-| macOS | [macOS 설치 파일 v1.7.0](https://github.com/Kimmacaroni/CY_Viewer/releases/download/macos-v1.7.0/CYViewer-macOS-v1.7.0.dmg) |
+| Windows 10·11 64비트 | [Windows 설치 파일 v1.5.0](https://github.com/Kimmacaroni/CY_Viewer/releases/download/windows-v1.5.0/CYViewer-Setup-v1.5.0.exe) |
+| macOS | [macOS 설치 파일 v1.8.0](https://github.com/Kimmacaroni/CY_Viewer/releases/download/macos-v1.8.0/CYViewer-macOS-v1.8.0.dmg) |
 | iPhone·iPad·웹 | [CY뷰어 웹앱 열기](https://kimmacaroni.github.io/CY_Viewer/) |
 
 아이폰에서는 Safari로 웹앱을 연 뒤 `공유` → `홈 화면에 추가`를 선택하면
 CY뷰어 아이콘으로 실행할 수 있습니다. 개발자 모드나 유선 연결은 필요하지 않습니다.
 
-Windows 10·11 64비트 환경을 지원합니다. Release에서 `CYViewer-Setup-v1.4.0.exe`를 내려받아 설치하세요. 설치 마법사에서 설치 위치와 바탕화면 바로가기 생성 여부를 선택할 수 있습니다.
+Windows 10·11 64비트 환경을 지원합니다. Release에서 `CYViewer-Setup-v1.5.0.exe`를 내려받아 설치하세요. 설치 마법사에서 설치 위치와 바탕화면 바로가기 생성 여부를 선택할 수 있습니다.
 
 ## 업데이트
 
@@ -53,7 +53,7 @@ Apple 앱과 웹앱의 기능 차이는 [플랫폼 안내](macos_app/README.md),
 
 ## 개인정보
 
-문서는 사용자의 PC에서 처리됩니다. CY뷰어는 문서 내용을 별도의 서버에 업로드하지 않습니다.
+문서는 사용자의 기기에서 처리됩니다. Google Drive에 연결하지 않으면 PDF는 기기에만 보관됩니다. 연결하면 PDF 원본과 읽기 상태를 사용자의 개인 Google Drive에 저장합니다.
 
 ## 문의 및 오류 제보
 
@@ -67,13 +67,13 @@ CY뷰어와 아이콘의 저작권은 저장소 소유자에게 있습니다. �
 
 Anyone can use [CY Viewer on the web](https://kimmacaroni.github.io/CY_Viewer/) or download the Mac/Windows apps from the [download site](https://kimmacaroni.github.io/CY_Viewer/download/), without signing in.
 
-CY Viewer supports **한국어 and English**. It follows the device language by default (English for other languages). Use the language menu to choose manually. Web and Mac apply changes immediately; Windows applies the selected language next time it starts. Your PDF content is not translated or uploaded.
+CY Viewer supports **한국어 and English**. It follows the device language by default (English for other languages). Use the language menu to choose manually. Web and Mac apply changes immediately; Windows applies the selected language next time it starts. Your PDF content is not translated. PDFs are uploaded to your personal Google Drive only after you connect your Google account.
 
 한국어·영어와 기기 언어 자동 선택을 지원합니다. 웹·Mac은 언어 선택을 바로 반영하고 Windows는 문서 작업을 유지하기 위해 다음 실행부터 반영합니다. 파일 선택·인쇄 창의 언어는 운영체제 설정을 따릅니다.
 
 ## 최근 열어본 파일
 
-웹·Mac·Windows에서 최근 열어본 파일을 최대 5개 표시합니다. 다시 연 파일은 맨 위로 이동합니다. 웹은 브라우저 안에 PDF 사본을 저장해 다시 열며, 목록의 제거 버튼으로 사본을 삭제할 수 있습니다. 목록은 기기·브라우저별로 관리되고 자동 동기화하지 않습니다. [보관 방식과 제한](docs/RECENT_FILES.md)을 참고하세요.
+웹·Mac·Windows에서 최근 열어본 파일을 최대 5개 표시합니다. 다시 연 파일은 맨 위로 이동합니다. 웹은 브라우저 안에 PDF 사본을 저장해 다시 열며, 목록의 제거 버튼으로 사본을 삭제할 수 있습니다. 기본 목록은 기기·브라우저별로 관리됩니다. Google Drive에 연결하면 별도의 Drive 최근 목록에서 다른 플랫폼의 파일을 이어 읽을 수 있습니다. [보관 방식과 제한](docs/RECENT_FILES.md)을 참고하세요.
 
 ## Google 계정과 개인 Drive 동기화
 
