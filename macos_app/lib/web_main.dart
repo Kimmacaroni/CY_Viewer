@@ -70,6 +70,17 @@ class _WebLibraryPageState extends State<_WebLibraryPage> {
   void initState() {
     super.initState();
     unawaited(_loadRecent());
+    DriveSync.instance.addListener(_driveChanged);
+  }
+
+  void _driveChanged() {
+    if (mounted) setState(() {});
+  }
+
+  @override
+  void dispose() {
+    DriveSync.instance.removeListener(_driveChanged);
+    super.dispose();
   }
 
   Future<void> _loadRecent() async {
@@ -155,6 +166,7 @@ class _WebLibraryPageState extends State<_WebLibraryPage> {
         ),
       );
     } finally {
+      if (DriveSync.instance.connected) unawaited(DriveSync.instance.refresh());
       // 최근 사본 저장은 백그라운드 작업이다. 복귀 후 파일 선택을 막지 않는다.
       if (mounted) setState(() => _opening = false);
     }
@@ -213,7 +225,20 @@ class _WebLibraryPageState extends State<_WebLibraryPage> {
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.stretch,
               children: [
-                if (_recent.isNotEmpty) ...[
+                if (DriveSync.instance.connected) ...[
+                  SizedBox(
+                    height: math.max(
+                      52,
+                      MediaQuery.textScalerOf(context).scale(16) + 28,
+                    ),
+                    child: _filePicker(),
+                  ),
+                  const SizedBox(height: 20),
+                  DriveHomeRecent(
+                    onOpen: (name, bytes) =>
+                        _openPickedPdf(PickedWebPdf(name: name, bytes: bytes)),
+                  ),
+                ] else if (_recent.isNotEmpty) ...[
                   SizedBox(
                     height: math.max(
                       52,

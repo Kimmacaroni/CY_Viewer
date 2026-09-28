@@ -434,33 +434,9 @@ class CyViewer(TkinterDnD.Tk):
             parent.bind("<Configure>", lambda event, item=widget: item.configure(wraplength=max(120, event.width - 16)), add="+")
             return widget
         label(intro, tr('문서 작업 공간'), bold=True, color=COLORS["blue"])
-        if not self.recent_files:
-            label(intro, tr('문서를 열고,\n바로 읽으세요.'), 24, True)
-            label(intro, tr('PDF를 선택하거나 이 창에 끌어놓으세요.'), color=COLORS["muted"])
-        if self.recent_files:
-            label(intro, tr('최근 열어본 파일'), 12, True)
-            for path in self.recent_files:
-                button = tk.Button(intro, text=Path(path).name, anchor='w', relief='flat',
-                    bg=COLORS['surface'], fg=COLORS['ink'], padx=12, pady=10,
-                    font=('Malgun Gothic', 10), cursor='hand2', takefocus=True,
-                    command=lambda value=path: self.load_pdf(Path(value)))
-                button.pack(fill='x', pady=(0, 5))
-                def fit_name(event, item=button, name=Path(path).name):
-                    font = tkfont.Font(font=item.cget('font'))
-                    available = max(40, event.width - 30)
-                    text = name
-                    while text and font.measure(text + ('…' if text != name else '')) > available:
-                        text = text[:-1]
-                    item.configure(text=text + ('…' if text != name else ''))
-                intro.bind('<Configure>', fit_name, add='+')
-        else:
-            for title, detail in [
-                (tr('찾고 읽기'), tr('문서 검색 · 확대 · 보기 방식 변경')),
-                (tr('중요한 페이지 남기기'), tr('책갈피로 필요한 곳을 빠르게 찾기')),
-                (tr('표시하고 저장하기'), tr('텍스트 표시 · OCR · PDF와 이미지 저장')),
-            ]:
-                label(intro, title, 11, True)
-                label(intro, detail, 10, color=COLORS["muted"])
+        self.welcome_recent = tk.Frame(intro, bg=COLORS['canvas'])
+        self.welcome_recent.pack(fill='x')
+        self.refresh_drive_home()
         panel = tk.Frame(layout, bg=COLORS["surface"], padx=28, pady=28,
             highlightbackground=COLORS["line"], highlightthickness=1)
         panel.grid(row=0, column=1, sticky="ew", padx=(28, 0))
@@ -477,6 +453,38 @@ class CyViewer(TkinterDnD.Tk):
             for child in widget.winfo_children():
                 register_drop(child)
         register_drop(self.welcome)
+
+    def refresh_drive_home(self):
+        frame = getattr(self, 'welcome_recent', None)
+        if frame is None or not frame.winfo_exists():
+            return
+        for child in frame.winfo_children():
+            child.destroy()
+        cloud = bool(self.drive_ui.drive.token)
+        tk.Label(frame, text=tr('Drive 최근 파일 · 최대 5개' if cloud else '최근 열어본 파일'),
+            anchor='w', bg=COLORS['canvas'], fg=COLORS['ink'], font=('Malgun Gothic',12,'bold')).pack(fill='x', pady=(0,12))
+        rows = self.drive_ui.rows[:5] if cloud else self.recent_files[:5]
+        if not rows:
+            message = '아직 동기화한 PDF가 없습니다. PDF를 열어 주세요.' if cloud else '최근 열어본 파일이 없습니다.'
+            tk.Label(frame, text=tr(message), wraplength=320, justify='left', bg=COLORS['canvas'], fg=COLORS['muted']).pack(fill='x', pady=12)
+        for row in rows:
+            name = row.get('name','PDF') if cloud else Path(row).name
+            command = (lambda value=row: self.drive_ui.download(value)) if cloud else (lambda value=row: self.load_pdf(Path(value)))
+            button = tk.Button(frame, text=name, anchor='w', relief='flat', bg=COLORS['surface'], fg=COLORS['ink'],
+                padx=12, pady=10, font=('Malgun Gothic',10), cursor='hand2', takefocus=True, command=command,
+                state='disabled' if cloud and self.drive_ui.busy else 'normal')
+            button.pack(fill='x', pady=(0,5))
+            def fit_name(event, item=button, title=name):
+                font = tkfont.Font(font=item.cget('font'))
+                available = max(40,event.width-30)
+                text = title
+                while text and font.measure(text + ('…' if text != title else '')) > available:
+                    text = text[:-1]
+                item.configure(text=text + ('…' if text != title else ''))
+            button.bind('<Configure>',fit_name)
+        if cloud:
+            tk.Label(frame, text=self.drive_ui.status, wraplength=320, justify='left', bg=COLORS['canvas'], fg=COLORS['muted']).pack(fill='x', pady=8)
+            tk.Button(frame, text=tr('새로고침'), command=self.drive_ui.refresh, state='disabled' if self.drive_ui.busy else 'normal', bg=COLORS['surface'], fg=COLORS['ink'], padx=12, pady=10).pack(fill='x',pady=4)
 
     def _button(self, parent: tk.Widget, label: str, command, style: str = "Action.TButton") -> RoundedButton:
         return RoundedButton(parent, label, command, "primary" if style == "Primary.TButton" else "secondary")

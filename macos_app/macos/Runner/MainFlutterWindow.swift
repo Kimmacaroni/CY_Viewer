@@ -921,5 +921,15 @@ private let cyNativeEnglish: [String: String] = [
   "기본적으로 문서를 이 기기에서 관리합니다.\nDrive를 연결하면 이후 여는 PDF를 개인 Drive에도 저장합니다.": "By default, documents are managed on this device.\nAfter connecting Drive, PDFs you open are also saved to your personal Drive.",
   "기본적으로 문서는 이 기기에서 처리합니다. Drive 연결 후에는 개인 Drive에도 저장합니다.": "By default, documents are processed on this device. After connecting Drive, they are also saved to your personal Drive.",
   "개인정보 안내": "Privacy notice",
+  "Mac에서 ‘CYViewer’을(를) 열지 않음이 표시되나요?": "Does your Mac say “CYViewer” was not opened?",
+  "현재 Mac 배포본은 Apple 개발자 서명·공증을 받지 않아 macOS가 실행을 차단할 수 있습니다. 공식 CY뷰어 GitHub 릴리스에서 받은 파일인지 확인한 뒤 아래 순서로 여세요.": "The current Mac release is not Developer ID signed or notarized by Apple, so macOS may block it. Confirm you downloaded it from the official CY Viewer GitHub releases, then follow these steps.",
+  "경고 창에서 ‘휴지통으로 이동’ 대신 ‘완료’를 누릅니다.": "Select Done in the alert rather than Move to Trash.",
+  "시스템 설정 → 개인정보 보호 및 보안으로 들어갑니다.": "Go to System Settings → Privacy & Security.",
+  "아래쪽 CYViewer 차단 안내에서 ‘확인 없이 열기’를 누릅니다.": "Scroll to the CYViewer blocked-app message and select Open Anyway.",
+  "Mac 암호 또는 Touch ID로 승인하고 ‘열기’를 누릅니다.": "Authenticate with your Mac password or Touch ID, then select Open.",
+  "‘확인 없이 열기’가 보이지 않으면 앱 실행을 다시 시도한 뒤 설정을 확인하세요. macOS 버전에 따라 버튼 이름이 다를 수 있습니다.": "If Open Anyway is missing, try launching the app again and check Settings. Button labels may differ by macOS version.",
+  "Apple 공식 실행 안내 ↗": "Apple’s official instructions ↗",
+  "Mac 사용자는 필독": "Mac users: read before opening",
+  "아직 동기화한 PDF가 없습니다. PDF를 열어 주세요.": "No synced PDFs yet. Open a PDF to get started.",
 ]
 // END GENERATED TRANSLATIONS

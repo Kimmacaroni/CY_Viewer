@@ -77,6 +77,7 @@ class DriveUI:
             self.refresh()
 
     def render(self):
+        self.app.refresh_drive_home()
         if not self.window or not self.window.winfo_exists():
             return
         for child in self.frame.winfo_children():
@@ -133,7 +134,8 @@ class DriveUI:
             name = 'PDF-' + re.sub(r'[<>:"/\\|?*\x00-\x1f]', '_', row.get('name', 'document.pdf'))[:120].rstrip(' .')
             target = directory / name
             target.write_bytes(data)
-            self.window.destroy()
+            if self.window and self.window.winfo_exists():
+                self.window.destroy()
             self.app.load_pdf(target)
         self.submit(lambda: drive.download(row), ready)
 
