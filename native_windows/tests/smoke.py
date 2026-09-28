@@ -57,18 +57,45 @@ try:
         finally:
             messagebox.askyesno = ask
             app.is_dirty = False
+        app.next_page()
+        app.show_library()
+        app.update()
+        assert app.welcome.winfo_ismapped()
+        assert not app.workspace.winfo_ismapped()
+        current = str(app.document_path.resolve())
+        app.toggle_favorite(current)
+        assert app.library_state[current]['favorite']
+        app.select_library_filter('favorites')
+        assert app.library_tabs['favorites'].variant == 'selected'
+        app.load_pdf(Path(current))
+        app.update()
+        assert app.page_number == 1
+        app.geometry("900x700")
+        app.update()
+        assert not app.rail.winfo_ismapped()
+        assert app.tools_button.winfo_ismapped()
+        app.toggle_tools()
+        app.update()
+        assert app.rail.winfo_ismapped()
+        app.toggle_tools()
+        app.geometry("1200x800")
+        app.update()
+        assert app.rail.winfo_ismapped()
+        assert not app.tools_button.winfo_ismapped()
+        app.show_library()
+        app.select_library_filter('all')
         app.geometry("780x560")
-        app.welcome.destroy()
-        app._make_welcome()
         app.update()
         def buttons(widget):
             return ([widget] if isinstance(widget, tk.Button) else []) + [item for child in widget.winfo_children() for item in buttons(child)]
         recent_buttons = buttons(app.welcome)
         assert len(recent_buttons) == 5
-        for button in recent_buttons:
-            assert button.winfo_ismapped()
-            assert button.winfo_rooty() >= app.winfo_rooty()
-            assert button.winfo_rooty() + button.winfo_height() <= app.winfo_rooty() + app.winfo_height()
+        assert all(button.winfo_width() > 100 for button in recent_buttons)
+        # 작은 창은 문서를 제거하지 않고 스크롤한다.
+        app.recent_files = []
+        app.refresh_drive_home()
+        app.update()
+        assert app.welcome.winfo_ismapped()
         app.document.close()
         app.document = None
 finally:

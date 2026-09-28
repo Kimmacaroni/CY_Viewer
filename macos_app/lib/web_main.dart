@@ -62,6 +62,8 @@ class _WebLibraryPage extends StatefulWidget {
 }
 
 class _WebLibraryPageState extends State<_WebLibraryPage> {
+  String _filter = 'recent';
+  Set<String> _favorites = {};
   bool _opening = false;
   String? _error;
   List<Map<String, dynamic>> _recent = [];
@@ -70,6 +72,7 @@ class _WebLibraryPageState extends State<_WebLibraryPage> {
   void initState() {
     super.initState();
     unawaited(_loadRecent());
+    unawaited(_loadFavorites());
     DriveSync.instance.addListener(_driveChanged);
   }
 
@@ -81,6 +84,32 @@ class _WebLibraryPageState extends State<_WebLibraryPage> {
   void dispose() {
     DriveSync.instance.removeListener(_driveChanged);
     super.dispose();
+  }
+
+  Future<void> _loadFavorites() async {
+    final prefs = await SharedPreferences.getInstance();
+    if (mounted) {
+      setState(
+        () => _favorites = (prefs.getStringList('cy_web_favorites') ?? [])
+            .toSet(),
+      );
+    }
+  }
+
+  Future<void> _favorite(String id) async {
+    final updated = {..._favorites};
+    updated.contains(id) ? updated.remove(id) : updated.add(id);
+    try {
+      final prefs = await SharedPreferences.getInstance();
+      if (!await prefs.setStringList('cy_web_favorites', updated.toList())) {
+        throw StateError('preferences');
+      }
+      if (mounted) setState(() => _favorites = updated);
+    } catch (_) {
+      if (mounted) {
+        setState(() => _error = trNow('즐겨찾기를 저장하지 못했습니다. 다시 시도해 주세요.'));
+      }
+    }
   }
 
   Future<void> _loadRecent() async {
@@ -172,6 +201,10 @@ class _WebLibraryPageState extends State<_WebLibraryPage> {
     }
   }
 
+  bool get _headerOpen =>
+      MediaQuery.sizeOf(context).width >= 600 &&
+      (_recent.isNotEmpty || DriveSync.instance.connected);
+
   Widget _filePicker() => _opening
       ? const Center(child: CircularProgressIndicator())
       : WebPdfPickRegion(onPicked: _openPickedPdf, onError: _handlePickError);
@@ -214,45 +247,91 @@ class _WebLibraryPageState extends State<_WebLibraryPage> {
             ),
           ),
         ),
+        if (_headerOpen)
+          Padding(
+            padding: const EdgeInsets.only(right: 16),
+            child: SizedBox(width: 160, height: 48, child: _filePicker()),
+          ),
       ],
     ),
     body: SafeArea(
       child: Center(
         child: SingleChildScrollView(
-          padding: EdgeInsets.symmetric(horizontal: 24, vertical: 40),
+          padding: EdgeInsets.fromLTRB(24, 24, 24, 32),
           child: ConstrainedBox(
-            constraints: BoxConstraints(maxWidth: 1000),
+            constraints: BoxConstraints(maxWidth: 1120),
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.stretch,
               children: [
-                if (DriveSync.instance.connected) ...[
-                  SizedBox(
-                    height: math.max(
-                      52,
-                      MediaQuery.textScalerOf(context).scale(16) + 28,
-                    ),
-                    child: _filePicker(),
+                CyLibraryToolbar(
+                  detail: tr(
+                    context,
+                    _filter == 'recent' && DriveSync.instance.connected
+                        ? 'Drive 최근 파일 · 최대 5개'
+                        : '최근 5개 · 이 브라우저에만 저장됨',
                   ),
-                  const SizedBox(height: 20),
+                  selected: _filter,
+                  onSelected: (value) => setState(() => _filter = value),
+                ),
+                const SizedBox(height: 20),
+                if (_filter == 'recent' && DriveSync.instance.connected) ...[
+                  if (!_headerOpen)
+                    SizedBox(
+                      height: math.max(
+                        52,
+                        MediaQuery.textScalerOf(context).scale(16) + 28,
+                      ),
+                      child: _filePicker(),
+                    ),
+                  const SizedBox(height: 16),
                   DriveHomeRecent(
                     onOpen: (name, bytes) =>
                         _openPickedPdf(PickedWebPdf(name: name, bytes: bytes)),
                   ),
-                ] else if (_recent.isNotEmpty) ...[
-                  SizedBox(
-                    height: math.max(
-                      52,
-                      MediaQuery.textScalerOf(context).scale(16) + 28,
+                ] else if (_recent.isNotEmpty || _filter == 'favorites') ...[
+                  if (!_headerOpen)
+                    SizedBox(
+                      height: math.max(
+                        52,
+                        MediaQuery.textScalerOf(context).scale(16) + 28,
+                      ),
+                      child: _filePicker(),
                     ),
-                    child: _filePicker(),
-                  ),
-                  const SizedBox(height: 20),
-                  CyRecentFiles(
-                    files: _recent,
-                    enabled: !_opening,
-                    onOpen: _openRecent,
-                    onRemove: _removeRecent,
-                  ),
+                  const SizedBox(height: 16),
+                  if (_filter == 'favorites' &&
+                      !_recent.any((row) => _favorites.contains(row['id'])))
+                    Card(
+                      child: Padding(
+                        padding: const EdgeInsets.all(32),
+                        child: Column(
+                          children: [
+                            const Icon(Icons.star_outline, size: 40),
+                            const SizedBox(height: 16),
+                            Text(tr(context, '즐겨찾는 문서가 없습니다')),
+                            const SizedBox(height: 8),
+                            Text(tr(context, '문서 옆의 별을 누르면 여기에 모아 볼 수 있습니다.')),
+                            TextButton(
+                              onPressed: () => setState(() => _filter = 'all'),
+                              child: Text(tr(context, '전체 문서 보기')),
+                            ),
+                          ],
+                        ),
+                      ),
+                    )
+                  else
+                    CyRecentFiles(
+                      files: _filter == 'favorites'
+                          ? _recent
+                                .where((row) => _favorites.contains(row['id']))
+                                .toList()
+                          : _recent,
+                      enabled: !_opening,
+                      onOpen: _openRecent,
+                      onRemove: _removeRecent,
+                      favorites: _favorites,
+                      onFavorite: _favorite,
+                      showHeading: false,
+                    ),
                 ] else
                   CyDocumentWelcome(
                     web: true,

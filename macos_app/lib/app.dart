@@ -427,61 +427,24 @@ class _LibraryPageState extends State<LibraryPage> {
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.stretch,
               children: [
-                Wrap(
-                  spacing: 12,
-                  runSpacing: 4,
-                  crossAxisAlignment: WrapCrossAlignment.center,
-                  children: [
-                    Text(
-                      tr(context, "문서함"),
-                      style: theme.textTheme.headlineSmall,
-                    ),
-                    Text(
-                      _recentOnly
-                          ? tr(
-                              context,
-                              DriveSync.instance.connected
-                                  ? 'Drive 최근 파일 · 최대 5개'
-                                  : '최근 5개 · 이 기기에 저장됨',
-                            )
-                          : tr(context, "{0}개의 문서 · 이 기기에 저장됨", [
-                              _items.length,
-                            ]),
-                      style: theme.textTheme.bodySmall,
-                    ),
-                  ],
-                ),
-                SizedBox(height: 16),
-                Wrap(
-                  spacing: 8,
-                  runSpacing: 8,
-                  children: [
-                    ChoiceChip(
-                      label: Text(tr(context, '최근 열어본 파일')),
-                      selected: _recentOnly,
-                      onSelected: (_) => setState(() {
-                        _recentOnly = true;
-                        _favoritesOnly = false;
-                      }),
-                    ),
-                    ChoiceChip(
-                      label: Text(tr(context, "전체 문서")),
-                      selected: !_favoritesOnly && !_recentOnly,
-                      onSelected: (_) => setState(() {
-                        _favoritesOnly = false;
-                        _recentOnly = false;
-                      }),
-                    ),
-                    ChoiceChip(
-                      avatar: Icon(Icons.star_outline, size: 18),
-                      label: Text(tr(context, "즐겨찾기")),
-                      selected: _favoritesOnly,
-                      onSelected: (_) => setState(() {
-                        _favoritesOnly = true;
-                        _recentOnly = false;
-                      }),
-                    ),
-                  ],
+                CyLibraryToolbar(
+                  detail: _recentOnly
+                      ? tr(
+                          context,
+                          DriveSync.instance.connected
+                              ? 'Drive 최근 파일 · 최대 5개'
+                              : '최근 5개 · 이 기기에 저장됨',
+                        )
+                      : tr(context, '{0}개의 문서 · 이 기기에 저장됨', [_items.length]),
+                  selected: _recentOnly
+                      ? 'recent'
+                      : _favoritesOnly
+                      ? 'favorites'
+                      : 'all',
+                  onSelected: (value) => setState(() {
+                    _recentOnly = value == 'recent';
+                    _favoritesOnly = value == 'favorites';
+                  }),
                 ),
                 SizedBox(height: 20),
                 Expanded(

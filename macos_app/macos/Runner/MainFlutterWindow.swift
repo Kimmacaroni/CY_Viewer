@@ -931,5 +931,9 @@ private let cyNativeEnglish: [String: String] = [
   "Apple 공식 실행 안내 ↗": "Apple’s official instructions ↗",
   "Mac 사용자는 필독": "Mac users: read before opening",
   "아직 동기화한 PDF가 없습니다. PDF를 열어 주세요.": "No synced PDFs yet. Open a PDF to get started.",
+  "즐겨찾기를 저장하지 못했습니다. 다시 시도해 주세요.": "Could not save favorites. Please try again.",
+  "문서를 열고, 바로 읽으세요.": "Open a document. Start reading.",
+  "최근 파일을 저장하지 못했습니다.": "Could not save recent files.",
+  "최근 열람 · {0}": "Last opened · {0}",
 ]
 // END GENERATED TRANSLATIONS
