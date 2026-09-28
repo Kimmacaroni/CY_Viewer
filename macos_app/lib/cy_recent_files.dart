@@ -10,37 +10,89 @@ class CyRecentFiles extends StatelessWidget {
     required this.onOpen,
     required this.onRemove,
     this.enabled = true,
+    this.favorites = const {},
+    this.onFavorite,
+    this.showHeading = true,
   });
   final List<Map<String, dynamic>> files;
   final ValueChanged<Map<String, dynamic>> onOpen;
   final ValueChanged<String> onRemove;
   final bool enabled;
+  final Set<String> favorites;
+  final ValueChanged<String>? onFavorite;
+  final bool showHeading;
 
   @override
   Widget build(BuildContext context) => Column(
     crossAxisAlignment: CrossAxisAlignment.stretch,
     children: [
-      Text(
-        tr(context, '최근 열어본 파일'),
-        style: Theme.of(context).textTheme.titleLarge,
-      ),
-      const SizedBox(height: 8),
-      Text(tr(context, '최근 5개 · 이 브라우저에만 저장됨')),
+      if (showHeading)
+        Text(
+          tr(context, '최근 열어본 파일'),
+          style: Theme.of(context).textTheme.titleLarge,
+        ),
+      if (showHeading) const SizedBox(height: 8),
+      if (showHeading) Text(tr(context, '최근 5개 · 이 브라우저에만 저장됨')),
       const SizedBox(height: 12),
       for (final row in files.take(5))
         Card(
           child: ListTile(
-            leading: const Icon(Icons.description_outlined),
+            contentPadding: const EdgeInsets.symmetric(
+              horizontal: 16,
+              vertical: 8,
+            ),
+            leading: Container(
+              padding: const EdgeInsets.all(10),
+              decoration: BoxDecoration(
+                color: Theme.of(context).colorScheme.primaryContainer,
+                borderRadius: BorderRadius.circular(10),
+              ),
+              child: Icon(
+                Icons.description_outlined,
+                color: Theme.of(context).colorScheme.onPrimaryContainer,
+              ),
+            ),
             title: Text(
               row['name'] as String,
               maxLines: 2,
               overflow: TextOverflow.ellipsis,
             ),
+            subtitle: row['openedAt'] is num
+                ? Text(
+                    tr(context, '최근 열람 · {0}', [
+                      DateTime.fromMillisecondsSinceEpoch(
+                        (row['openedAt'] as num).toInt(),
+                      ).toLocal().toString().split(' ').first,
+                    ]),
+                  )
+                : null,
             onTap: enabled ? () => onOpen(row) : null,
-            trailing: IconButton(
-              tooltip: tr(context, '최근 목록에서 제거'),
-              onPressed: enabled ? () => onRemove(row['id'] as String) : null,
-              icon: const Icon(Icons.close),
+            trailing: Row(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                if (onFavorite != null)
+                  IconButton(
+                    tooltip: tr(
+                      context,
+                      favorites.contains(row['id']) ? '즐겨찾기 해제' : '즐겨찾기에 추가',
+                    ),
+                    onPressed: enabled
+                        ? () => onFavorite!(row['id'] as String)
+                        : null,
+                    icon: Icon(
+                      favorites.contains(row['id'])
+                          ? Icons.star
+                          : Icons.star_border,
+                    ),
+                  ),
+                IconButton(
+                  tooltip: tr(context, '최근 목록에서 제거'),
+                  onPressed: enabled
+                      ? () => onRemove(row['id'] as String)
+                      : null,
+                  icon: const Icon(Icons.close),
+                ),
+              ],
             ),
           ),
         ),

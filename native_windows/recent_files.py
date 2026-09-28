@@ -36,3 +36,25 @@ def remember(path):
     temporary.write_text(json.dumps(values, ensure_ascii=False), encoding='utf-8')
     temporary.replace(target)
     return values
+
+
+def library_path():
+    return store_path().with_name('library-state.json')
+
+
+def load_library():
+    try:
+        data = json.loads(library_path().read_text(encoding='utf-8'))
+        return {path: {'favorite': value.get('favorite') is True,
+                       'page': max(1, value.get('page', 1)) if isinstance(value.get('page', 1), int) else 1}
+                for path, value in data.items() if isinstance(path, str) and isinstance(value, dict)}
+    except (OSError, ValueError, AttributeError):
+        return {}
+
+
+def save_library(values):
+    target = library_path()
+    target.parent.mkdir(parents=True, exist_ok=True)
+    temporary = target.with_suffix('.tmp')
+    temporary.write_text(json.dumps(values, ensure_ascii=False), encoding='utf-8')
+    temporary.replace(target)

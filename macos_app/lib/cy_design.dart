@@ -464,3 +464,54 @@ class CyReaderWorkspace extends StatelessWidget {
     );
   }
 }
+
+/// Mac 문서함의 제목·보관 위치·필터를 웹에서도 동일하게 사용한다.
+class CyLibraryToolbar extends StatelessWidget {
+  const CyLibraryToolbar({
+    super.key,
+    required this.detail,
+    required this.selected,
+    required this.onSelected,
+  });
+  final String detail;
+  final String selected;
+  final ValueChanged<String> onSelected;
+  @override
+  Widget build(BuildContext context) => Column(
+    crossAxisAlignment: CrossAxisAlignment.stretch,
+    children: [
+      Wrap(
+        spacing: 12,
+        runSpacing: 4,
+        crossAxisAlignment: WrapCrossAlignment.center,
+        children: [
+          Text(
+            tr(context, '문서함'),
+            style: Theme.of(context).textTheme.headlineSmall,
+          ),
+          Text(detail, style: Theme.of(context).textTheme.bodySmall),
+        ],
+      ),
+      const SizedBox(height: 16),
+      Wrap(
+        spacing: 8,
+        runSpacing: 8,
+        children: [
+          for (final entry in const {
+            'recent': '최근 열어본 파일',
+            'all': '전체 문서',
+            'favorites': '즐겨찾기',
+          }.entries)
+            ChoiceChip(
+              avatar: entry.key == 'favorites'
+                  ? const Icon(Icons.star_outline, size: 18)
+                  : null,
+              label: Text(tr(context, entry.value)),
+              selected: selected == entry.key,
+              onSelected: (_) => onSelected(entry.key),
+            ),
+        ],
+      ),
+    ],
+  );
+}
