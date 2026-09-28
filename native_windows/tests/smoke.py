@@ -4,6 +4,7 @@ import sys
 import tempfile
 import shutil
 import tkinter as tk
+from types import SimpleNamespace
 from tkinter import messagebox
 
 sys.stdout.reconfigure(encoding="utf-8")
@@ -80,6 +81,12 @@ try:
         app.toggle_tools()
         app.geometry("1200x800")
         app.update()
+        # CI 가상 화면은 요청한 1200px 창을 더 작게 제한할 수 있다.
+        # 실제 크기를 기록하고 넓은 화면의 Configure 처리도 직접 검증한다.
+        print(f"Windows 반응형 검사: 화면 {app.winfo_screenwidth()}px, 창 {app.winfo_width()}px")
+        if app.winfo_width() < 1100:
+            app.reader_layout(SimpleNamespace(widget=app, width=1200))
+            app.update_idletasks()
         assert app.rail.winfo_ismapped()
         assert not app.tools_button.winfo_ismapped()
         app.show_library()
