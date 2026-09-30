@@ -2,7 +2,6 @@ import Cocoa
 import FlutterMacOS
 import PDFKit
 import Vision
-import CryptoKit
 
 class MainFlutterWindow: NSWindow {
   private var securityScopedURLs: [URL] = []
@@ -249,13 +248,10 @@ private enum FileAccessError: LocalizedError {
   }
 }
 
-// 배포본의 샌드박스와 파일 접근 권한을 유지하는 업데이트 다운로드 도우미.
+// 앱 샌드박스를 유지하면서 공식 릴리스를 검증해 브라우저로 전달한다.
 private struct MacUpdateInfo {
   let version: String
-  let fileName: String
   let url: URL
-  let checksumURL: URL
-  let size: Int64
 
   static func versionParts(_ version: String) -> [Int]? {
     guard version.range(of: "^[0-9]+\\.[0-9]+\\.[0-9]+$", options: .regularExpression) != nil else { return nil }
@@ -282,21 +278,10 @@ private struct MacUpdateInfo {
             binary["browser_download_url"] as? String == prefix + filename,
             sums["browser_download_url"] as? String == prefix + checksum,
             let size = binary["size"] as? Int64, size > 0, size <= 250 * 1024 * 1024,
-            let url = URL(string: prefix + filename), let checksumURL = URL(string: prefix + checksum)
+            let url = URL(string: prefix + filename)
       else { return nil }
-      return MacUpdateInfo(version: version, fileName: filename, url: url, checksumURL: checksumURL, size: size)
+      return MacUpdateInfo(version: version, url: url)
     }.max { (versionParts($0.version) ?? []).lexicographicallyPrecedes(versionParts($1.version) ?? []) }
-  }
-
-  static func checksum(_ text: String, fileName: String) -> String? {
-    for line in text.split(whereSeparator: \.isNewline) {
-      let pieces = line.trimmingCharacters(in: .whitespacesAndNewlines).split(maxSplits: 1, whereSeparator: \.isWhitespace)
-      guard pieces.count == 2 else { continue }
-      let hash = String(pieces[0]).lowercased()
-      let name = pieces[1].trimmingCharacters(in: .whitespaces).trimmingCharacters(in: CharacterSet(charactersIn: "*"))
-      if name == fileName && hash.range(of: "^[a-f0-9]{64}$", options: .regularExpression) != nil { return hash }
-    }
-    return nil
   }
 }
 
@@ -306,7 +291,6 @@ private final class MacUpdateController {
   private var timer: Timer?
   private var progressWindow: NSWindow?
   private var progressLabel: NSTextField?
-  private var downloaded: URL?
   private let version = Bundle.main.infoDictionary?["CFBundleShortVersionString"] as? String ?? "0.0.0"
 
   init(window: NSWindow) {
@@ -319,10 +303,6 @@ private final class MacUpdateController {
   func check(manual: Bool) {
     if busy {
       if manual { progressWindow?.makeKeyAndOrderFront(nil) }
-      return
-    }
-    if let downloaded {
-      openInstaller(downloaded)
       return
     }
     busy = true
@@ -349,11 +329,11 @@ private final class MacUpdateController {
         }
         let alert = NSAlert()
         alert.messageText = cyNativeTr("CY뷰어 {0} 업데이트", [String(describing: update.version)])
-        alert.informativeText = cyNativeTr("현재 버전: {0}\n\n설치 파일을 다운로드하고 검증한 뒤 엽니다. 마지막으로 CYViewer.app을 Applications로 옮겨 기존 앱을 교체해 주세요.", [String(describing: self.version)])
-        alert.addButton(withTitle: cyNativeTr("다운로드"))
+        alert.informativeText = cyNativeTr("현재 버전: {0}\n\n브라우저에서 공식 설치 파일을 다운로드합니다. DMG를 연 뒤 CY뷰어를 종료하고 CYViewer.app을 Applications로 옮겨 교체하세요. 앱에서 받은 이전 DMG는 사용하지 마세요.", [String(describing: self.version)])
+        alert.addButton(withTitle: cyNativeTr("브라우저에서 다운로드"))
         alert.addButton(withTitle: cyNativeTr("나중에"))
         self.present(alert) { response in
-          if response == .alertFirstButtonReturn { self.download(update) }
+          if response == .alertFirstButtonReturn { self.openBrowserDownload(update) }
         }
       }
     }.resume()
@@ -383,59 +363,17 @@ private final class MacUpdateController {
     progressWindow?.orderFront(nil)
   }
   private func closeProgress() { progressWindow?.orderOut(nil) }
-  private func fail(_ message: String) {
-    DispatchQueue.main.async { self.busy = false; self.closeProgress(); self.notice(cyNativeTr("업데이트를 완료하지 못했습니다"), message) }
-  }
-
-  private func download(_ update: MacUpdateInfo) {
-    busy = true
-    showProgress(cyNativeTr("설치 파일을 다운로드하고 검증합니다…"))
-    var request = URLRequest(url: update.checksumURL); request.timeoutInterval = 30
-    URLSession.shared.dataTask(with: request) { [weak self] data, response, error in
-      guard let self else { return }
-      guard error == nil, (response as? HTTPURLResponse)?.statusCode == 200,
-            let data, data.count <= 65536, let text = String(data: data, encoding: .utf8),
-            let expected = MacUpdateInfo.checksum(text, fileName: update.fileName)
-      else { self.fail(cyNativeTr("설치 파일의 검증 정보를 받지 못했습니다. 다시 시도해 주세요.")); return }
-      var packageRequest = URLRequest(url: update.url); packageRequest.timeoutInterval = 300
-      URLSession.shared.downloadTask(with: packageRequest) { [weak self] temporary, response, error in
-        guard let self else { return }
-        guard error == nil, (response as? HTTPURLResponse)?.statusCode == 200,
-              response?.url?.scheme == "https", let temporary
-        else { self.fail(cyNativeTr("설치 파일을 다운로드하지 못했습니다. 다시 시도해 주세요.")); return }
-        do {
-          let attributes = try FileManager.default.attributesOfItem(atPath: temporary.path)
-          guard (attributes[.size] as? NSNumber)?.int64Value == update.size else { throw UpdateError.invalidFile }
-          let handle = try FileHandle(forReadingFrom: temporary)
-          defer { try? handle.close() }
-          var hash = SHA256()
-          while let chunk = try handle.read(upToCount: 1024 * 1024), !chunk.isEmpty { hash.update(data: chunk) }
-          let actual = hash.finalize().map { String(format: "%02x", $0) }.joined()
-          guard actual == expected else { throw UpdateError.invalidFile }
-          let directory = FileManager.default.temporaryDirectory.appendingPathComponent("CYViewer-update-" + UUID().uuidString)
-          try FileManager.default.createDirectory(at: directory, withIntermediateDirectories: true)
-          let target = directory.appendingPathComponent(update.fileName)
-          try FileManager.default.moveItem(at: temporary, to: target)
-          DispatchQueue.main.async {
-            self.downloaded = target; self.busy = false; self.closeProgress(); self.openInstaller(target)
-          }
-        } catch { self.fail(cyNativeTr("설치 파일 검증에 실패했습니다. 다시 다운로드해 주세요.")) }
-      }.resume()
-    }.resume()
-  }
-
-  private func openInstaller(_ url: URL) {
-    let alert = NSAlert()
-    alert.messageText = cyNativeTr("설치 파일이 준비되었습니다")
-    alert.informativeText = cyNativeTr("작업한 문서를 저장하세요. DMG를 연 뒤 CY뷰어를 종료하고 CYViewer.app을 Applications로 옮겨 교체합니다. 앱을 자동으로 종료하거나 문서를 닫지 않습니다.")
-    alert.addButton(withTitle: cyNativeTr("설치 파일 열기")); alert.addButton(withTitle: cyNativeTr("나중에"))
-    present(alert) { response in
-      if response == .alertFirstButtonReturn && !NSWorkspace.shared.open(url) {
-        self.notice(cyNativeTr("설치 파일을 열 수 없습니다"), cyNativeTr("배포 사이트에서 설치 파일을 받아 주세요.\nhttps://kimmacaroni.github.io/CY_Viewer/download/"))
-      }
+  private func openBrowserDownload(_ update: MacUpdateInfo) {
+    // 샌드박스 앱이 만든 DMG에는 실행 금지 quarantine 속성이 전파될 수 있다.
+    // 허용 목록으로 검증된 공식 릴리스 URL을 브라우저에 맡겨 사용자가 설치 파일을 받는다.
+    guard NSWorkspace.shared.open(update.url) else {
+      notice(cyNativeTr("다운로드 페이지를 열지 못했습니다"),
+             cyNativeTr("배포 사이트에서 설치 파일을 받아 주세요.\nhttps://kimmacaroni.github.io/CY_Viewer/download/"))
+      return
     }
+    notice(cyNativeTr("브라우저에서 다운로드"),
+           cyNativeTr("다운로드한 DMG를 열고 CY뷰어를 종료한 뒤 CYViewer.app을 Applications로 옮겨 교체하세요. 기존에 앱에서 받은 DMG는 사용하지 마세요."))
   }
-  private enum UpdateError: Error { case invalidFile }
 }
 
 // Flutter와 같은 언어를 기본 메뉴와 업데이트 알림에도 적용한다.
@@ -935,5 +873,10 @@ private let cyNativeEnglish: [String: String] = [
   "문서를 열고, 바로 읽으세요.": "Open a document. Start reading.",
   "최근 파일을 저장하지 못했습니다.": "Could not save recent files.",
   "최근 열람 · {0}": "Last opened · {0}",
+  "현재 버전: {0}\\n\\n브라우저에서 공식 설치 파일을 다운로드합니다. DMG를 연 뒤 CY뷰어를 종료하고 CYViewer.app을 Applications로 옮겨 교체하세요. 앱에서 받은 이전 DMG는 사용하지 마세요.": "Current version: {0}\\n\\nDownload the official installer in your browser. Open the DMG, quit CY Viewer, then move CYViewer.app to Applications to replace it. Do not use an older DMG downloaded by the app.",
+  "브라우저에서 다운로드": "Download in browser",
+  "다운로드 페이지를 열지 못했습니다": "Could not open the download page",
+  "다운로드한 DMG를 열고 CY뷰어를 종료한 뒤 CYViewer.app을 Applications로 옮겨 교체하세요. 기존에 앱에서 받은 DMG는 사용하지 마세요.": "Open the downloaded DMG, quit CY Viewer, then move CYViewer.app to Applications to replace it. Do not use a DMG previously downloaded by the app.",
+  "앱에서 새 버전을 알리고 공식 설치 파일을 브라우저에서 받습니다. DMG를 열고 CYViewer.app을 Applications로 옮겨 기존 앱을 교체해 주세요. 현재 Mac 배포본은 Apple 서명·공증 전이므로 마지막 교체는 직접 진행합니다.": "The app notifies you of a new version and opens the official installer in your browser. Open the DMG and move CYViewer.app to Applications to replace the old app. The Mac release is not yet Apple-signed or notarized, so replacement is manual.",
 ]
 // END GENERATED TRANSLATIONS
