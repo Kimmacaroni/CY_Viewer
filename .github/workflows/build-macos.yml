@@ -115,7 +115,7 @@ jobs:
           PACKAGE_VERSION: ${{ needs.build.outputs.version }}
         run: |
           cat > notes.md <<'EOF'
-          배포 사이트와 앱 내 업데이트 알림·다운로드·검증 기능을 추가했습니다. Mac은 DMG를 연 뒤 Applications로 직접 옮겨 교체합니다.
+          Mac 업데이트는 앱의 안내에서 공식 릴리스 설치 파일을 브라우저로 받아 진행합니다. 앱 안에서 받은 이전 DMG는 사용하지 마세요. DMG를 연 뒤 Applications로 직접 옮겨 교체합니다.
 
           macOS용 CY뷰어 설치 파일입니다. DMG를 열고 CYViewer.app을 Applications 폴더로 옮겨 주세요.
 
