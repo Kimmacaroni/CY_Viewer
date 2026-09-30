@@ -531,4 +531,9 @@ const cyEnglish = <String, String>{
   "문서를 열고, 바로 읽으세요.": "Open a document. Start reading.",
   "최근 파일을 저장하지 못했습니다.": "Could not save recent files.",
   "최근 열람 · {0}": "Last opened · {0}",
+  "현재 버전: {0}\\n\\n브라우저에서 공식 설치 파일을 다운로드합니다. DMG를 연 뒤 CY뷰어를 종료하고 CYViewer.app을 Applications로 옮겨 교체하세요. 앱에서 받은 이전 DMG는 사용하지 마세요.": "Current version: {0}\\n\\nDownload the official installer in your browser. Open the DMG, quit CY Viewer, then move CYViewer.app to Applications to replace it. Do not use an older DMG downloaded by the app.",
+  "브라우저에서 다운로드": "Download in browser",
+  "다운로드 페이지를 열지 못했습니다": "Could not open the download page",
+  "다운로드한 DMG를 열고 CY뷰어를 종료한 뒤 CYViewer.app을 Applications로 옮겨 교체하세요. 기존에 앱에서 받은 DMG는 사용하지 마세요.": "Open the downloaded DMG, quit CY Viewer, then move CYViewer.app to Applications to replace it. Do not use a DMG previously downloaded by the app.",
+  "앱에서 새 버전을 알리고 공식 설치 파일을 브라우저에서 받습니다. DMG를 열고 CYViewer.app을 Applications로 옮겨 기존 앱을 교체해 주세요. 현재 Mac 배포본은 Apple 서명·공증 전이므로 마지막 교체는 직접 진행합니다.": "The app notifies you of a new version and opens the official installer in your browser. Open the DMG and move CYViewer.app to Applications to replace the old app. The Mac release is not yet Apple-signed or notarized, so replacement is manual.",
 };

@@ -18,11 +18,14 @@ var trial = release; trial["prerelease"] = true
 assert(MacUpdateInfo.newest([trial], current:"1.0.0") == nil)
 var bad = release; bad["assets"] = [["name":"CYViewer-macOS-v1.10.0.dmg", "size":100, "browser_download_url":"https://example.com/fake.dmg"]]
 assert(MacUpdateInfo.newest([bad], current:"1.0.0") == nil)
-assert(MacUpdateInfo.checksum(String(repeating:"a",count:64)+"  file.dmg",fileName:"file.dmg") != nil)
-assert(MacUpdateInfo.checksum(String(repeating:"a",count:64)+"  wrong.dmg",fileName:"file.dmg") == nil)
+assert(MacUpdateInfo.newest([release], current:"1.9.0")?.url.absoluteString == prefix+"CYViewer-macOS-v1.10.0.dmg")
 print("Mac updater checks passed")
 '''
 with tempfile.TemporaryDirectory() as directory:
     path = Path(directory)/'checks.swift'
     path.write_text('import Foundation\n'+parser+checks)
     subprocess.run(['swift', str(path)], check=True)
+
+# 샌드박스 내부 DMG를 만든 뒤 여는 회귀를 막는다. URL은 위 Swift 선택기가 허용 목록으로 검증한다.
+assert 'NSWorkspace.shared.open(update.url)' in source
+assert 'downloadTask(with: packageRequest)' not in source

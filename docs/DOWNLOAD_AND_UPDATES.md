@@ -26,8 +26,9 @@ GitHub의 공개 정식 릴리스에서 플랫폼별 가장 높은 완성 버전
 
 ### macOS
 
-기존 App Sandbox를 유지하고 업데이트 확인·다운로드용 `network.client` 권한을 추가한다.
-다운로드와 검증이 끝나면 사용자가 DMG를 열 수 있다. 앱을 종료하고 Applications로 옮기는 마지막 교체는 직접 한다.
+기존 App Sandbox를 유지한다. 업데이트 확인에는 `network.client`를 사용한다.
+샌드박스 앱이 직접 내려받은 DMG에는 macOS가 실행 금지 quarantine 속성을 붙일 수 있으므로, 1.10.1부터 검증된 공식 릴리스 URL을 기본 브라우저로 열어 파일을 받는다. 이전 앱에서 받은 DMG는 다시 사용하지 않는다.
+브라우저가 내려받은 DMG를 사용자가 연다. 앱을 종료하고 Applications로 옮기는 마지막 교체는 직접 한다.
 완전 자동 교체를 위해서는 안정적인 업데이트 서명/배포 체계를 갖춘 Sparkle 통합을 별도로 진행해야 한다. 현재 서명·공증 전 배포본에서 샌드박스를 해제하거나 임의 셸 스크립트로 자기 앱을 교체하지 않는다.
 
 참고: [Sparkle 문서](https://sparkle-project.org/documentation/), [Inno Setup 설치 인수](https://jrsoftware.org/ishelp/topic_setupcmdline.htm).
@@ -42,7 +43,7 @@ GitHub의 공개 정식 릴리스에서 플랫폼별 가장 높은 완성 버전
 
 ## 검증
 
-OS·정식 릴리스 선택 테스트 3개, Windows 업데이트 테스트 7개, Mac Swift 릴리스 선택·버전·체크섬 검사와 Flutter 회귀 테스트 17개를 실행한다. Windows CI에서는 실제 앱 PDF 검사와 설치 파일의 설치·덮어쓰기 및 실행 파일 해시 검사를 수행한다.
+OS·정식 릴리스 선택 테스트 3개, Windows 업데이트 테스트 7개, Mac Swift 릴리스 선택·버전·브라우저 URL 검사와 Flutter 회귀 테스트 17개를 실행한다. Windows CI에서는 실제 앱 PDF 검사와 설치 파일의 설치·덮어쓰기 및 실행 파일 해시 검사를 수행한다.
 2026-09-26 로컬 Mac 빌드와 Flutter 분석·테스트가 통과했다. Chrome의 다른 확장 프로그램 UI로 브라우저 제어가 차단되어 실제 배포 사이트의 시각 검증은 완료하지 못했다. Mac 업데이트 알림부터 DMG 열기까지의 실제 GUI 및 사용자 PC에서 이전 버전→새 버전 전체 업데이트는 별도 확인이 필요하다.
 
 ## 2026-09-26 배포 결과
@@ -57,3 +58,7 @@ OS·정식 릴리스 선택 테스트 3개, Windows 업데이트 테스트 7개,
 
 최종 사이트 배포 작업 `36242466252` 성공을 확인했다. 공개 URL에서 HTML·JS·CSS·아이콘·문서함 이미지를 내려받아 최종 소스 파일과 SHA-256이 같은지 확인했다.
 실제 공개 릴리스 JSON으로 Mac 1.4.0→1.5.0 감지와 1.5.0 동일 버전 제외, 사이트의 Mac 1.5.0·Windows 1.2.0 선택도 확인했다.
+
+## 2026-09-30 Mac 앱 안에서 받은 DMG 실행 실패
+
+Mac 1.10.0 업데이트 경로가 앱 샌드박스 안에 DMG를 저장해, 사용자 Mac의 `/Applications/CYViewer.app`에 `com.apple.quarantine: 0186;...;CYViewer;`가 전파됐다. 코드 서명 검증은 통과했으나 `spctl`은 `File created by an AppSandbox, exec/open not allowed`로 차단했다. 이는 서명·공증 안내와 별개의 오류다. 1.10.1부터 앱에서 직접 DMG를 만들지 않고 검증된 공식 릴리스 주소를 브라우저로 넘긴다. 이 경로에서는 앱 내 다운로드 후 SHA-256 검사가 적용되지 않으므로 릴리스에서 공개하는 검증 파일과 브라우저·macOS의 검증을 사용한다. 기존에 받은 DMG가 아닌 브라우저에서 새로 받은 DMG로 설치해야 한다.
