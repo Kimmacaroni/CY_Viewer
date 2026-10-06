@@ -31,4 +31,13 @@
 
 ## 배포
 
-`publish-desktop-versions.yml`은 main의 버전 변경을 플랫폼 태그 및 기존 OS별 검증·릴리스 빌드로 연결한다. GitHub 게시와 실제 설치 파일·체크섬 확인 결과는 배포가 끝난 뒤 별도로 기록한다.
+`publish-desktop-versions.yml`은 main의 버전 변경을 플랫폼 태그 및 기존 OS별 검증·릴리스 빌드로 연결한다. PR #29를 병합한 `db7d8d789b7c1d6b31f07d3ac309b8543cf891ff`에서 웹과 두 데스크톱 버전을 공개했다.
+
+- 웹 Pages 빌드 `37460025279`: 성공. 공개 웹의 버전 `1.11.0`, 빌드 `17`과 새 캐시 식별자를 확인했다. 공개 앱에서 실제 PDF 열기·페이지 이동·보기 방식·책갈피 진입도 확인했다.
+- Windows 릴리스 빌드 `37460051170`: 성공. 실제 Windows GUI smoke·설치 및 재설치 검사도 통과했다. 공개 설치 파일은 36,953,395바이트, SHA-256 `c5e48be0bdefe283225ace68b8b09befebd2805435bca65f269430b26a87c3b0`이다.
+- Mac 릴리스 빌드 `37460045948`: 공개 DMG 생성 및 Swift 검사 성공. 공개 설치 파일은 34,010,217바이트, SHA-256 `78fb776fc6fc0af173fbf20dec419e2b7d44090ae2c059d62eaa6b5d15efbe90`이다.
+- 두 설치 파일 모두 공식 공개 다운로드 주소에서 직접 내려받아 릴리스 체크섬과 크기를 대조했다. 다운로드 페이지와 README의 기본 링크도 새 버전으로 갱신했다.
+
+[웹앱](https://kimmacaroni.github.io/CY_Viewer/) · [다운로드](https://kimmacaroni.github.io/CY_Viewer/download/) · [병합 PR](https://github.com/Kimmacaroni/CY_Viewer/pull/29)
+
+실제 사용자 Mac 설치와 iPhone/iPad 실기기 검증 범위는 위의 제한을 유지한다.

@@ -98,3 +98,9 @@ CY뷰어 작업 인수 기록
   기록은 앱의 직접 HTML 입력 전환 근거이며, 모든 앱 경로 성공의 증거는 아니다.
 - archive-download-history/archive-download-pages 브랜치는 과거 기록 보존용이다.
   최신 구현으로 혼동하지 않는다. 다른 미병합 브랜치는 별도로 diff를 확인한다.
+
+2026-10-06 후속 작업
+- 디자인 개선 PR #29 병합: db7d8d789b7c1d6b31f07d3ac309b8543cf891ff.
+- 웹/Mac 1.11.0+17, Windows 1.8.0 공개 및 실제 다운로드 체크섬 검증.
+- 변경과 검증 근거는 docs/DESIGN_REFINEMENT.md에 기록.
+- 위 파일 목록과 Git 이력은 초기 학습 시점의 스냅샷이며 최신 버전은 이 후속 기록을 참조.
