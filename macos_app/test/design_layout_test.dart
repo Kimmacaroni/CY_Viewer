@@ -6,6 +6,53 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 void main() {
+  testWidgets('데스크톱 탐색은 책갈피·보기·페이지를 직접 실행한다', (tester) async {
+    tester.view.physicalSize = const Size(1200, 800);
+    tester.view.devicePixelRatio = 1;
+    addTearDown(tester.view.resetPhysicalSize);
+    addTearDown(tester.view.resetDevicePixelRatio);
+    var bookmarks = 0, views = 0, pages = 0, next = 0, tools = 0;
+    await tester.pumpWidget(
+      MaterialApp(
+        theme: CyDesign.theme(Brightness.light),
+        home: Scaffold(
+          body: CyReaderWorkspace(
+            onOpen: () {},
+            onSearch: () {},
+            onPage: () => pages++,
+            onBookmark: () {},
+            onTools: () => tools++,
+            onBookmarks: () => bookmarks++,
+            onView: () => views++,
+            onNext: () => next++,
+            pageLabel: '1 / 12',
+            onSave: () {},
+            onPrint: () {},
+            onZoomIn: () {},
+            onZoomOut: () {},
+            child: const Text('문서 영역'),
+          ),
+        ),
+      ),
+    );
+    await tester.tap(find.text('책갈피 목록'));
+    await tester.tap(find.text('보기 방식'));
+    await tester.tap(find.text('1 / 12'));
+    await tester.tap(find.byTooltip('다음 페이지'));
+    expect((bookmarks, views, pages, next, tools), (1, 1, 1, 1, 0));
+    expect(
+      tester
+          .widget<IconButton>(
+            find.byWidgetPredicate(
+              (widget) => widget is IconButton && widget.tooltip == '이전 페이지',
+            ),
+          )
+          .onPressed,
+      isNull,
+    );
+    expect(tester.takeException(), isNull);
+  });
+
   for (final web in [false, true]) {
     for (final size in [const Size(320, 640), const Size(1024, 768)]) {
       for (final scale in [1.0, 2.0]) {
@@ -72,7 +119,7 @@ void main() {
         scenario.$3 ? findsOneWidget : findsNothing,
       );
       if (scenario.$3) {
-        final save = find.widgetWithText(OutlinedButton, 'PDF로 저장');
+        final save = find.widgetWithText(TextButton, 'PDF로 저장');
         await tester.ensureVisible(save);
         await tester.tap(save);
         expect(saves, 1);

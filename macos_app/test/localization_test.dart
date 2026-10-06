@@ -15,17 +15,17 @@ void main() {
   testWidgets('언어 변경을 저장하고 웹 문구를 즉시 바꾼다', (tester) async {
     await tester.pumpWidget(const CyViewerWebApp());
     await tester.pumpAndSettle();
-    expect(find.text('어떤 문서를 읽을까요?'), findsOneWidget);
+    expect(find.text('문서를 열고,\n바로 읽으세요.'), findsOneWidget);
     await CyLanguage.instance.select('en');
     await tester.pumpAndSettle();
-    expect(find.text('What would you like to read?'), findsOneWidget);
+    expect(find.text('Open a document.\nStart reading.'), findsOneWidget);
     expect(
       (await SharedPreferences.getInstance()).getString('cy_language'),
       'en',
     );
     await CyLanguage.instance.select('ko');
     await tester.pumpAndSettle();
-    expect(find.text('어떤 문서를 읽을까요?'), findsOneWidget);
+    expect(find.text('문서를 열고,\n바로 읽으세요.'), findsOneWidget);
   });
 
   testWidgets('열려 있는 경로를 언어 변경으로 닫지 않는다', (tester) async {
@@ -71,7 +71,7 @@ void main() {
           web ? const CyViewerWebApp() : const PersonalPdfApp(),
         );
         await tester.pumpAndSettle();
-        expect(find.text('What would you like to read?'), findsOneWidget);
+        expect(find.text('Open a document.\nStart reading.'), findsOneWidget);
         expect(tester.takeException(), isNull);
       });
     }

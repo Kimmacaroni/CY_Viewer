@@ -13,6 +13,7 @@ class CyRecentFiles extends StatelessWidget {
     this.favorites = const {},
     this.onFavorite,
     this.showHeading = true,
+    this.showResume = true,
   });
   final List<Map<String, dynamic>> files;
   final ValueChanged<Map<String, dynamic>> onOpen;
@@ -20,7 +21,7 @@ class CyRecentFiles extends StatelessWidget {
   final bool enabled;
   final Set<String> favorites;
   final ValueChanged<String>? onFavorite;
-  final bool showHeading;
+  final bool showHeading, showResume;
 
   @override
   Widget build(BuildContext context) => Column(
@@ -34,63 +35,91 @@ class CyRecentFiles extends StatelessWidget {
       if (showHeading) const SizedBox(height: 8),
       if (showHeading) Text(tr(context, '최근 5개 · 이 브라우저에만 저장됨')),
       const SizedBox(height: 12),
-      for (final row in files.take(5))
-        Card(
-          child: ListTile(
-            contentPadding: const EdgeInsets.symmetric(
-              horizontal: 16,
-              vertical: 8,
-            ),
-            leading: Container(
-              padding: const EdgeInsets.all(10),
-              decoration: BoxDecoration(
-                color: Theme.of(context).colorScheme.primaryContainer,
-                borderRadius: BorderRadius.circular(10),
-              ),
-              child: Icon(
-                Icons.description_outlined,
-                color: Theme.of(context).colorScheme.onPrimaryContainer,
-              ),
-            ),
-            title: Text(
-              row['name'] as String,
-              maxLines: 2,
-              overflow: TextOverflow.ellipsis,
-            ),
-            subtitle: row['openedAt'] is num
-                ? Text(
-                    tr(context, '최근 열람 · {0}', [
-                      DateTime.fromMillisecondsSinceEpoch(
-                        (row['openedAt'] as num).toInt(),
-                      ).toLocal().toString().split(' ').first,
-                    ]),
+      for (final entry in files.take(5).toList().asMap().entries)
+        Padding(
+          padding: const EdgeInsets.only(bottom: 8),
+          child: Card(
+            shape: showResume && entry.key == 0
+                ? RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(16),
+                    side: BorderSide(
+                      color: Theme.of(context).colorScheme.primary,
+                    ),
                   )
                 : null,
-            onTap: enabled ? () => onOpen(row) : null,
-            trailing: Row(
-              mainAxisSize: MainAxisSize.min,
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.stretch,
               children: [
-                if (onFavorite != null)
-                  IconButton(
-                    tooltip: tr(
-                      context,
-                      favorites.contains(row['id']) ? '즐겨찾기 해제' : '즐겨찾기에 추가',
-                    ),
-                    onPressed: enabled
-                        ? () => onFavorite!(row['id'] as String)
-                        : null,
-                    icon: Icon(
-                      favorites.contains(row['id'])
-                          ? Icons.star
-                          : Icons.star_border,
+                if (showResume && entry.key == 0)
+                  Padding(
+                    padding: const EdgeInsets.fromLTRB(16, 16, 16, 0),
+                    child: Text(
+                      tr(context, '이어서 읽기'),
+                      style: Theme.of(context).textTheme.labelLarge?.copyWith(
+                        color: Theme.of(context).colorScheme.primary,
+                      ),
                     ),
                   ),
-                IconButton(
-                  tooltip: tr(context, '최근 목록에서 제거'),
-                  onPressed: enabled
-                      ? () => onRemove(row['id'] as String)
+                ListTile(
+                  contentPadding: const EdgeInsets.symmetric(
+                    horizontal: 16,
+                    vertical: 8,
+                  ),
+                  leading: Container(
+                    padding: const EdgeInsets.all(10),
+                    decoration: BoxDecoration(
+                      color: Theme.of(context).colorScheme.primaryContainer,
+                      borderRadius: BorderRadius.circular(10),
+                    ),
+                    child: Icon(
+                      Icons.description_outlined,
+                      color: Theme.of(context).colorScheme.onPrimaryContainer,
+                    ),
+                  ),
+                  title: Text(
+                    entry.value['name'] as String,
+                    maxLines: 2,
+                    overflow: TextOverflow.ellipsis,
+                  ),
+                  subtitle: entry.value['openedAt'] is num
+                      ? Text(
+                          tr(context, '최근 열람 · {0}', [
+                            DateTime.fromMillisecondsSinceEpoch(
+                              (entry.value['openedAt'] as num).toInt(),
+                            ).toLocal().toString().split(' ').first,
+                          ]),
+                        )
                       : null,
-                  icon: const Icon(Icons.close),
+                  onTap: enabled ? () => onOpen(entry.value) : null,
+                  trailing: Row(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      if (onFavorite != null)
+                        IconButton(
+                          tooltip: tr(
+                            context,
+                            favorites.contains(entry.value['id'])
+                                ? '즐겨찾기 해제'
+                                : '즐겨찾기에 추가',
+                          ),
+                          onPressed: enabled
+                              ? () => onFavorite!(entry.value['id'] as String)
+                              : null,
+                          icon: Icon(
+                            favorites.contains(entry.value['id'])
+                                ? Icons.star
+                                : Icons.star_border,
+                          ),
+                        ),
+                      IconButton(
+                        tooltip: tr(context, '최근 목록에서 제거'),
+                        onPressed: enabled
+                            ? () => onRemove(entry.value['id'] as String)
+                            : null,
+                        icon: const Icon(Icons.close),
+                      ),
+                    ],
+                  ),
                 ),
               ],
             ),

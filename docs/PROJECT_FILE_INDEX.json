@@ -1,0 +1,1692 @@
+{
+  "기준일": "2026-10-06",
+  "기준커밋": "5275787c64012850d5c18e9645a10e6aab0f2bd4",
+  "범위": "기준 커밋에서 추적되는 로컬 파일. 해시는 목록 대조용이며 모든 소스 행의 정밀 검토를 의미하지 않는다.",
+  "files": [
+    {
+      "path": ".github/workflows/build-macos.yml",
+      "bytes": 4590,
+      "sha256": "64202123331890e50b738da4c34e793e830f51aacebd1345fb06380727dc8883"
+    },
+    {
+      "path": ".github/workflows/build-windows.yml",
+      "bytes": 4303,
+      "sha256": "d1784cd86e280d684e674223f41450658384fb787546e8bf3d8f89fc024c81a6"
+    },
+    {
+      "path": ".github/workflows/deploy-web.yml",
+      "bytes": 1806,
+      "sha256": "1aed8b63ed0e25978611b96e07f5451b8ee5e4dad6fd0f608d6e5c79c7eb2fbb"
+    },
+    {
+      "path": ".gitignore",
+      "bytes": 391,
+      "sha256": "0d0dee757e182dbeb7f0b93c6601c103336d9792c63a73c03372a5b8b9551373"
+    },
+    {
+      "path": "AGENTS.md",
+      "bytes": 1566,
+      "sha256": "3224a95a72c2400a478e659adb8386bd0fd9498760e5a4dc49cd0b7ea7f14ec8"
+    },
+    {
+      "path": "CYViewer-OneFile.spec",
+      "bytes": 1144,
+      "sha256": "247524337b799476301df57a06e2c22b254cc1a8adfd4f51ddbcf84780e7848e"
+    },
+    {
+      "path": "CYViewer.spec",
+      "bytes": 1254,
+      "sha256": "17968de5fde8474b250a318753cd5262793d33af85df3203f902d0cc9462c86f"
+    },
+    {
+      "path": "README.md",
+      "bytes": 5912,
+      "sha256": "e1443a81f3198adfc3068ec882d9c78764409841083a2f574822ee49446e7e93"
+    },
+    {
+      "path": "docs/CY_DESIGN_SYSTEM.md",
+      "bytes": 10879,
+      "sha256": "677bde7babd5c12b9d05be2659733a31155952c993dc388f0afb1d78ba7c8bff"
+    },
+    {
+      "path": "docs/CY뷰어_대화및작업기록.docx",
+      "bytes": 44386,
+      "sha256": "473360b5237d1a0bb3c37edbed7c9fda633a86de5db1804a6db7fef9ddbc4479"
+    },
+    {
+      "path": "docs/DESIGN_REVIEW.md",
+      "bytes": 4204,
+      "sha256": "6435b7ea2632fe1ed64a30daedf832f438e1cca03354f2493f519a10072a8c02"
+    },
+    {
+      "path": "docs/DOWNLOAD_AND_UPDATES.md",
+      "bytes": 6754,
+      "sha256": "89ea8d72cbf4dfb4dcbec81908ff91e4807fb8564951eec12184ecaa2e6b7cad"
+    },
+    {
+      "path": "docs/GOOGLE_DRIVE_SYNC.md",
+      "bytes": 3444,
+      "sha256": "bd95e13f95b9793925f7b557f10e604e8442632aa373eed410513dfb46448e02"
+    },
+    {
+      "path": "docs/MULTILINGUAL_RELEASE.md",
+      "bytes": 2513,
+      "sha256": "55a3b023f07c1eb5a4ca58ec34f22785a4a4a5717e3d948a2e5dc1616b3fcc6f"
+    },
+    {
+      "path": "docs/RECENT_FILES.md",
+      "bytes": 2705,
+      "sha256": "a60f3206b37bed7688290242a64aec3aad90f83027f96fe0f10e67e956f71de5"
+    },
+    {
+      "path": "docs/RELEASES.md",
+      "bytes": 4201,
+      "sha256": "5a5fe9a12c0c0d5e48151bbd6bd1a45f63d960d016676f07812fc50951de8f20"
+    },
+    {
+      "path": "docs/USER_GUIDE.md",
+      "bytes": 2875,
+      "sha256": "0846a938f73873bd2a4eb41e30bc7f08e759ca25c291ff7772815de2f78e3cee"
+    },
+    {
+      "path": "docs/WEB_APP_ICON_FIX.md",
+      "bytes": 1260,
+      "sha256": "60ecb23b307b94cdb090f2449592fc554819befb674d019a01fe0aa92cf3cf9a"
+    },
+    {
+      "path": "docs/WEB_INSTALLED_PICKER_FIX.md",
+      "bytes": 2560,
+      "sha256": "56f51af7f2b97e03670d8d3627d39a2fbccce8a57c002752ae07d589b2065ea1"
+    },
+    {
+      "path": "docs/WEB_PDF_LOADING_FIX.md",
+      "bytes": 2302,
+      "sha256": "251975c9364ab3aefe412abd1a2717853fa5e846e13002a5854b05b157cf041d"
+    },
+    {
+      "path": "docs/WEB_PRINT_RANGE.md",
+      "bytes": 5513,
+      "sha256": "0880baec13b97c8a7212a72a0b95d23ec98d8636d0623eedea91933f91c7a0c4"
+    },
+    {
+      "path": "docs/archive/download-repository/SHA256SUMS-v1.0.0-original.txt",
+      "bytes": 185,
+      "sha256": "f294e309e2bfeb52c6f13a6aa8be21bbf8647de92f518bd291268a36d4d3f439"
+    },
+    {
+      "path": "docs/archive/download-repository/verification.json",
+      "bytes": 2400,
+      "sha256": "d1049084edb4347a0bbd0f0e1b7c084c8b5710305fb4f1a8895d6ff13e644a73"
+    },
+    {
+      "path": "installer/CYViewer.iss",
+      "bytes": 1484,
+      "sha256": "0b07f76df8c29a43a08d1de8422da8bdd46acc44103d4bcd2bed4eb61d124ebf"
+    },
+    {
+      "path": "localization/en.json",
+      "bytes": 43702,
+      "sha256": "5326b78cd0bf6e1e803ac017bf3f226d79ad7130d2ab2f779fdfb6d3bc0a5d7e"
+    },
+    {
+      "path": "macos_app/.gitignore",
+      "bytes": 746,
+      "sha256": "441eaa1de5b3db9fae056e7503567e9f8dd94173e1389c60f76956abf729015a"
+    },
+    {
+      "path": "macos_app/.metadata",
+      "bytes": 964,
+      "sha256": "1dd570c4c301548c4ca6be34db17468f386e47452410e5a165b0e590b69907f7"
+    },
+    {
+      "path": "macos_app/README.md",
+      "bytes": 2319,
+      "sha256": "ecd72e7efa7610327d084d2528f8cb5c71e3ccaaaed2b57a15f346f6458e35c9"
+    },
+    {
+      "path": "macos_app/analysis_options.yaml",
+      "bytes": 1532,
+      "sha256": "9750fa0456ec6e4188aeb7b97e8d4edb9e4ac20576eb298cf6831bbbfd340551"
+    },
+    {
+      "path": "macos_app/assets/cy_viewer_icon.png",
+      "bytes": 1928225,
+      "sha256": "2a13b4d332984b79854c016d6aaae6c59b8928fd88e167f6a3c0cfcf7a8c8c49"
+    },
+    {
+      "path": "macos_app/ios/.gitignore",
+      "bytes": 569,
+      "sha256": "37380775aeb2499662b7aca80f4ac4c95ae827c3ba2bfa179aa3e9af4812c623"
+    },
+    {
+      "path": "macos_app/ios/Flutter/AppFrameworkInfo.plist",
+      "bytes": 720,
+      "sha256": "da12038f9b2688a8a26160fea2609fa8fcb11421448c109f09c0f573efe7698d"
+    },
+    {
+      "path": "macos_app/ios/Flutter/Debug.xcconfig",
+      "bytes": 30,
+      "sha256": "a82d7765b37116ee4821d2cd1d65942febf8032353757ffb0826eabde785b4a6"
+    },
+    {
+      "path": "macos_app/ios/Flutter/Release.xcconfig",
+      "bytes": 30,
+      "sha256": "a82d7765b37116ee4821d2cd1d65942febf8032353757ffb0826eabde785b4a6"
+    },
+    {
+      "path": "macos_app/ios/Runner.xcodeproj/project.pbxproj",
+      "bytes": 26046,
+      "sha256": "81632b668563c6092fada3cf47983468a4510f3b1e9ae4b64e71df8625378865"
+    },
+    {
+      "path": "macos_app/ios/Runner.xcodeproj/project.xcworkspace/contents.xcworkspacedata",
+      "bytes": 135,
+      "sha256": "7f3b00b5c3fdb45242d7b87e1e5c4e25d1fa8129a16c94295ecc4e8ea2235c5f"
+    },
+    {
+      "path": "macos_app/ios/Runner.xcodeproj/project.xcworkspace/xcshareddata/IDEWorkspaceChecks.plist",
+      "bytes": 238,
+      "sha256": "dfa0f9bb85b95ccba9c6811adadf8cb407fb5d52088e89db83ebc308ec448542"
+    },
+    {
+      "path": "macos_app/ios/Runner.xcodeproj/project.xcworkspace/xcshareddata/WorkspaceSettings.xcsettings",
+      "bytes": 226,
+      "sha256": "11b247bc6796892d67c9a821d18604db4dd6a880981b34f38460b9866e6b247f"
+    },
+    {
+      "path": "macos_app/ios/Runner.xcodeproj/xcshareddata/xcschemes/Runner.xcscheme",
+      "bytes": 4717,
+      "sha256": "9fbce429f56243561dd437a527136c9f9ed77165e3b271b923faf236cfcd0484"
+    },
+    {
+      "path": "macos_app/ios/Runner.xcworkspace/contents.xcworkspacedata",
+      "bytes": 152,
+      "sha256": "46c3c9702ff7c5584e11c954d943cfb6e07fb26e3fbd072ddbc0f388aa352de1"
+    },
+    {
+      "path": "macos_app/ios/Runner.xcworkspace/xcshareddata/IDEWorkspaceChecks.plist",
+      "bytes": 238,
+      "sha256": "dfa0f9bb85b95ccba9c6811adadf8cb407fb5d52088e89db83ebc308ec448542"
+    },
+    {
+      "path": "macos_app/ios/Runner.xcworkspace/xcshareddata/WorkspaceSettings.xcsettings",
+      "bytes": 226,
+      "sha256": "11b247bc6796892d67c9a821d18604db4dd6a880981b34f38460b9866e6b247f"
+    },
+    {
+      "path": "macos_app/ios/Runner/AppDelegate.swift",
+      "bytes": 6427,
+      "sha256": "9c4ab1e8b9518a4aa6fd4710288ff28c24e228a57272c16c9a71f0b0c7692b95"
+    },
+    {
+      "path": "macos_app/ios/Runner/Assets.xcassets/AppIcon.appiconset/Contents.json",
+      "bytes": 2097,
+      "sha256": "59aee64f32dab46ad775da6ea2f3fc4efe6e8a78289a9185cd0d2d7e055845dd"
+    },
+    {
+      "path": "macos_app/ios/Runner/Assets.xcassets/AppIcon.appiconset/Icon-App-1024x1024@1x.png",
+      "bytes": 780336,
+      "sha256": "c7c3008243bd8be10975ca7a6bbba0d8752cf537c7ec7b3aca0767ef08956db3"
+    },
+    {
+      "path": "macos_app/ios/Runner/Assets.xcassets/AppIcon.appiconset/Icon-App-20x20@1x.png",
+      "bytes": 1014,
+      "sha256": "c8cee66d1163013c4f4600bf75d87b8acbc9d72eee1fb03c2288630686364e6f"
+    },
+    {
+      "path": "macos_app/ios/Runner/Assets.xcassets/AppIcon.appiconset/Icon-App-20x20@2x.png",
+      "bytes": 2712,
+      "sha256": "c96baf5e825e6b3196956bed2474e296ef4b69704bc6c48b03653469e388bf9f"
+    },
+    {
+      "path": "macos_app/ios/Runner/Assets.xcassets/AppIcon.appiconset/Icon-App-20x20@3x.png",
+      "bytes": 5096,
+      "sha256": "f4d3f1fbab8b3b333e41fbed6742d67df0cfea0efb2b2a1319a8457cef05e9d2"
+    },
+    {
+      "path": "macos_app/ios/Runner/Assets.xcassets/AppIcon.appiconset/Icon-App-29x29@1x.png",
+      "bytes": 1716,
+      "sha256": "5c23d0b2a4269f033ac0194f72e2719590e2c7fff0893f4b5a2928120cbb5221"
+    },
+    {
+      "path": "macos_app/ios/Runner/Assets.xcassets/AppIcon.appiconset/Icon-App-29x29@2x.png",
+      "bytes": 4805,
+      "sha256": "349f56b2dbcc8e5b1c519ebd5ff26030f5e9288200b4dd42c4458ea0a62d90e0"
+    },
+    {
+      "path": "macos_app/ios/Runner/Assets.xcassets/AppIcon.appiconset/Icon-App-29x29@3x.png",
+      "bytes": 9279,
+      "sha256": "d868aae98361328ad4a60ebbb11eb25411ed9daf3ef7bea49ca1bc7b912aa343"
+    },
+    {
+      "path": "macos_app/ios/Runner/Assets.xcassets/AppIcon.appiconset/Icon-App-40x40@1x.png",
+      "bytes": 2712,
+      "sha256": "c96baf5e825e6b3196956bed2474e296ef4b69704bc6c48b03653469e388bf9f"
+    },
+    {
+      "path": "macos_app/ios/Runner/Assets.xcassets/AppIcon.appiconset/Icon-App-40x40@2x.png",
+      "bytes": 8039,
+      "sha256": "5849286ecff8a00e9094f762e0099380a0289685786bad8f004df01adee77ff9"
+    },
+    {
+      "path": "macos_app/ios/Runner/Assets.xcassets/AppIcon.appiconset/Icon-App-40x40@3x.png",
+      "bytes": 15445,
+      "sha256": "39f427d2d4e85bce34f63a159d1f8b6ab638cdf47a3b21c4d5b04a75dddad325"
+    },
+    {
+      "path": "macos_app/ios/Runner/Assets.xcassets/AppIcon.appiconset/Icon-App-50x50@1x.png",
+      "bytes": 3881,
+      "sha256": "a2b7964e6e18e1275fd01793c343e94133848e2d66cd7d637420f1423361281d"
+    },
+    {
+      "path": "macos_app/ios/Runner/Assets.xcassets/AppIcon.appiconset/Icon-App-50x50@2x.png",
+      "bytes": 11541,
+      "sha256": "e93eef8efb70c4ada68a77a7bd918c85af76a0fd843fe15efda91b9ff609d314"
+    },
+    {
+      "path": "macos_app/ios/Runner/Assets.xcassets/AppIcon.appiconset/Icon-App-57x57@1x.png",
+      "bytes": 4699,
+      "sha256": "846123eef6b6c309fc41f12bc03599312fb7829849675c76e3893c1b425a4269"
+    },
+    {
+      "path": "macos_app/ios/Runner/Assets.xcassets/AppIcon.appiconset/Icon-App-57x57@2x.png",
+      "bytes": 14219,
+      "sha256": "365ff5ab05eac870d678af0f04b8be0b5a537f1e778faaa17afa85ac0fb1e965"
+    },
+    {
+      "path": "macos_app/ios/Runner/Assets.xcassets/AppIcon.appiconset/Icon-App-60x60@2x.png",
+      "bytes": 15445,
+      "sha256": "39f427d2d4e85bce34f63a159d1f8b6ab638cdf47a3b21c4d5b04a75dddad325"
+    },
+    {
+      "path": "macos_app/ios/Runner/Assets.xcassets/AppIcon.appiconset/Icon-App-60x60@3x.png",
+      "bytes": 29895,
+      "sha256": "a9a86359aa829b35c39a392a12d78b3b652c8c056169a1e4f62c92842e95a401"
+    },
+    {
+      "path": "macos_app/ios/Runner/Assets.xcassets/AppIcon.appiconset/Icon-App-72x72@1x.png",
+      "bytes": 6780,
+      "sha256": "638c594a42e7453c0f4e1168fead057ff8b1239f7096709ab4056af1d0498d3f"
+    },
+    {
+      "path": "macos_app/ios/Runner/Assets.xcassets/AppIcon.appiconset/Icon-App-72x72@2x.png",
+      "bytes": 20637,
+      "sha256": "9c3209c9b621a295fb48e4aed2000ad346a6529cb87e3219b4034a8839283946"
+    },
+    {
+      "path": "macos_app/ios/Runner/Assets.xcassets/AppIcon.appiconset/Icon-App-76x76@1x.png",
+      "bytes": 7394,
+      "sha256": "a3d96a0e8ded38a08c607f023c0ea61936d91a0680861ab65832b2271327556f"
+    },
+    {
+      "path": "macos_app/ios/Runner/Assets.xcassets/AppIcon.appiconset/Icon-App-76x76@2x.png",
+      "bytes": 22534,
+      "sha256": "a5a717d5f72f20b513af7113de6636d03816c7617af768ea5fb16165404c2f4c"
+    },
+    {
+      "path": "macos_app/ios/Runner/Assets.xcassets/AppIcon.appiconset/Icon-App-83.5x83.5@2x.png",
+      "bytes": 26923,
+      "sha256": "1d1c948188356bce4a6e681bfce74da7f1f11d20f3ae3d7f2f01fdb3f14bd589"
+    },
+    {
+      "path": "macos_app/ios/Runner/Assets.xcassets/LaunchImage.imageset/Contents.json",
+      "bytes": 391,
+      "sha256": "ccc7950fd5f5b82067c85f667940a9d59189151460761ece8098ca78daa19469"
+    },
+    {
+      "path": "macos_app/ios/Runner/Assets.xcassets/LaunchImage.imageset/LaunchImage.png",
+      "bytes": 68,
+      "sha256": "93ae7d494fad0fb30cbf3ae746a39c4bc7a0f8bbf87fbb587a3f3c01f3c5ce20"
+    },
+    {
+      "path": "macos_app/ios/Runner/Assets.xcassets/LaunchImage.imageset/LaunchImage@2x.png",
+      "bytes": 68,
+      "sha256": "93ae7d494fad0fb30cbf3ae746a39c4bc7a0f8bbf87fbb587a3f3c01f3c5ce20"
+    },
+    {
+      "path": "macos_app/ios/Runner/Assets.xcassets/LaunchImage.imageset/LaunchImage@3x.png",
+      "bytes": 68,
+      "sha256": "93ae7d494fad0fb30cbf3ae746a39c4bc7a0f8bbf87fbb587a3f3c01f3c5ce20"
+    },
+    {
+      "path": "macos_app/ios/Runner/Assets.xcassets/LaunchImage.imageset/README.md",
+      "bytes": 336,
+      "sha256": "a985b626c4f7546a8ba392d135e9226c3547c8e2b46895f5f2bdf40d7b14ef9f"
+    },
+    {
+      "path": "macos_app/ios/Runner/Base.lproj/LaunchScreen.storyboard",
+      "bytes": 2377,
+      "sha256": "857e61203b3deafb05766d8fcda898b86a7cb6f3d5e385ecc9926c4d698215e9"
+    },
+    {
+      "path": "macos_app/ios/Runner/Base.lproj/Main.storyboard",
+      "bytes": 1605,
+      "sha256": "fd367b6c43006d61b730f674970dd48b9f662c8f2264e52ffc1558102a2c9f2d"
+    },
+    {
+      "path": "macos_app/ios/Runner/Info.plist",
+      "bytes": 2706,
+      "sha256": "fa80207d2e364f25b84250c81d3dd66778cb6789c6234c8456c2a6c132ec08d9"
+    },
+    {
+      "path": "macos_app/ios/Runner/Runner-Bridging-Header.h",
+      "bytes": 38,
+      "sha256": "1a8d11d01d1cc92c650c9c9ed35299240052d4683a15a719a2315ef44185e074"
+    },
+    {
+      "path": "macos_app/ios/Runner/SceneDelegate.swift",
+      "bytes": 245,
+      "sha256": "5d118bff377cb50e504024a7e9c82308ad4fc523c1a17a0c90f5f8788782ce8f"
+    },
+    {
+      "path": "macos_app/ios/RunnerTests/RunnerTests.swift",
+      "bytes": 285,
+      "sha256": "5e8f4908dacea6f29b2a790e4d38bf5fded69096063f9a27a2f21584d62b30c0"
+    },
+    {
+      "path": "macos_app/lib/advanced_reader.dart",
+      "bytes": 41854,
+      "sha256": "87ab7758f5dd360ad99d1c5aae4c019a5c97f1e2c19f9410b88ac0b838545cdc"
+    },
+    {
+      "path": "macos_app/lib/app.dart",
+      "bytes": 27162,
+      "sha256": "e4547bf0e4824208c88003aa8bc74c736238d678373b99483d38a58b3282843e"
+    },
+    {
+      "path": "macos_app/lib/app_commands.dart",
+      "bytes": 1157,
+      "sha256": "3b0ef03babe2db2163de1df2323748ce69b44776e88e55ce10d8422eef4c9ee6"
+    },
+    {
+      "path": "macos_app/lib/cy_browser_locale.dart",
+      "bytes": 100,
+      "sha256": "bb17ae1960e9f75176f2e270c2413874da6f29d930da688516c7d3f30db0ad0a"
+    },
+    {
+      "path": "macos_app/lib/cy_browser_locale_stub.dart",
+      "bytes": 40,
+      "sha256": "c01197cabf02a5f264a074324ba046c07cc6f6fc449d224a08e856579feac3f8"
+    },
+    {
+      "path": "macos_app/lib/cy_browser_locale_web.dart",
+      "bytes": 525,
+      "sha256": "440b71092668cf1d397750800e3cf1f949205db9174d1d63b18e3609a628ca65"
+    },
+    {
+      "path": "macos_app/lib/cy_design.dart",
+      "bytes": 17456,
+      "sha256": "77703f52908549042e579b3b70598d6346fd3b34a1046528e82096bd9ae2df3d"
+    },
+    {
+      "path": "macos_app/lib/cy_localization.dart",
+      "bytes": 3479,
+      "sha256": "6237807a5d558d83d6a2058d9f6a7157ab8cacadb4969d0b18bac70e8c89f12b"
+    },
+    {
+      "path": "macos_app/lib/cy_recent_files.dart",
+      "bytes": 3479,
+      "sha256": "0555019a45f2ed2b83bf08aa40a4151bbf788ae741bbbb6bcb4e8641ad364de0"
+    },
+    {
+      "path": "macos_app/lib/cy_translations.dart",
+      "bytes": 44155,
+      "sha256": "ba35abfde2418f48742db6b8816f8032cd4393bd68f0b33e4fd442f064600450"
+    },
+    {
+      "path": "macos_app/lib/drive_auth.dart",
+      "bytes": 140,
+      "sha256": "7491df53299b7ec995813fb42f8c1b0291b72d695d910ecf64213cd3aec10500"
+    },
+    {
+      "path": "macos_app/lib/drive_auth_browser.dart",
+      "bytes": 171,
+      "sha256": "ec466cf127a2de89f5f724cb9b2649411e0279f8cbfca4be6ddfb7af4b0cd055"
+    },
+    {
+      "path": "macos_app/lib/drive_auth_native.dart",
+      "bytes": 3457,
+      "sha256": "5665d5e828ea8ed7571299c295cb51d5369ac22917c812e5ca72018dd1c176b5"
+    },
+    {
+      "path": "macos_app/lib/drive_auth_stub.dart",
+      "bytes": 75,
+      "sha256": "532d5a88e5769ca2bb269efb1d2e7d78268c51c171157c9a63ae94b6f416d285"
+    },
+    {
+      "path": "macos_app/lib/drive_panel.dart",
+      "bytes": 12133,
+      "sha256": "20c4a6ba93e701b2d6c340e11e6ea26ca1244074b45713ab42c8f04484064482"
+    },
+    {
+      "path": "macos_app/lib/drive_sync.dart",
+      "bytes": 13486,
+      "sha256": "441b34f60b353fe64bf6ce40d7918e7ea404387ab635875de65d4160ccf5f1ca"
+    },
+    {
+      "path": "macos_app/lib/main.dart",
+      "bytes": 302,
+      "sha256": "b4f024f89d2f88d06bade8c0300b2d6975d7b8843fc3be3492093c54e37616c0"
+    },
+    {
+      "path": "macos_app/lib/recent_web_store.dart",
+      "bytes": 102,
+      "sha256": "78f4956bb8c9b8755f8a2f3cb3f8e64c9a41cfc447e658bdea1933f754f402b0"
+    },
+    {
+      "path": "macos_app/lib/recent_web_store_browser.dart",
+      "bytes": 857,
+      "sha256": "940d328093b2e2f159a2eeda0679a18a7e865cec671d93866b2fc807fd6c52a4"
+    },
+    {
+      "path": "macos_app/lib/recent_web_store_stub.dart",
+      "bytes": 265,
+      "sha256": "7b1716b0b076cc0d37586d3abe71422eb313e235fcfe35b937e9b06a8c2cb7b0"
+    },
+    {
+      "path": "macos_app/lib/web_control_geometry.dart",
+      "bytes": 752,
+      "sha256": "22a9485c41a9ad698d123d0b803adef873df98b907d963e0d7cc9eb0a04a7c1a"
+    },
+    {
+      "path": "macos_app/lib/web_inline_print.dart",
+      "bytes": 6486,
+      "sha256": "e40030152466bc6a19011c2503f8a85d1ecc282dcd5a2b38d6d219a914b805cc"
+    },
+    {
+      "path": "macos_app/lib/web_main.dart",
+      "bytes": 33112,
+      "sha256": "23295526aa943efc614c3e3713631bc846089a90e6d36ce2befe8d8d296897ad"
+    },
+    {
+      "path": "macos_app/lib/web_native_control.dart",
+      "bytes": 106,
+      "sha256": "d5198a5a70707c87443a0923230867652d2dca059a7d5c7250b1f10e1eb2addb"
+    },
+    {
+      "path": "macos_app/lib/web_native_control_browser.dart",
+      "bytes": 4547,
+      "sha256": "0c792123ebbad048a418609d212808fc86196efc5bd37046666931c1c959b951"
+    },
+    {
+      "path": "macos_app/lib/web_native_control_stub.dart",
+      "bytes": 587,
+      "sha256": "48397588dd45e705eb6c9139a1d86a967bddb2fb6770a6be0c8a45acb5e7f067"
+    },
+    {
+      "path": "macos_app/lib/web_pdf_load_guard.dart",
+      "bytes": 3580,
+      "sha256": "457dcbe54e85ddeeca74a25ac9b251b555bf583b2812ff9143073df1d9f5e981"
+    },
+    {
+      "path": "macos_app/lib/web_pdf_picker.dart",
+      "bytes": 98,
+      "sha256": "1cf4b307ca142f00e9e88114acc1ec0a71ea98eb18cc9f5c086db4e789901b01"
+    },
+    {
+      "path": "macos_app/lib/web_pdf_picker_browser.dart",
+      "bytes": 4223,
+      "sha256": "3ecad84136cb940ce171a70b4efec818583b2f2b0412d43b446d995d2fd9f40f"
+    },
+    {
+      "path": "macos_app/lib/web_pdf_picker_stub.dart",
+      "bytes": 765,
+      "sha256": "ee55be5a188d969c871321ac4f489026a43d2d341fc37844bea0806bea4a6e22"
+    },
+    {
+      "path": "macos_app/lib/web_print.dart",
+      "bytes": 6821,
+      "sha256": "a10726f0ae564169bdcffe028cc2be90776afc73480c8439ec5e3196576e3297"
+    },
+    {
+      "path": "macos_app/lib/web_print_platform.dart",
+      "bytes": 106,
+      "sha256": "d5f8b32b0e99f30c8b015dfbcff4b8b4d1cf15ad5fd5b658c23d13ab93a0600c"
+    },
+    {
+      "path": "macos_app/lib/web_print_platform_browser.dart",
+      "bytes": 2974,
+      "sha256": "958230144106b98537ffabad6634bd7105a556adef760db6ba4f69da89913113"
+    },
+    {
+      "path": "macos_app/lib/web_print_platform_stub.dart",
+      "bytes": 300,
+      "sha256": "87280e60b48794a1fbd76b51f785ff71a8d40a0b5e73d831a7732e6b9b499fef"
+    },
+    {
+      "path": "macos_app/macos/.gitignore",
+      "bytes": 89,
+      "sha256": "ffec1a0bbd70547186b82ad4e49089bafab2de309b89de97c776d70debb179fa"
+    },
+    {
+      "path": "macos_app/macos/Flutter/Flutter-Debug.xcconfig",
+      "bytes": 48,
+      "sha256": "62290ad8e938bf410206d8c7e131262696b58a6df110d39faf3399396ffe61b1"
+    },
+    {
+      "path": "macos_app/macos/Flutter/Flutter-Release.xcconfig",
+      "bytes": 48,
+      "sha256": "62290ad8e938bf410206d8c7e131262696b58a6df110d39faf3399396ffe61b1"
+    },
+    {
+      "path": "macos_app/macos/Flutter/GeneratedPluginRegistrant.swift",
+      "bytes": 824,
+      "sha256": "6ab91ec88782878651a732a6488165ee7a48d9af5e06da2ba6e92e8a8c8713dd"
+    },
+    {
+      "path": "macos_app/macos/Runner.xcodeproj/project.pbxproj",
+      "bytes": 28537,
+      "sha256": "1835a91dcb54f84d6ba6287df36dcef320fc8ead97bc10282c7a3cf3a0877a85"
+    },
+    {
+      "path": "macos_app/macos/Runner.xcodeproj/project.xcworkspace/xcshareddata/IDEWorkspaceChecks.plist",
+      "bytes": 238,
+      "sha256": "dfa0f9bb85b95ccba9c6811adadf8cb407fb5d52088e89db83ebc308ec448542"
+    },
+    {
+      "path": "macos_app/macos/Runner.xcodeproj/xcshareddata/xcschemes/Runner.xcscheme",
+      "bytes": 4570,
+      "sha256": "ef2677b103e4a733b4cae5719ed378c96a63e53ce1d604d53b01346a4f8d7ab4"
+    },
+    {
+      "path": "macos_app/macos/Runner.xcworkspace/contents.xcworkspacedata",
+      "bytes": 152,
+      "sha256": "46c3c9702ff7c5584e11c954d943cfb6e07fb26e3fbd072ddbc0f388aa352de1"
+    },
+    {
+      "path": "macos_app/macos/Runner.xcworkspace/xcshareddata/IDEWorkspaceChecks.plist",
+      "bytes": 238,
+      "sha256": "dfa0f9bb85b95ccba9c6811adadf8cb407fb5d52088e89db83ebc308ec448542"
+    },
+    {
+      "path": "macos_app/macos/Runner/AppDelegate.swift",
+      "bytes": 1611,
+      "sha256": "c6c9c593e2bdd4eb438d74a19e24cf8efeaa34e632bd296be8b9b189e798b11d"
+    },
+    {
+      "path": "macos_app/macos/Runner/Assets.xcassets/AppIcon.appiconset/Contents.json",
+      "bytes": 1582,
+      "sha256": "2f6d47350f39cde7d3fabf1dc8109e0ed6638d0ca353c20d3f70b0ad43e5c102"
+    },
+    {
+      "path": "macos_app/macos/Runner/Assets.xcassets/AppIcon.appiconset/app_icon_1024.png",
+      "bytes": 937966,
+      "sha256": "5ffd1a308bca88bbbf7327d17a2a88bf2655a40f313e8560b5021a7838d7065a"
+    },
+    {
+      "path": "macos_app/macos/Runner/Assets.xcassets/AppIcon.appiconset/app_icon_128.png",
+      "bytes": 22068,
+      "sha256": "c91b184b24318bf41fef45da7db039edcbb5663914765b79610c9eb44fca5cfb"
+    },
+    {
+      "path": "macos_app/macos/Runner/Assets.xcassets/AppIcon.appiconset/app_icon_16.png",
+      "bytes": 853,
+      "sha256": "69be2d27203a2bc716cb8ffc6d95d3c97e3058b599f53125af2ea0ce283783a9"
+    },
+    {
+      "path": "macos_app/macos/Runner/Assets.xcassets/AppIcon.appiconset/app_icon_256.png",
+      "bytes": 70690,
+      "sha256": "942afe0cd10b71faf6e3c0fdd47c278eb1ae372977f63047021fdb61625ff78e"
+    },
+    {
+      "path": "macos_app/macos/Runner/Assets.xcassets/AppIcon.appiconset/app_icon_32.png",
+      "bytes": 2378,
+      "sha256": "b89e9313875af27884feb4e0a37f0294f0e98d37828fe2b053088842a10f61a6"
+    },
+    {
+      "path": "macos_app/macos/Runner/Assets.xcassets/AppIcon.appiconset/app_icon_512.png",
+      "bytes": 244502,
+      "sha256": "028db7db22567ec0a602a419fd5e2681803da795312b540fde64268f8d1bc789"
+    },
+    {
+      "path": "macos_app/macos/Runner/Assets.xcassets/AppIcon.appiconset/app_icon_64.png",
+      "bytes": 7091,
+      "sha256": "dda6d7ab460cd02ebbdd6a6405f2011e9793292dcc08817f784c2d9f0f8b6adb"
+    },
+    {
+      "path": "macos_app/macos/Runner/Base.lproj/MainMenu.xib",
+      "bytes": 26796,
+      "sha256": "a7400b315b6ae3881dc9baed52236be8ac9a257975542f1f738c4e294a031463"
+    },
+    {
+      "path": "macos_app/macos/Runner/Configs/AppInfo.xcconfig",
+      "bytes": 607,
+      "sha256": "b95cca5e274ff86e8660aff86137db318e83065658a1442a66b5c3b02fb02437"
+    },
+    {
+      "path": "macos_app/macos/Runner/Configs/Debug.xcconfig",
+      "bytes": 77,
+      "sha256": "8067d533ef6593760baad9a9855a786a7a77470fcc3f0925ec04fe43bc1ac4b0"
+    },
+    {
+      "path": "macos_app/macos/Runner/Configs/Release.xcconfig",
+      "bytes": 79,
+      "sha256": "7a6a4b4d973a23052fa0a0388dd261e32d311d7b66ba1bfc3b914b361808ac61"
+    },
+    {
+      "path": "macos_app/macos/Runner/Configs/Warnings.xcconfig",
+      "bytes": 580,
+      "sha256": "0e341a392b16ad302d12890aa3dac9257a6c10ece685437604259a85341645a3"
+    },
+    {
+      "path": "macos_app/macos/Runner/DebugProfile.entitlements",
+      "bytes": 586,
+      "sha256": "47aa7d6832eade8c1bd1ee0eeed8732c2b0dbdf18e641314a63118e5a9cf89af"
+    },
+    {
+      "path": "macos_app/macos/Runner/Info.plist",
+      "bytes": 1559,
+      "sha256": "afa3f51046a13638a6377d166318e304a20ec6275cdf15d38983e10f9513d59d"
+    },
+    {
+      "path": "macos_app/macos/Runner/MainFlutterWindow.swift",
+      "bytes": 61915,
+      "sha256": "addb9de9b4f6a57fa21281d0330a673520df2cc8ef6af76c1d7c1f15f76456a5"
+    },
+    {
+      "path": "macos_app/macos/Runner/Release.entitlements",
+      "bytes": 533,
+      "sha256": "823f8deb140e7dc79104f368c2897fced9f111857417174212dd77b6190cf228"
+    },
+    {
+      "path": "macos_app/macos/RunnerTests/RunnerTests.swift",
+      "bytes": 290,
+      "sha256": "6bc180bc77c7def7a21d197233e25dff42cc493ab9d294632edafc18fdf0ac44"
+    },
+    {
+      "path": "macos_app/pubspec.lock",
+      "bytes": 25528,
+      "sha256": "935db17da2c835e2a1b753684ce2b95f6f30b074b1ea776d4cb504e3b65167a1"
+    },
+    {
+      "path": "macos_app/pubspec.yaml",
+      "bytes": 4366,
+      "sha256": "1791d4accc5c5ef73c445c2505d473881dac07339e006d125bebeba81ba4cb7b"
+    },
+    {
+      "path": "macos_app/test/design_layout_test.dart",
+      "bytes": 3829,
+      "sha256": "eca7b769e2cbcc6eb14768e80fa701a39bc2c901ff408defc56c194fd7314a52"
+    },
+    {
+      "path": "macos_app/test/drive_home_recent_test.dart",
+      "bytes": 2150,
+      "sha256": "63eaff04c484c35e00e80019934bce312a8695d87b39f4b7f9cc2a7753d99837"
+    },
+    {
+      "path": "macos_app/test/drive_panel_test.dart",
+      "bytes": 1623,
+      "sha256": "4de7f295b4304e0c83d40f1e4bfa8658341f294c221084448b9e55b33f6b3030"
+    },
+    {
+      "path": "macos_app/test/drive_sync_test.dart",
+      "bytes": 4099,
+      "sha256": "a8e8a6cafe957aad2d27a61c4bd1b34a070e6035eb5368642b375c875f93a377"
+    },
+    {
+      "path": "macos_app/test/fixtures/print-pages.pdf",
+      "bytes": 1365,
+      "sha256": "7999299675a05130ee0a7d19ba2552d6ff57e9d5d76acb70062d869afac4beab"
+    },
+    {
+      "path": "macos_app/test/library_parity_test.dart",
+      "bytes": 2272,
+      "sha256": "95cd6e3bb224a462579741c80eebb4c537c86cb06b1b63ceabedfd6f15c6fc88"
+    },
+    {
+      "path": "macos_app/test/localization_test.dart",
+      "bytes": 3611,
+      "sha256": "954dccfe9b68045e78f436bbb9c60c1c8aa6ab09181492e56fec1f3d1f5d7915"
+    },
+    {
+      "path": "macos_app/test/recent_layout_test.dart",
+      "bytes": 2280,
+      "sha256": "6c58b9a7c1ce95ffa900688a40876de4f2cc3cc0b8644c66e3802d70c8593f70"
+    },
+    {
+      "path": "macos_app/test/recent_library_test.dart",
+      "bytes": 1946,
+      "sha256": "2e2308f247f8d38a4b536f9a04e1b801147ddafab908a2e364a134accad39ef0"
+    },
+    {
+      "path": "macos_app/test/web_app_test.dart",
+      "bytes": 2056,
+      "sha256": "71ca3424ad94a81623cc83bb55c625b841bef5f2c449664ccc6e6a708df08567"
+    },
+    {
+      "path": "macos_app/test/web_control_geometry_test.dart",
+      "bytes": 1653,
+      "sha256": "76f6edf8352479a02f0a27da831523d8cd194e765d4d2af4708d26fe2e0f42ca"
+    },
+    {
+      "path": "macos_app/test/web_inline_print_test.dart",
+      "bytes": 4037,
+      "sha256": "642f679d9910386387d086e3a64bf066a60e3b3f1a525cb4569ba8b2768cd956"
+    },
+    {
+      "path": "macos_app/test/web_pdf_load_guard_test.dart",
+      "bytes": 3402,
+      "sha256": "8419f03be1487256b0ba54b1b2bd903e0a352994156e67169a2e0242ba73d3ca"
+    },
+    {
+      "path": "macos_app/test/web_print_test.dart",
+      "bytes": 7178,
+      "sha256": "de53bbeb47a3e063407897539cdcf2b4be417ca49e1c17187bd839a9bcd693d4"
+    },
+    {
+      "path": "macos_app/test/widget_test.dart",
+      "bytes": 1831,
+      "sha256": "80b08ebc66a581e55f1d7c0fd86b6ac947b15ba3eac895042ea9a37cff6e1ed3"
+    },
+    {
+      "path": "macos_app/web/apple-touch-icon.png",
+      "bytes": 29895,
+      "sha256": "a9a86359aa829b35c39a392a12d78b3b652c8c056169a1e4f62c92842e95a401"
+    },
+    {
+      "path": "macos_app/web/drive-auth.js",
+      "bytes": 1141,
+      "sha256": "2cfd73c928a9397dfbce8d10eca0644b2ee89d65e6add4e50a0c9720ffe4835c"
+    },
+    {
+      "path": "macos_app/web/favicon.png",
+      "bytes": 2378,
+      "sha256": "b89e9313875af27884feb4e0a37f0294f0e98d37828fe2b053088842a10f61a6"
+    },
+    {
+      "path": "macos_app/web/flutter_bootstrap.js",
+      "bytes": 259,
+      "sha256": "b4bcd684942c2748a88a34e20784f091123f4bc181533175a13bb8e260fbdfcf"
+    },
+    {
+      "path": "macos_app/web/icons/cy-viewer-256.png",
+      "bytes": 70690,
+      "sha256": "942afe0cd10b71faf6e3c0fdd47c278eb1ae372977f63047021fdb61625ff78e"
+    },
+    {
+      "path": "macos_app/web/icons/cy-viewer-512.png",
+      "bytes": 244502,
+      "sha256": "028db7db22567ec0a602a419fd5e2681803da795312b540fde64268f8d1bc789"
+    },
+    {
+      "path": "macos_app/web/index.html",
+      "bytes": 1171,
+      "sha256": "702dd5e34eb70367364fe8d0fe4d82bb363007c0363ad9f10fc05ee9287d9355"
+    },
+    {
+      "path": "macos_app/web/input-check/check.js",
+      "bytes": 2176,
+      "sha256": "aa9462aadee52c184fd346065466a62692fb99ac405760b0883d628c676655c7"
+    },
+    {
+      "path": "macos_app/web/input-check/index.html",
+      "bytes": 3736,
+      "sha256": "3833ecec90a185be0a0300cfcab65c302c0dfc76debff617ec46282deb864ab6"
+    },
+    {
+      "path": "macos_app/web/manifest-en.json",
+      "bytes": 559,
+      "sha256": "16a6a1db08404721011e0a1a72c1861ebbe50b86d0789005751ed78917d766d7"
+    },
+    {
+      "path": "macos_app/web/manifest.json",
+      "bytes": 550,
+      "sha256": "b2c6e79dce1b8e775b40962d17ea18df0bb8990fea9c903482c345876eb0cf6b"
+    },
+    {
+      "path": "macos_app/web/pdf-picker.css",
+      "bytes": 1188,
+      "sha256": "3454c18266a887b4193ecf5b403fcb7321ad4deea8814b065c6a0fcdb7bedc6e"
+    },
+    {
+      "path": "macos_app/web/privacy/index.html",
+      "bytes": 3879,
+      "sha256": "b0860383eb17c1f4fb56a60aa787cdaf9acf63970ec5807f91b9b03d16051b29"
+    },
+    {
+      "path": "macos_app/web/recent-pdfs.js",
+      "bytes": 2525,
+      "sha256": "fe702da98b60ebb2431ade689fd34695437adf2276c8a9194423332c6ef2a1bf"
+    },
+    {
+      "path": "native_windows/cy_localization.py",
+      "bytes": 1444,
+      "sha256": "9311936a941df7b52cfee8346cb8c83f1081da38c6702848232b23dbc1cdcac4"
+    },
+    {
+      "path": "native_windows/cy_translations.py",
+      "bytes": 42814,
+      "sha256": "49359f9be9f1200c206f86a7e07b33eb346841f4bdacf62af94385ca7d36e500"
+    },
+    {
+      "path": "native_windows/cy_viewer.py",
+      "bytes": 80573,
+      "sha256": "e688c0ba17bec9d7166cb0b63c6f89cf3d47af741b0393345e494681231f58c9"
+    },
+    {
+      "path": "native_windows/design.py",
+      "bytes": 1086,
+      "sha256": "e93bf87a13f27ff216154f3776c35927b36dea21ec9c572996510f7615ea246d"
+    },
+    {
+      "path": "native_windows/drive_sync.py",
+      "bytes": 9517,
+      "sha256": "51d775937cc833104ee8d99d8476ab38d6ba4c897cfe973eff4ac14bfc1bbcd1"
+    },
+    {
+      "path": "native_windows/drive_ui.py",
+      "bytes": 8326,
+      "sha256": "34c2089007a9d601aa346177fb28261d892dd93291ef849114800d4189a53962"
+    },
+    {
+      "path": "native_windows/recent_files.py",
+      "bytes": 2003,
+      "sha256": "195a715fcc126197d63bde9de70a5f0826fed9d70bd8f72077139fd6da47db62"
+    },
+    {
+      "path": "native_windows/tessdata/eng.traineddata",
+      "bytes": 4113088,
+      "sha256": "7d4322bd2a7749724879683fc3912cb542f19906c83bcc1a52132556427170b2"
+    },
+    {
+      "path": "native_windows/tessdata/kor.traineddata",
+      "bytes": 1677415,
+      "sha256": "6b85e11d9bbf07863b97b3523b1b112844c43e713df8b66418a081fd1060b3b2"
+    },
+    {
+      "path": "native_windows/tests/install_smoke.ps1",
+      "bytes": 1132,
+      "sha256": "b2a59601a51fb3534e0533d21b97dcea30e0a4bee2f5a1359e7e653339d8cbd8"
+    },
+    {
+      "path": "native_windows/tests/smoke.py",
+      "bytes": 4217,
+      "sha256": "59a49f488eb46df89801b971b897bc9e82c58a84651615dd12daa29e61df6a8b"
+    },
+    {
+      "path": "native_windows/tests/test_drive_sync.py",
+      "bytes": 2114,
+      "sha256": "54b6e7c731873d8d569bcda5d48a81fda8416041a2157271eca9438d3f746d95"
+    },
+    {
+      "path": "native_windows/tests/test_library_state.py",
+      "bytes": 1205,
+      "sha256": "bb89b22445e68de30b17194a3473996448dcc803392a17b71f96f2a00deb8c86"
+    },
+    {
+      "path": "native_windows/tests/test_localization.py",
+      "bytes": 1176,
+      "sha256": "7df891477a977a36e8a951cfcc0eb434f92c37189dfef1caff5e3e983b86940a"
+    },
+    {
+      "path": "native_windows/tests/test_recent_files.py",
+      "bytes": 1403,
+      "sha256": "fd1244367ca3e7922f273bc6db31b47ca550f31cc7bdc7719a099c8bc6a26e04"
+    },
+    {
+      "path": "native_windows/tests/test_updater.py",
+      "bytes": 3165,
+      "sha256": "385af28eaea0223f95eb1ed12aa79cb07b25ff8d3690bc98fdc186766ffbbc58"
+    },
+    {
+      "path": "native_windows/updater.py",
+      "bytes": 9949,
+      "sha256": "3c6fc79f2c8ba7c7cce3d871b9bd8a76310bd53517367e4d1853dbd64f6722f1"
+    },
+    {
+      "path": "native_windows/version.py",
+      "bytes": 22,
+      "sha256": "f050c4e0260f28200cb93fbc67cba67fc77f15970d843b9bde68502078758b99"
+    },
+    {
+      "path": "output/design/native-library-light.png",
+      "bytes": 70755,
+      "sha256": "e05c2c862466dad93a0be7fd1415a24171bfba59a6f333db528a6f8213e53e39"
+    },
+    {
+      "path": "output/design/reader-workspace-light.png",
+      "bytes": 43715,
+      "sha256": "e6385dc56e2581c653f9e75d6eb9c600999ea4b2d8967c64390e07c442ce8d78"
+    },
+    {
+      "path": "output/design/web-desktop-dark.png",
+      "bytes": 66093,
+      "sha256": "63b99da6f143e08deac1028b853eb11cc9cad73218c7f2521423e5d57a95f348"
+    },
+    {
+      "path": "output/design/web-mobile-light.png",
+      "bytes": 59879,
+      "sha256": "66306c2c1698b7d4a811809d4b6bf01af91a2f35c0d1f9409805a548d09ac35b"
+    },
+    {
+      "path": "output/pdf/CYViewer_한국어_기능_테스트.pdf",
+      "bytes": 104734,
+      "sha256": "6a3557448d3497322281f1b2ed31f14e373fc36dc664d7b8d7312a234fd82125"
+    },
+    {
+      "path": "personal_pdf_viewer/.gitignore",
+      "bytes": 746,
+      "sha256": "441eaa1de5b3db9fae056e7503567e9f8dd94173e1389c60f76956abf729015a"
+    },
+    {
+      "path": "personal_pdf_viewer/.metadata",
+      "bytes": 1412,
+      "sha256": "bb4b21ea53301d5635f468a1623d98e1ff4605f2cebdcc54a95158e080d8345a"
+    },
+    {
+      "path": "personal_pdf_viewer/README.md",
+      "bytes": 1766,
+      "sha256": "afb9fe76c3df5422b91e383f9381b27eb23fd0db5ddeafe59b725ca2f8f5874e"
+    },
+    {
+      "path": "personal_pdf_viewer/analysis_options.yaml",
+      "bytes": 1519,
+      "sha256": "4f5eadd4510f1201b229fbaeb707f4c24d52ed692c11a63c1c95deae0513f1a9"
+    },
+    {
+      "path": "personal_pdf_viewer/android/.gitignore",
+      "bytes": 253,
+      "sha256": "b027c9de1011765c015e5819bf857c0d75bfcd0886fb01721c091159012e50f1"
+    },
+    {
+      "path": "personal_pdf_viewer/android/app/build.gradle.kts",
+      "bytes": 1770,
+      "sha256": "c0130d727fc2ddf76adc5dbcb30663f87d983301f71835ced50d702954b732ed"
+    },
+    {
+      "path": "personal_pdf_viewer/android/app/src/debug/AndroidManifest.xml",
+      "bytes": 378,
+      "sha256": "30b0832ed8b92dfbd6ae2abfa939ccf26333d37600056b1572bd4a397a18a74b"
+    },
+    {
+      "path": "personal_pdf_viewer/android/app/src/main/AndroidManifest.xml",
+      "bytes": 2194,
+      "sha256": "c4d1a7204b723fc949b262105a0b41517b15701497a42199d536e360f67c09be"
+    },
+    {
+      "path": "personal_pdf_viewer/android/app/src/main/kotlin/com/personalpdf/pdfapp/MainActivity.kt",
+      "bytes": 124,
+      "sha256": "23167dbd13f598c4615a730714a7e81c7d31f3cac444506d60ea27920e36f833"
+    },
+    {
+      "path": "personal_pdf_viewer/android/app/src/main/res/drawable-v21/launch_background.xml",
+      "bytes": 438,
+      "sha256": "7ca6d5cec2169c5a98661a119db23a6f3399c8fef2256ff04f3a642831282478"
+    },
+    {
+      "path": "personal_pdf_viewer/android/app/src/main/res/drawable/launch_background.xml",
+      "bytes": 434,
+      "sha256": "94433756fe10005ddd6fc55cc5c0b1e9f3c10b66a08ceac795ece6713d34e28a"
+    },
+    {
+      "path": "personal_pdf_viewer/android/app/src/main/res/mipmap-hdpi/ic_launcher.png",
+      "bytes": 8792,
+      "sha256": "6e2841bffcd60afcf347b853be2fdf6aae1a47c1091f94de707fc541472bb21f"
+    },
+    {
+      "path": "personal_pdf_viewer/android/app/src/main/res/mipmap-mdpi/ic_launcher.png",
+      "bytes": 4584,
+      "sha256": "592b53b8e9c964e78966d877dac8792f2588244a27545735fda6908001647528"
+    },
+    {
+      "path": "personal_pdf_viewer/android/app/src/main/res/mipmap-xhdpi/ic_launcher.png",
+      "bytes": 13693,
+      "sha256": "5fb4da1b91748bb488e4e5a9abe0956feb8de8c90bb91432ae0ecbc59d86465b"
+    },
+    {
+      "path": "personal_pdf_viewer/android/app/src/main/res/mipmap-xxhdpi/ic_launcher.png",
+      "bytes": 26446,
+      "sha256": "85a07665268d3431a61e5ff3e911c797d0252c26a24128e277341e3579cfdf83"
+    },
+    {
+      "path": "personal_pdf_viewer/android/app/src/main/res/mipmap-xxxhdpi/ic_launcher.png",
+      "bytes": 42016,
+      "sha256": "9a994e1470b35244be7523426c479685f7a0a79e002f132bc82ded232a39e553"
+    },
+    {
+      "path": "personal_pdf_viewer/android/app/src/main/res/values-night/styles.xml",
+      "bytes": 995,
+      "sha256": "8c5bad5152f217e837519f9c15211d19f39bd45f5f67faf6dd81cb4b299e518f"
+    },
+    {
+      "path": "personal_pdf_viewer/android/app/src/main/res/values/styles.xml",
+      "bytes": 996,
+      "sha256": "937d7c82f539c72eb94fd3a3773f29b3d3fef1997213c92cb632298cedf4bda9"
+    },
+    {
+      "path": "personal_pdf_viewer/android/app/src/profile/AndroidManifest.xml",
+      "bytes": 378,
+      "sha256": "30b0832ed8b92dfbd6ae2abfa939ccf26333d37600056b1572bd4a397a18a74b"
+    },
+    {
+      "path": "personal_pdf_viewer/android/build.gradle.kts",
+      "bytes": 537,
+      "sha256": "6a26dba2cb8dfba1e74f540b0d17a89d96c1301d3c3bfda14348bed257fddcba"
+    },
+    {
+      "path": "personal_pdf_viewer/android/gradle.properties",
+      "bytes": 300,
+      "sha256": "0f82b18017fba6bb5ce3aa4b2d1a00c9382fc8aae7b1d9326e44b18abd66d80b"
+    },
+    {
+      "path": "personal_pdf_viewer/android/gradle/wrapper/gradle-wrapper.properties",
+      "bytes": 202,
+      "sha256": "b690d26223576fe4e63889fad9a00df81945cb870b9476cc5a563152a1a88a74"
+    },
+    {
+      "path": "personal_pdf_viewer/android/settings.gradle.kts",
+      "bytes": 770,
+      "sha256": "016759283e88ade6eba92910583feeef88b962839b957aa414296afd2952d122"
+    },
+    {
+      "path": "personal_pdf_viewer/assets/cy_viewer_icon.png",
+      "bytes": 1928225,
+      "sha256": "2a13b4d332984b79854c016d6aaae6c59b8928fd88e167f6a3c0cfcf7a8c8c49"
+    },
+    {
+      "path": "personal_pdf_viewer/ios/.gitignore",
+      "bytes": 569,
+      "sha256": "37380775aeb2499662b7aca80f4ac4c95ae827c3ba2bfa179aa3e9af4812c623"
+    },
+    {
+      "path": "personal_pdf_viewer/ios/Flutter/AppFrameworkInfo.plist",
+      "bytes": 720,
+      "sha256": "da12038f9b2688a8a26160fea2609fa8fcb11421448c109f09c0f573efe7698d"
+    },
+    {
+      "path": "personal_pdf_viewer/ios/Flutter/Debug.xcconfig",
+      "bytes": 30,
+      "sha256": "a82d7765b37116ee4821d2cd1d65942febf8032353757ffb0826eabde785b4a6"
+    },
+    {
+      "path": "personal_pdf_viewer/ios/Flutter/Release.xcconfig",
+      "bytes": 30,
+      "sha256": "a82d7765b37116ee4821d2cd1d65942febf8032353757ffb0826eabde785b4a6"
+    },
+    {
+      "path": "personal_pdf_viewer/ios/Runner.xcodeproj/project.pbxproj",
+      "bytes": 25749,
+      "sha256": "d0b0309e0d636b416bdce4af55553d4702c9a649e27b10ade96144b53b302cab"
+    },
+    {
+      "path": "personal_pdf_viewer/ios/Runner.xcodeproj/project.xcworkspace/contents.xcworkspacedata",
+      "bytes": 135,
+      "sha256": "7f3b00b5c3fdb45242d7b87e1e5c4e25d1fa8129a16c94295ecc4e8ea2235c5f"
+    },
+    {
+      "path": "personal_pdf_viewer/ios/Runner.xcodeproj/project.xcworkspace/xcshareddata/IDEWorkspaceChecks.plist",
+      "bytes": 238,
+      "sha256": "dfa0f9bb85b95ccba9c6811adadf8cb407fb5d52088e89db83ebc308ec448542"
+    },
+    {
+      "path": "personal_pdf_viewer/ios/Runner.xcodeproj/project.xcworkspace/xcshareddata/WorkspaceSettings.xcsettings",
+      "bytes": 226,
+      "sha256": "11b247bc6796892d67c9a821d18604db4dd6a880981b34f38460b9866e6b247f"
+    },
+    {
+      "path": "personal_pdf_viewer/ios/Runner.xcodeproj/xcshareddata/xcschemes/Runner.xcscheme",
+      "bytes": 4717,
+      "sha256": "9fbce429f56243561dd437a527136c9f9ed77165e3b271b923faf236cfcd0484"
+    },
+    {
+      "path": "personal_pdf_viewer/ios/Runner.xcworkspace/contents.xcworkspacedata",
+      "bytes": 152,
+      "sha256": "46c3c9702ff7c5584e11c954d943cfb6e07fb26e3fbd072ddbc0f388aa352de1"
+    },
+    {
+      "path": "personal_pdf_viewer/ios/Runner.xcworkspace/xcshareddata/IDEWorkspaceChecks.plist",
+      "bytes": 238,
+      "sha256": "dfa0f9bb85b95ccba9c6811adadf8cb407fb5d52088e89db83ebc308ec448542"
+    },
+    {
+      "path": "personal_pdf_viewer/ios/Runner.xcworkspace/xcshareddata/WorkspaceSettings.xcsettings",
+      "bytes": 226,
+      "sha256": "11b247bc6796892d67c9a821d18604db4dd6a880981b34f38460b9866e6b247f"
+    },
+    {
+      "path": "personal_pdf_viewer/ios/Runner/AppDelegate.swift",
+      "bytes": 539,
+      "sha256": "451c6d9ba0a2b3ff43092ea349c60fa79a91f1158b915eb29dbdd357cb95d7b8"
+    },
+    {
+      "path": "personal_pdf_viewer/ios/Runner/Assets.xcassets/AppIcon.appiconset/Contents.json",
+      "bytes": 2519,
+      "sha256": "3b1e214f466ffedff74baa5598ad5c4421130eea6bc8d57b8fe23435e8280ae4"
+    },
+    {
+      "path": "personal_pdf_viewer/ios/Runner/Assets.xcassets/AppIcon.appiconset/Icon-App-1024x1024@1x.png",
+      "bytes": 981824,
+      "sha256": "a60aa09f76e2a4e28f5408fa45da48cf263369bd6d99d8a2b8913f0b5b74b8c3"
+    },
+    {
+      "path": "personal_pdf_viewer/ios/Runner/Assets.xcassets/AppIcon.appiconset/Icon-App-20x20@1x.png",
+      "bytes": 1182,
+      "sha256": "08d6081ce0bd1253945dc44f935acc79d74c3808930fedaa8a4f9f71e2653f97"
+    },
+    {
+      "path": "personal_pdf_viewer/ios/Runner/Assets.xcassets/AppIcon.appiconset/Icon-App-20x20@2x.png",
+      "bytes": 3430,
+      "sha256": "69f76a3942d19fad4f8d8f964263b62c7acb818313d950cd8fde9089c14806d4"
+    },
+    {
+      "path": "personal_pdf_viewer/ios/Runner/Assets.xcassets/AppIcon.appiconset/Icon-App-20x20@3x.png",
+      "bytes": 6563,
+      "sha256": "96f9cb695f31bd9620abd1485ba7a7cbd5ae462f38bfa8aa173544c24ffa4770"
+    },
+    {
+      "path": "personal_pdf_viewer/ios/Runner/Assets.xcassets/AppIcon.appiconset/Icon-App-29x29@1x.png",
+      "bytes": 2028,
+      "sha256": "90c35be2676d611d197aefe80440156c0e7ff2b9c543a8523e0b758961836dab"
+    },
+    {
+      "path": "personal_pdf_viewer/ios/Runner/Assets.xcassets/AppIcon.appiconset/Icon-App-29x29@2x.png",
+      "bytes": 6066,
+      "sha256": "f64c911946b6af141937241ed1d025d44112a146cb51d730c72ad310d5f55e90"
+    },
+    {
+      "path": "personal_pdf_viewer/ios/Runner/Assets.xcassets/AppIcon.appiconset/Icon-App-29x29@3x.png",
+      "bytes": 11756,
+      "sha256": "a1c63874304d90f822603494bb4506801c843f8e0123ae43f8dd46cfc0d17c13"
+    },
+    {
+      "path": "personal_pdf_viewer/ios/Runner/Assets.xcassets/AppIcon.appiconset/Icon-App-40x40@1x.png",
+      "bytes": 3430,
+      "sha256": "69f76a3942d19fad4f8d8f964263b62c7acb818313d950cd8fde9089c14806d4"
+    },
+    {
+      "path": "personal_pdf_viewer/ios/Runner/Assets.xcassets/AppIcon.appiconset/Icon-App-40x40@2x.png",
+      "bytes": 10149,
+      "sha256": "eca927b4c89f0d4b905578680c229309f5f1cd954798d2c8848a9acb92310e30"
+    },
+    {
+      "path": "personal_pdf_viewer/ios/Runner/Assets.xcassets/AppIcon.appiconset/Icon-App-40x40@3x.png",
+      "bytes": 19770,
+      "sha256": "b98b5e54b396901d56389b2fb6c9b2b596491b2f0265d18336f125ba84efa3c3"
+    },
+    {
+      "path": "personal_pdf_viewer/ios/Runner/Assets.xcassets/AppIcon.appiconset/Icon-App-60x60@2x.png",
+      "bytes": 19770,
+      "sha256": "b98b5e54b396901d56389b2fb6c9b2b596491b2f0265d18336f125ba84efa3c3"
+    },
+    {
+      "path": "personal_pdf_viewer/ios/Runner/Assets.xcassets/AppIcon.appiconset/Icon-App-60x60@3x.png",
+      "bytes": 37871,
+      "sha256": "2d9f138e195c7c5a05db2d0da3702e2629fab8ddc3c1c2025f873238d9c0d173"
+    },
+    {
+      "path": "personal_pdf_viewer/ios/Runner/Assets.xcassets/AppIcon.appiconset/Icon-App-76x76@1x.png",
+      "bytes": 9496,
+      "sha256": "efa539a28397e0aecc9ef9251a4ebb0477a0696e57e20175879cc14326872b77"
+    },
+    {
+      "path": "personal_pdf_viewer/ios/Runner/Assets.xcassets/AppIcon.appiconset/Icon-App-76x76@2x.png",
+      "bytes": 28932,
+      "sha256": "b0cc992872d226fe4423ff217ab255aa18588eef4dd75324738660a65c1655d6"
+    },
+    {
+      "path": "personal_pdf_viewer/ios/Runner/Assets.xcassets/AppIcon.appiconset/Icon-App-83.5x83.5@2x.png",
+      "bytes": 33380,
+      "sha256": "e6479c8500c8ce2f95092c44ca5a40fc2d339cd1292525a61c5f874bb5d88930"
+    },
+    {
+      "path": "personal_pdf_viewer/ios/Runner/Assets.xcassets/LaunchImage.imageset/Contents.json",
+      "bytes": 391,
+      "sha256": "ccc7950fd5f5b82067c85f667940a9d59189151460761ece8098ca78daa19469"
+    },
+    {
+      "path": "personal_pdf_viewer/ios/Runner/Assets.xcassets/LaunchImage.imageset/LaunchImage.png",
+      "bytes": 68,
+      "sha256": "93ae7d494fad0fb30cbf3ae746a39c4bc7a0f8bbf87fbb587a3f3c01f3c5ce20"
+    },
+    {
+      "path": "personal_pdf_viewer/ios/Runner/Assets.xcassets/LaunchImage.imageset/LaunchImage@2x.png",
+      "bytes": 68,
+      "sha256": "93ae7d494fad0fb30cbf3ae746a39c4bc7a0f8bbf87fbb587a3f3c01f3c5ce20"
+    },
+    {
+      "path": "personal_pdf_viewer/ios/Runner/Assets.xcassets/LaunchImage.imageset/LaunchImage@3x.png",
+      "bytes": 68,
+      "sha256": "93ae7d494fad0fb30cbf3ae746a39c4bc7a0f8bbf87fbb587a3f3c01f3c5ce20"
+    },
+    {
+      "path": "personal_pdf_viewer/ios/Runner/Assets.xcassets/LaunchImage.imageset/README.md",
+      "bytes": 336,
+      "sha256": "a985b626c4f7546a8ba392d135e9226c3547c8e2b46895f5f2bdf40d7b14ef9f"
+    },
+    {
+      "path": "personal_pdf_viewer/ios/Runner/Base.lproj/LaunchScreen.storyboard",
+      "bytes": 2377,
+      "sha256": "857e61203b3deafb05766d8fcda898b86a7cb6f3d5e385ecc9926c4d698215e9"
+    },
+    {
+      "path": "personal_pdf_viewer/ios/Runner/Base.lproj/Main.storyboard",
+      "bytes": 1605,
+      "sha256": "fd367b6c43006d61b730f674970dd48b9f662c8f2264e52ffc1558102a2c9f2d"
+    },
+    {
+      "path": "personal_pdf_viewer/ios/Runner/Info.plist",
+      "bytes": 2210,
+      "sha256": "c802e1be5b9c5dae55845163d677229a6e9a301339a15e4dbdffef55616b7d9d"
+    },
+    {
+      "path": "personal_pdf_viewer/ios/Runner/Runner-Bridging-Header.h",
+      "bytes": 38,
+      "sha256": "1a8d11d01d1cc92c650c9c9ed35299240052d4683a15a719a2315ef44185e074"
+    },
+    {
+      "path": "personal_pdf_viewer/ios/Runner/SceneDelegate.swift",
+      "bytes": 76,
+      "sha256": "add68b905971dedfcc0d0b5b7118030de5925ba8c081ad9815463699e3a444ad"
+    },
+    {
+      "path": "personal_pdf_viewer/ios/RunnerTests/RunnerTests.swift",
+      "bytes": 285,
+      "sha256": "5e8f4908dacea6f29b2a790e4d38bf5fded69096063f9a27a2f21584d62b30c0"
+    },
+    {
+      "path": "personal_pdf_viewer/lib/advanced_reader.dart",
+      "bytes": 17701,
+      "sha256": "ddd352b31989d974edfbe895610c4886105a574aeb1cb3f0f7688a98e0210e13"
+    },
+    {
+      "path": "personal_pdf_viewer/lib/app.dart",
+      "bytes": 10064,
+      "sha256": "7258e264abb8a1bf5f2f20c84fa82350d97fcbcc6a8a68ccf22ebc8da2cd2f02"
+    },
+    {
+      "path": "personal_pdf_viewer/lib/main.dart",
+      "bytes": 155,
+      "sha256": "339731a41a58cc48b03a54d1cb248fca30c3bf9393091d6f452b8e0d4b33aea3"
+    },
+    {
+      "path": "personal_pdf_viewer/macos/.gitignore",
+      "bytes": 89,
+      "sha256": "ffec1a0bbd70547186b82ad4e49089bafab2de309b89de97c776d70debb179fa"
+    },
+    {
+      "path": "personal_pdf_viewer/macos/Flutter/Flutter-Debug.xcconfig",
+      "bytes": 48,
+      "sha256": "62290ad8e938bf410206d8c7e131262696b58a6df110d39faf3399396ffe61b1"
+    },
+    {
+      "path": "personal_pdf_viewer/macos/Flutter/Flutter-Release.xcconfig",
+      "bytes": 48,
+      "sha256": "62290ad8e938bf410206d8c7e131262696b58a6df110d39faf3399396ffe61b1"
+    },
+    {
+      "path": "personal_pdf_viewer/macos/Flutter/GeneratedPluginRegistrant.swift",
+      "bytes": 620,
+      "sha256": "fedb0eb40712cf059bf4d053762929fe00a9b61a8ffde100425611f369748d28"
+    },
+    {
+      "path": "personal_pdf_viewer/macos/Runner.xcodeproj/project.pbxproj",
+      "bytes": 27840,
+      "sha256": "017002a22151e9ce1c1c402bdcdde5f31e21d1491e6faf58a56ea374cfe6e6bd"
+    },
+    {
+      "path": "personal_pdf_viewer/macos/Runner.xcodeproj/project.xcworkspace/xcshareddata/IDEWorkspaceChecks.plist",
+      "bytes": 238,
+      "sha256": "dfa0f9bb85b95ccba9c6811adadf8cb407fb5d52088e89db83ebc308ec448542"
+    },
+    {
+      "path": "personal_pdf_viewer/macos/Runner.xcodeproj/xcshareddata/xcschemes/Runner.xcscheme",
+      "bytes": 4560,
+      "sha256": "738e2bac1187d1a2f7a2bb5aa6ebca8627da3194f81d11235b577670ebdd0943"
+    },
+    {
+      "path": "personal_pdf_viewer/macos/Runner.xcworkspace/contents.xcworkspacedata",
+      "bytes": 152,
+      "sha256": "46c3c9702ff7c5584e11c954d943cfb6e07fb26e3fbd072ddbc0f388aa352de1"
+    },
+    {
+      "path": "personal_pdf_viewer/macos/Runner.xcworkspace/xcshareddata/IDEWorkspaceChecks.plist",
+      "bytes": 238,
+      "sha256": "dfa0f9bb85b95ccba9c6811adadf8cb407fb5d52088e89db83ebc308ec448542"
+    },
+    {
+      "path": "personal_pdf_viewer/macos/Runner/AppDelegate.swift",
+      "bytes": 311,
+      "sha256": "ce9dbe45a57c59e85519da50a26c471615b9c8cdd85a8f4a39d2e480e62a4af4"
+    },
+    {
+      "path": "personal_pdf_viewer/macos/Runner/Assets.xcassets/AppIcon.appiconset/Contents.json",
+      "bytes": 1291,
+      "sha256": "bc6ba8105ca69651aeeb77358851590de295dca04681a1d58c0f449641c242f3"
+    },
+    {
+      "path": "personal_pdf_viewer/macos/Runner/Assets.xcassets/AppIcon.appiconset/app_icon_1024.png",
+      "bytes": 981824,
+      "sha256": "a60aa09f76e2a4e28f5408fa45da48cf263369bd6d99d8a2b8913f0b5b74b8c3"
+    },
+    {
+      "path": "personal_pdf_viewer/macos/Runner/Assets.xcassets/AppIcon.appiconset/app_icon_128.png",
+      "bytes": 22005,
+      "sha256": "fc9785a03ccc9a7c198b16281b238bd47337ec82a566e99bccde145c045329d3"
+    },
+    {
+      "path": "personal_pdf_viewer/macos/Runner/Assets.xcassets/AppIcon.appiconset/app_icon_16.png",
+      "bytes": 885,
+      "sha256": "46f7c16df4a73647c4fc93863afcc955d0793f1f7466be6a17cdde4c8d527210"
+    },
+    {
+      "path": "personal_pdf_viewer/macos/Runner/Assets.xcassets/AppIcon.appiconset/app_icon_256.png",
+      "bytes": 69098,
+      "sha256": "ee01f1663ec9bb6a6631ee17040accc3f63e272cbc9c9aae0cd2af7effd70149"
+    },
+    {
+      "path": "personal_pdf_viewer/macos/Runner/Assets.xcassets/AppIcon.appiconset/app_icon_32.png",
+      "bytes": 2374,
+      "sha256": "cbda2b97436d4e6b4af3ec60f7dc667f2e615c0e0933f86abc5aafae34979b9b"
+    },
+    {
+      "path": "personal_pdf_viewer/macos/Runner/Assets.xcassets/AppIcon.appiconset/app_icon_512.png",
+      "bytes": 247583,
+      "sha256": "da779a79c05d77b5f14440bf2f211633647d46d2bfaccf83c7b2818b0dc4f661"
+    },
+    {
+      "path": "personal_pdf_viewer/macos/Runner/Assets.xcassets/AppIcon.appiconset/app_icon_64.png",
+      "bytes": 7250,
+      "sha256": "a3fca07fbbf68a6cefb8da18bcf4ced482f7fe1e12f6e2f43f1d3d2fa64c4277"
+    },
+    {
+      "path": "personal_pdf_viewer/macos/Runner/Base.lproj/MainMenu.xib",
+      "bytes": 23729,
+      "sha256": "be9e9ef8469d3262370e0f0b855ed163cbf9c8362c59e330b2ffe63b86fa42f4"
+    },
+    {
+      "path": "personal_pdf_viewer/macos/Runner/Configs/AppInfo.xcconfig",
+      "bytes": 607,
+      "sha256": "3e49698c74ee32936c07fdca39666657967acbe4fa58528fe6c1e45411aa005d"
+    },
+    {
+      "path": "personal_pdf_viewer/macos/Runner/Configs/Debug.xcconfig",
+      "bytes": 77,
+      "sha256": "8067d533ef6593760baad9a9855a786a7a77470fcc3f0925ec04fe43bc1ac4b0"
+    },
+    {
+      "path": "personal_pdf_viewer/macos/Runner/Configs/Release.xcconfig",
+      "bytes": 79,
+      "sha256": "7a6a4b4d973a23052fa0a0388dd261e32d311d7b66ba1bfc3b914b361808ac61"
+    },
+    {
+      "path": "personal_pdf_viewer/macos/Runner/Configs/Warnings.xcconfig",
+      "bytes": 580,
+      "sha256": "0e341a392b16ad302d12890aa3dac9257a6c10ece685437604259a85341645a3"
+    },
+    {
+      "path": "personal_pdf_viewer/macos/Runner/DebugProfile.entitlements",
+      "bytes": 348,
+      "sha256": "ebaab2b9992173de422c33e1fbab7f6e31acaa2213956097ac8cefd894a91ac8"
+    },
+    {
+      "path": "personal_pdf_viewer/macos/Runner/Info.plist",
+      "bytes": 1060,
+      "sha256": "f253e89c512b3a9a81bc5cdd7a14bf932470f835f261654a808ea4549cd94aad"
+    },
+    {
+      "path": "personal_pdf_viewer/macos/Runner/MainFlutterWindow.swift",
+      "bytes": 388,
+      "sha256": "65c9613c11bcedfa51416b16c975d8ba6ff12b405fc19d60db8755d92e86d9fe"
+    },
+    {
+      "path": "personal_pdf_viewer/macos/Runner/Release.entitlements",
+      "bytes": 240,
+      "sha256": "b746c74b201e6af4e0864fbd1f4f629f96156a7ec4b7208bc995d0a5089bb592"
+    },
+    {
+      "path": "personal_pdf_viewer/macos/RunnerTests/RunnerTests.swift",
+      "bytes": 290,
+      "sha256": "6bc180bc77c7def7a21d197233e25dff42cc493ab9d294632edafc18fdf0ac44"
+    },
+    {
+      "path": "personal_pdf_viewer/pubspec.lock",
+      "bytes": 23440,
+      "sha256": "a36282f794c17b95acbb3647d35b2d1e7c1c50317c46e7996d9a5f3f0b4c91d6"
+    },
+    {
+      "path": "personal_pdf_viewer/pubspec.yaml",
+      "bytes": 4108,
+      "sha256": "4628f022c6dbd5ca2b5baa1c968e8755d56f3c2cb22a0799668d87f73d53a9fe"
+    },
+    {
+      "path": "personal_pdf_viewer/test/widget_test.dart",
+      "bytes": 529,
+      "sha256": "fd5fb0673db2a9d0eb50ac7887aeeff2c10b87b704a92faef5655106ec42bc17"
+    },
+    {
+      "path": "personal_pdf_viewer/windows/.gitignore",
+      "bytes": 291,
+      "sha256": "96345475f1a3c66bd32d28178fba151ab1506b35b1f7857b8f7651863093ea11"
+    },
+    {
+      "path": "personal_pdf_viewer/windows/CMakeLists.txt",
+      "bytes": 4148,
+      "sha256": "f09dfd85cd24bb7292ae6df21e326d299d8aa73b8b7f08a2ac733590806ffb06"
+    },
+    {
+      "path": "personal_pdf_viewer/windows/flutter/CMakeLists.txt",
+      "bytes": 3742,
+      "sha256": "1fe418971b6f41bb35ceb3d64113a835f3f6f171ecaa707bf232492b57a588d6"
+    },
+    {
+      "path": "personal_pdf_viewer/windows/flutter/generated_plugin_registrant.cc",
+      "bytes": 324,
+      "sha256": "a7527f0f96901d37a8bc68556978ed134f7af5ce22eb0afd911955d3baeac257"
+    },
+    {
+      "path": "personal_pdf_viewer/windows/flutter/generated_plugin_registrant.h",
+      "bytes": 302,
+      "sha256": "dbc11635d7b1ba1887adf40df5b83d634e9c3ab0bee34510c71528bb4d73602a"
+    },
+    {
+      "path": "personal_pdf_viewer/windows/flutter/generated_plugins.cmake",
+      "bytes": 772,
+      "sha256": "5d3fba3dfaaa59b2ef25581ed86b0039139d5555d0be423322eeea820909fc8c"
+    },
+    {
+      "path": "personal_pdf_viewer/windows/runner/CMakeLists.txt",
+      "bytes": 1796,
+      "sha256": "34119ec122e36940235ef4bc245fcfb43b6960ed443e28af1a8d833a81209b9e"
+    },
+    {
+      "path": "personal_pdf_viewer/windows/runner/Runner.rc",
+      "bytes": 3035,
+      "sha256": "d05b3a07a42592b2369c4fadbb4a317bc70c4da6a93aa934bc4121bb8fb219c3"
+    },
+    {
+      "path": "personal_pdf_viewer/windows/runner/flutter_window.cpp",
+      "bytes": 2122,
+      "sha256": "dd185884c0b5301d400b58f12ebb36b1c8b326531597e531b40e44a6eeb0e943"
+    },
+    {
+      "path": "personal_pdf_viewer/windows/runner/flutter_window.h",
+      "bytes": 928,
+      "sha256": "38e0fcd3a0b83895852ec295cb70d90179c0dcd40d58f065eb5232a4ecd84898"
+    },
+    {
+      "path": "personal_pdf_viewer/windows/runner/main.cpp",
+      "bytes": 1504,
+      "sha256": "eed61938aa35fb3ce85752724e438a680d4b92b3cd5db5c4c3cd1cf844a104c7"
+    },
+    {
+      "path": "personal_pdf_viewer/windows/runner/resource.h",
+      "bytes": 432,
+      "sha256": "1fa98588b04561590ba1cf0521ab86a9db4a878312f21c9d5861d965ddd8d1ae"
+    },
+    {
+      "path": "personal_pdf_viewer/windows/runner/resources/app_icon.ico",
+      "bytes": 108787,
+      "sha256": "eec38c36a7bd3ce458a2564069b89d71bb50648d83a06c2704a65da13f1575f0"
+    },
+    {
+      "path": "personal_pdf_viewer/windows/runner/resources/cy_viewer_icon.svg",
+      "bytes": 1423,
+      "sha256": "7594bf41eb4eeae19d7b1eb500c7da14a9ed318cdb71da481cea4f17ce28c53e"
+    },
+    {
+      "path": "personal_pdf_viewer/windows/runner/runner.exe.manifest",
+      "bytes": 602,
+      "sha256": "825d243e9fa1542619909c1b72d09b3ed7c1f3b225bb8367c125835e5dc3f8aa"
+    },
+    {
+      "path": "personal_pdf_viewer/windows/runner/utils.cpp",
+      "bytes": 2168,
+      "sha256": "6c2c87106b4b29d534c7edcafb3b7f7b9079caa3cdafa7e56671ad2adf5a2543"
+    },
+    {
+      "path": "personal_pdf_viewer/windows/runner/utils.h",
+      "bytes": 672,
+      "sha256": "95a7f7dddb832997cefa937a96f89472332277e75734a5de553610760b744b03"
+    },
+    {
+      "path": "personal_pdf_viewer/windows/runner/win32_window.cpp",
+      "bytes": 8534,
+      "sha256": "9065f31ccf746cf8b390121f958f9e959033af864aed779597066625ed56bc36"
+    },
+    {
+      "path": "personal_pdf_viewer/windows/runner/win32_window.h",
+      "bytes": 3522,
+      "sha256": "7dd03746b19dcf3542829b2f6e8ed40a2714ce5f2cb3b0e23f0118a2fcf62d62"
+    },
+    {
+      "path": "scripts/generate_localizations.py",
+      "bytes": 1431,
+      "sha256": "1108ead57a732b0ad5817bb72cf90bb1f9b3de67bd4ea29b093ef6bcdc5f8543"
+    },
+    {
+      "path": "site/download/downloads.js",
+      "bytes": 3781,
+      "sha256": "8e5b8c9be0947a1a70e0bb642a3cd55665a9cd0b77cba4ac0b65bc74a15a0b92"
+    },
+    {
+      "path": "site/download/icon.png",
+      "bytes": 1928225,
+      "sha256": "2a13b4d332984b79854c016d6aaae6c59b8928fd88e167f6a3c0cfcf7a8c8c49"
+    },
+    {
+      "path": "site/download/index.html",
+      "bytes": 8590,
+      "sha256": "96438a85530fc27c868bd6f4e85478e46d95fd24df6ce762c3afd67c8cc129f2"
+    },
+    {
+      "path": "site/download/language.js",
+      "bytes": 2650,
+      "sha256": "c95abce732d0535a570aabe9710dacf96ea6a153601ca720acb0396eb22fe65f"
+    },
+    {
+      "path": "site/download/library.png",
+      "bytes": 70755,
+      "sha256": "e05c2c862466dad93a0be7fd1415a24171bfba59a6f333db528a6f8213e53e39"
+    },
+    {
+      "path": "site/download/mac-help.js",
+      "bytes": 325,
+      "sha256": "2b386f0c51337b4cee6401618c7681f4996508a4ba51cdb075b2fc0ff81fb30f"
+    },
+    {
+      "path": "site/download/style.css",
+      "bytes": 6349,
+      "sha256": "93da72cff0f5daf24de937a32af5d2d479fb6e678f981e461a0d0fdc3a1fafbe"
+    },
+    {
+      "path": "site/download/translations.js",
+      "bytes": 42829,
+      "sha256": "71a765385636bdf72cf7bb0d83aacf0c4b3603148d2ab837623744f13281c137"
+    },
+    {
+      "path": "tests/check_mac_updater.py",
+      "bytes": 1943,
+      "sha256": "22d45b250f97008d6e8dd61302331c31d00e9e24dab127c1dce2949b5e7a253c"
+    },
+    {
+      "path": "tests/downloads.test.cjs",
+      "bytes": 1759,
+      "sha256": "5814e22a22dd886bbbe9e5e842b1d85c7b8ac6c8939b4d4796bb6157da9faa4b"
+    },
+    {
+      "path": "tests/package-lock.json",
+      "bytes": 599,
+      "sha256": "72e3c75110e2b144defbeff6722a941b6951d87667caddc2b394352ab2c69739"
+    },
+    {
+      "path": "tests/package.json",
+      "bytes": 182,
+      "sha256": "c62e2d0c2a4ae8611f9638c53a1cf10cdc58c8f08ee9967186222720cfebff76"
+    },
+    {
+      "path": "tests/recent-pdfs.test.cjs",
+      "bytes": 1791,
+      "sha256": "4e5c74cdd78e435b9e4be3e890e3546022e3f0f05b499fcf4e1cfa2524965cd4"
+    },
+    {
+      "path": "windows_print/App.xaml",
+      "bytes": 495,
+      "sha256": "e7f85e65e3726a6f4e0ff52b5355f251faf5a82f689a4cf8a7ffa4cd47e57cde"
+    },
+    {
+      "path": "windows_print/App.xaml.cs",
+      "bytes": 1025,
+      "sha256": "3257f09742eb468e44e74d9e3a793971dab14d213ceb92369a6705d8bf88dfae"
+    },
+    {
+      "path": "windows_print/Assets/CYViewer.ico",
+      "bytes": 108787,
+      "sha256": "eec38c36a7bd3ce458a2564069b89d71bb50648d83a06c2704a65da13f1575f0"
+    },
+    {
+      "path": "windows_print/Assets/SplashScreen.png",
+      "bytes": 95839,
+      "sha256": "e4a45705bc97b4b22826d79eca4bc5add21561903a14535d97ab9866246d54e9"
+    },
+    {
+      "path": "windows_print/Assets/Square150x150Logo.png",
+      "bytes": 28230,
+      "sha256": "6662bf036e5c008ae5042f121977bd43fca02c55c998bf74fd5a206300761a46"
+    },
+    {
+      "path": "windows_print/Assets/Square44x44Logo.png",
+      "bytes": 3993,
+      "sha256": "d1babe0f1dbd61e94d80a2ba2140a7961235e830fc3f3804b4cbd303e8c62ce0"
+    },
+    {
+      "path": "windows_print/Assets/StoreLogo.png",
+      "bytes": 4961,
+      "sha256": "8a563308f2907a1dcba3ea7a9cc66816e8082e60c10d3c9edc9b5e060dc3c714"
+    },
+    {
+      "path": "windows_print/Assets/Wide310x150Logo.png",
+      "bytes": 29838,
+      "sha256": "e1bee35eff6c4a3e3477ab7ed9483f94201a0fe4fdf58fd907fb4100319e6ef2"
+    },
+    {
+      "path": "windows_print/CYViewer.Print.csproj",
+      "bytes": 1173,
+      "sha256": "c3504ec6181711c764b5852b7c103c5704b59445fc9dfe822e1bdc28840ce1e1"
+    },
+    {
+      "path": "windows_print/MainWindow.xaml",
+      "bytes": 569,
+      "sha256": "8acb6047d1678186cf6170628e20a0a047d030afa2e11464fb3a63a03f5e7df7"
+    },
+    {
+      "path": "windows_print/MainWindow.xaml.cs",
+      "bytes": 4809,
+      "sha256": "3445091a0c5d3def317c5fb5a0b8ea0aa76bf9cdaedd6659a4c1f7c36d5ce24c"
+    },
+    {
+      "path": "windows_print/Package.appxmanifest",
+      "bytes": 1673,
+      "sha256": "491e7ada642817ab48efb0638900534ec01d38a6af63fc1361912849a605469c"
+    },
+    {
+      "path": "windows_print/app.manifest",
+      "bytes": 377,
+      "sha256": "e20b01808f234b2e1b4de8ec2f131805f191c6f98d51497fc4bc0e9ead88eedd"
+    },
+    {
+      "path": "windows_print/install_print_module.ps1",
+      "bytes": 545,
+      "sha256": "8993890ca9aa6371332f43dd0fecc53c652a161652f2b80bd418b2ebcafee4e6"
+    }
+  ]
+}

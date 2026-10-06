@@ -2,6 +2,8 @@
 
 ## 언어
 
+- 이어서 작업하기 전 `docs/PROJECT_CONTEXT.txt`의 인수 기록을 읽고 현재 Git 상태와 관련 소스를 확인한다. 전체 파일 목록은 `docs/PROJECT_FILE_INDEX.json`, 보존 Git 이력은 `docs/PROJECT_GIT_HISTORY.txt`를 참고한다.
+
 - 사용자와의 대화, 화면 문구, 문서와 주석은 한국어로 작성한다.
 
 ## UI 작업 전 필수 사항

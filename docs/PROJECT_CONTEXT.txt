@@ -1,0 +1,100 @@
+CY뷰어 작업 인수 기록
+기록일: 2026-10-06 (한국 시간)
+기준: main 5275787c64012850d5c18e9645a10e6aab0f2bd4, 135개 커밋.
+
+목적과 범위
+사용자는 Git과 파일에 남은 모든 작업 내용을 이후 작업의 맥락으로 활용하도록 요청했다.
+이 기록은 저장소 이력, 프로젝트 지침, README, 설계·문제 수정·배포 문서,
+초기 대화 기록 DOCX와 주요 코드 구조를 종합한 인수 자료다.
+모든 소스 행을 정밀 검토했다거나 모델을 영구 재학습했다는 뜻은 아니다.
+추적 파일 전체의 크기·해시 목록은 PROJECT_FILE_INDEX.json,
+로컬에서 확보한 모든 브랜치의 커밋 및 변경 파일은 PROJECT_GIT_HISTORY.txt에 보존한다.
+새 작업에서는 현재 Git 상태와 실제 관련 소스를 다시 확인한다.
+
+제품과 소스 구조
+- 메인 저장소: Kimmacaroni/CY_Viewer. 소스, 설치 파일, 공개 웹앱을 통합 관리한다.
+- Windows 현재 앱: native_windows/cy_viewer.py. Python/Tkinter, PyMuPDF,
+  Pillow, pywin32, tkinterdnd2. Tesseract 한국어/영어 전체 문서 OCR.
+- Apple 앱: macos_app/lib/main.dart → app.dart 문서함 → advanced_reader.dart.
+  Flutter/pdfrx와 Swift 네이티브 연동. Vision OCR, 시스템 인쇄,
+  Finder 열기, sandbox security-scoped bookmark와 메뉴 단축키를 포함한다.
+- 웹: macos_app/lib/web_main.dart. PDFium 초기화, 직접 HTML 파일 입력,
+  IndexedDB 최근 원본, 인쇄 전용 DOM, PDF 저장·공유를 사용한다.
+- personal_pdf_viewer는 초기 Flutter 프로젝트이며 현재 Windows 배포 진입점이 아니다.
+- windows_print는 Windows 시스템 인쇄 연동 모듈이다.
+- site/download는 플랫폼 감지, 다운로드, 언어 및 Mac 실행 안내 페이지다.
+- localization/en.json이 번역 원본이다. scripts/generate_localizations.py로
+  Dart/Python/Swift/사이트 번역을 생성한다. 생성 결과만 따로 수정하지 않는다.
+
+확인한 소스 버전과 배포 경로
+- Mac/웹 패키지: macos_app/pubspec.yaml 1.10.1+16.
+- Windows: native_windows/version.py 1.7.0. installer/CYViewer.iss와 함께 갱신한다.
+- 웹: https://kimmacaroni.github.io/CY_Viewer/
+- 다운로드: https://kimmacaroni.github.io/CY_Viewer/download/
+- 위 버전은 로컬 소스 기준이다. 이번 인수 작업에서 공개 설치 파일을 다시
+  다운로드하거나 릴리스 및 SHA-256을 실시간 검증한 것은 아니다.
+
+작업 이력
+- 9월 7일: Windows 독립 실행 앱, 텍스트 선택 피드백, 우클릭 편집,
+  한국어 OCR 인코딩·TSV 파싱, 원문 크기 및 굵기 보존, 보기 방식,
+  저장·인쇄·설치 프로그램과 아이콘. Mac 코드를 메인 저장소로 이전.
+- 9월 8~12일: Mac 시작 오류, sandbox 파일 접근, Finder PDF 열기와 렌더링 수정.
+- 9월 13일: iOS와 단축키, iPhone PWA, Safari 실제 파일 입력,
+  다운로드 및 웹 배포의 메인 저장소 통합.
+- 9월 26일: 플랫폼 공통 시작 화면·문서 도구·접근성, 설치 파일 CI,
+  다운로드 사이트와 앱 업데이트. 기본 작업 범위에 검증·커밋·GitHub·배포 포함.
+- 9월 27일: 웹 회색 화면 복구와 아이콘, 설치형 파일 선택 반복 수정,
+  한국어·영어, 최근 문서 5개, 웹 인쇄 범위와 전체 페이지 인쇄,
+  공유·저장 지연 후 입력 잠김 방지, 실제 HTML 입력 경로, 개인 Drive 동기화.
+- 9월 28일: Mac 실행 안내, Drive 최근 문서 홈 표시, 웹 캐시 갱신,
+  Mac 기준 Windows/웹 문서함 및 테마 통일, 분리 다운로드 저장소 기록 보존.
+- 9월 30일: Mac sandbox가 내려받은 DMG의 실행 금지 문제를 피하도록
+  공식 설치 파일을 기본 브라우저로 받는 경로로 변경, 릴리스 안내 정정.
+
+반드시 유지할 동작
+- 한국어로 소통·문서·주석 작성. UI 수정 전 docs/CY_DESIGN_SYSTEM.md 확인.
+- 문서 탐색 → 선택·편집 → 저장 흐름, 실제 파일명, 빈/선택/오류/완료 상태.
+- macos_app/lib/cy_design.dart와 native_windows/design.py의 공통 토큰,
+  좁은 화면의 문서 도구, 키보드 포커스와 터치 영역을 보존한다.
+- 최근 목록 최대 5개. Mac 전체 문서 보관은 별도 유지, Windows 경로와
+  즐겨찾기·페이지 메타데이터는 APPDATA/CYViewer, 웹은 원본 IndexedDB 사본.
+- 파일 선택창이 열려 있는 동안 웹을 잠그지 않는다. 실제 읽기만 중복 차단.
+  입력 컨트롤은 Flutter 밖 실제 DOM과 위치·클립·스크롤을 맞춘다.
+- PDF 준비가 45초를 넘거나 실패하면 복구 안내와 브라우저 기본 뷰어 제공.
+- 웹 인쇄 기본은 전체 페이지. 준비·취소·범위 변경의 늦은 응답을 무시한다.
+  사용자 HTML 클릭 안에서 window.print(), 페이지별 PNG와 A4 인쇄 DOM 사용.
+  기본 경로에서 외부 탭 자동 실행 금지. Safari 비동기 인쇄 자료는 대화상자를
+  닫거나 범위를 바꿀 때 해제한다. 큰 문서에서 페이지를 조용히 누락하지 않는다.
+- Drive 연결 전 업로드하지 않으며 연결 후 여는 원본부터 동기화한다.
+  drive.file, 데스크톱 loopback/state/PKCE, 세션 메모리 토큰을 사용한다.
+  PDF SHA-256 중복 제거·다운로드 검증, 페이지/책갈피별 시각 병합,
+  ETag 충돌 최대 3회 재시도와 계정 세대 분리를 유지한다.
+  편집 PDF 자동 업로드는 지원하지 않는다. 재저장한 파일을 다시 열면 새 해시다.
+- Mac 업데이트는 1.10.1부터 공식 URL을 브라우저로 열고 마지막 Applications
+  교체를 사용자가 수행한다. 과거 앱 내부 DMG 다운로드 설명을 현행으로 적용하지 않는다.
+- Windows 업데이트는 크기·SHA-256 확인, 미저장 변경 확인, 종료 후 설치,
+  성공 시 재실행이다. 개발 실행에서는 설치하지 않는다.
+
+검증 및 배포 기준
+- macos_app: flutter analyze, flutter test. 웹 릴리스 target lib/web_main.dart,
+  base-href /CY_Viewer/. Mac/Windows 빌드와 실제 실행은 각각의 OS에서 확인.
+- Windows 단위: python3 -m unittest discover -s native_windows/tests -p 'test_*.py'.
+- 웹 저장/다운로드: npm ci --prefix tests, npm test --prefix tests.
+- Mac 업데이트 소스 검증: python3 tests/check_mac_updater.py.
+- .github/workflows/deploy-web.yml: PR 빌드 검증, main Pages 배포.
+- build-macos.yml/build-windows.yml: 해당 버전 태그에서 설치 파일과 체크섬 게시.
+- 앱 변경 배포는 버전 증가 필수. CI 성공, 게시된 실제 파일, SHA-256,
+  실기기 GUI 확인은 서로 다른 근거로 보고한다.
+- 이번 변경은 인수 문서만이며 앱 버전 증가·설치 파일 재배포 대상은 아니다.
+
+기록의 시점과 미검증 사항
+- CY뷰어_대화및작업기록.docx는 9월 7일 초기 기록이다. 분리 다운로드 저장소,
+  Mac 1.1.0, 서버 전송 없음 설명은 후속 통합·Drive 기능으로 바뀌었다.
+- docs/CY_DESIGN_SYSTEM.md의 초기 Windows 밝은 테마 설명보다 마지막
+  Mac 기준 통일 항목과 현재 native_windows/design.py를 우선한다.
+- Apple 서명·공증, 실제 iPhone/iPad PWA 터치·AirPrint·OAuth 복귀,
+  사용자 OS의 설치·전체 업데이트 흐름은 기존 문서의 미검증 범위를 유지한다.
+- 실제 사용자가 /input-check/ 기본 HTML 파일 선택과 인쇄가 열린다고 확인한
+  기록은 앱의 직접 HTML 입력 전환 근거이며, 모든 앱 경로 성공의 증거는 아니다.
+- archive-download-history/archive-download-pages 브랜치는 과거 기록 보존용이다.
+  최신 구현으로 혼동하지 않는다. 다른 미병합 브랜치는 별도로 diff를 확인한다.

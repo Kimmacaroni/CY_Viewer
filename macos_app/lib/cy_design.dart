@@ -163,7 +163,7 @@ class CyBrand extends StatelessWidget {
   );
 }
 
-/// 빈 문서함에서도 열기 → 탐색 → 저장 흐름을 알려 주는 공통 시작 화면.
+/// 처음 열 때도 문서함 안에서 바로 시작할 수 있는 간결한 빈 상태.
 class CyDocumentWelcome extends StatelessWidget {
   const CyDocumentWelcome({super.key, required this.action, required this.web});
   final Widget action;
@@ -172,178 +172,80 @@ class CyDocumentWelcome extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
-    final scheme = theme.colorScheme;
-    return LayoutBuilder(
-      builder: (context, constraints) {
-        final wide =
-            constraints.maxWidth >= 760 &&
-            MediaQuery.textScalerOf(context).scale(14) < 21;
-        final intro = Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
+    return Card(
+      child: Padding(
+        padding: const EdgeInsets.all(24),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.stretch,
           children: [
-            Text(
-              tr(context, "문서 작업 공간"),
-              style: theme.textTheme.labelLarge?.copyWith(
-                color: scheme.primary,
-              ),
+            Icon(
+              Icons.description_outlined,
+              size: 32,
+              color: theme.colorScheme.primary,
             ),
-            SizedBox(height: 16),
+            const SizedBox(height: 16),
             Text(
               tr(context, "문서를 열고,\n바로 읽으세요."),
-              style: theme.textTheme.headlineMedium,
+              textAlign: TextAlign.center,
+              style: theme.textTheme.titleLarge,
             ),
-            SizedBox(height: 12),
+            const SizedBox(height: 8),
             Text(
-              web
-                  ? tr(
-                      context,
-                      "설치 없이, 파일 하나로 시작하세요.\n필요한 문구를 찾고 중요한 페이지를 남겨 보세요.",
-                    )
-                  : tr(
-                      context,
-                      "최근 문서와 읽던 페이지를 한곳에서.\nPDF를 선택하거나 이 창에 끌어놓으세요.",
-                    ),
-              style: theme.textTheme.bodyLarge,
+              tr(
+                context,
+                web ? "이 기기에 있는 PDF 파일을 선택하세요." : "PDF를 선택하거나 이 창에 끌어놓으세요.",
+              ),
+              textAlign: TextAlign.center,
             ),
-            SizedBox(height: 28),
-            _Feature(
-              icon: Icons.search,
-              title: tr(context, "찾고 읽기"),
-              description: tr(context, "문서 검색 · 확대 · 보기 방식 변경"),
+            const SizedBox(height: 20),
+            Center(
+              child: ConstrainedBox(
+                constraints: const BoxConstraints(maxWidth: 360),
+                child: SizedBox(width: double.infinity, child: action),
+              ),
             ),
-            SizedBox(height: 16),
-            _Feature(
-              icon: Icons.bookmark_border,
-              title: tr(context, "중요한 페이지 남기기"),
-              description: tr(context, "책갈피로 필요한 곳을 빠르게 찾기"),
-            ),
-            SizedBox(height: 16),
-            _Feature(
-              icon: Icons.ios_share_outlined,
-              title: web ? tr(context, "저장하고 공유하기") : tr(context, "표시하고 저장하기"),
-              description: web
-                  ? tr(context, "PDF 사본 저장 · 공유 · 인쇄")
-                  : tr(context, "텍스트 표시 · OCR · PDF와 이미지 저장"),
+            const SizedBox(height: 20),
+            const Divider(),
+            const SizedBox(height: 16),
+            Text(
+              tr(
+                context,
+                web
+                    ? "기본적으로 최근 PDF 5개의 사본을 이 브라우저에 저장합니다.\nDrive를 연결하면 이후 여는 PDF를 개인 Drive에도 저장합니다."
+                    : "기본적으로 문서를 이 기기에서 관리합니다.\nDrive를 연결하면 이후 여는 PDF를 개인 Drive에도 저장합니다.",
+              ),
+              textAlign: TextAlign.center,
+              style: theme.textTheme.bodySmall,
             ),
           ],
-        );
-        final panel = Card(
-          child: Padding(
-            padding: EdgeInsets.all(wide ? 32 : 24),
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.stretch,
-              children: [
-                Align(
-                  alignment: Alignment.centerLeft,
-                  child: Container(
-                    padding: EdgeInsets.all(16),
-                    decoration: BoxDecoration(
-                      color: scheme.primaryContainer,
-                      borderRadius: BorderRadius.circular(14),
-                    ),
-                    child: Icon(
-                      Icons.description_outlined,
-                      size: 36,
-                      color: scheme.onPrimaryContainer,
-                    ),
-                  ),
-                ),
-                SizedBox(height: 24),
-                Text(
-                  tr(context, "어떤 문서를 읽을까요?"),
-                  style: theme.textTheme.titleLarge,
-                ),
-                SizedBox(height: 8),
-                Text(
-                  web
-                      ? tr(context, "이 기기에 있는 PDF 파일을 선택하세요.")
-                      : tr(context, "파일을 선택하면 문서함에 추가됩니다."),
-                ),
-                SizedBox(height: 24),
-                action,
-                SizedBox(height: 24),
-                Divider(),
-                SizedBox(height: 16),
-                Row(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Icon(
-                      Icons.lock_outline,
-                      size: 17,
-                      color: scheme.onSurfaceVariant,
-                    ),
-                    SizedBox(width: 8),
-                    Expanded(
-                      child: Text(
-                        web
-                            ? tr(
-                                context,
-                                "기본적으로 최근 PDF 5개의 사본을 이 브라우저에 저장합니다.\nDrive를 연결하면 이후 여는 PDF를 개인 Drive에도 저장합니다.",
-                              )
-                            : tr(
-                                context,
-                                "기본적으로 문서를 이 기기에서 관리합니다.\nDrive를 연결하면 이후 여는 PDF를 개인 Drive에도 저장합니다.",
-                              ),
-                        style: theme.textTheme.bodySmall,
-                      ),
-                    ),
-                  ],
-                ),
-              ],
-            ),
-          ),
-        );
-        return wide
-            ? Row(
-                crossAxisAlignment: CrossAxisAlignment.center,
-                children: [
-                  Expanded(child: intro),
-                  SizedBox(width: 56),
-                  Expanded(child: panel),
-                ],
-              )
-            : Column(
-                crossAxisAlignment: CrossAxisAlignment.stretch,
-                children: [panel, SizedBox(height: 32), intro],
-              );
-      },
+        ),
+      ),
     );
   }
 }
 
-class _Feature extends StatelessWidget {
-  const _Feature({
-    required this.icon,
-    required this.title,
-    required this.description,
-  });
-  final IconData icon;
-  final String title;
-  final String description;
-
-  @override
-  Widget build(BuildContext context) => Row(
-    crossAxisAlignment: CrossAxisAlignment.start,
-    children: [
-      Icon(
-        icon,
-        size: 20,
-        color: Theme.of(context).colorScheme.onSurfaceVariant,
+/// 보기 방식은 책갈피 목록과 분리해 직접 선택한다.
+Future<int?> cyChooseView(BuildContext context, int selected) =>
+    showDialog<int>(
+      context: context,
+      builder: (context) => SimpleDialog(
+        title: Text(tr(context, '보기 방식')),
+        children: [
+          for (final entry in [
+            (Icons.view_day_outlined, '세로'),
+            (Icons.view_carousel_outlined, '가로'),
+            (Icons.menu_book_outlined, '두 쪽'),
+          ].asMap().entries)
+            ListTile(
+              leading: Icon(entry.value.$1),
+              title: Text(tr(context, entry.value.$2)),
+              selected: entry.key == selected,
+              trailing: entry.key == selected ? const Icon(Icons.check) : null,
+              onTap: () => Navigator.pop(context, entry.key),
+            ),
+        ],
       ),
-      SizedBox(width: 12),
-      Expanded(
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Text(title, style: Theme.of(context).textTheme.titleSmall),
-            SizedBox(height: 2),
-            Text(description, style: Theme.of(context).textTheme.bodySmall),
-          ],
-        ),
-      ),
-    ],
-  );
-}
+    );
 
 /// 데스크톱의 탐색·편집·저장 순서를 모든 Flutter 리더에서 공유한다.
 class CyReaderWorkspace extends StatelessWidget {
@@ -362,6 +264,11 @@ class CyReaderWorkspace extends StatelessWidget {
     this.editing,
     this.exports,
     this.printAction,
+    this.onBookmarks,
+    this.onView,
+    this.onPrevious,
+    this.onNext,
+    this.pageLabel,
   });
   final Widget child;
   final VoidCallback onOpen,
@@ -371,7 +278,8 @@ class CyReaderWorkspace extends StatelessWidget {
       onPrint,
       onZoomIn,
       onZoomOut;
-  final VoidCallback? onSearch, onPage;
+  final VoidCallback? onSearch, onPage, onBookmarks, onView, onPrevious, onNext;
+  final String? pageLabel;
   final Widget? editing, exports, printAction;
 
   static bool isWide(BuildContext context) =>
@@ -394,7 +302,12 @@ class CyReaderWorkspace extends StatelessWidget {
     Widget action(String label, IconData icon, VoidCallback? callback) =>
         Padding(
           padding: EdgeInsets.only(bottom: 8),
-          child: OutlinedButton.icon(
+          child: TextButton.icon(
+            style: TextButton.styleFrom(
+              alignment: Alignment.centerLeft,
+              foregroundColor: theme.colorScheme.onSurface,
+              padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
+            ),
             onPressed: callback,
             icon: Icon(icon, size: 18),
             label: Text(label),
@@ -413,35 +326,28 @@ class CyReaderWorkspace extends StatelessWidget {
           child: ListView(
             padding: EdgeInsets.all(16),
             children: [
-              FilledButton.icon(
+              TextButton.icon(
+                style: TextButton.styleFrom(alignment: Alignment.centerLeft),
                 onPressed: onOpen,
-                icon: Icon(Icons.add),
-                label: Text(tr(context, "PDF 열기")),
+                icon: const Icon(Icons.arrow_back),
+                label: Text(tr(context, "문서함")),
               ),
               section(tr(context, "01  문서 탐색"), [
-                action(tr(context, "문서 검색"), Icons.search, onSearch),
-                action(
-                  tr(context, "페이지 이동"),
-                  Icons.find_in_page_outlined,
-                  onPage,
-                ),
                 action(
                   tr(context, "이 페이지 책갈피"),
                   Icons.bookmark_border,
                   onBookmark,
                 ),
-                Row(
-                  children: [
-                    Expanded(
-                      child: action(tr(context, "축소"), Icons.remove, onZoomOut),
-                    ),
-                    SizedBox(width: 8),
-                    Expanded(
-                      child: action(tr(context, "확대"), Icons.add, onZoomIn),
-                    ),
-                  ],
+                action(
+                  tr(context, "책갈피 목록"),
+                  Icons.bookmarks_outlined,
+                  onBookmarks ?? onTools,
                 ),
-                action(tr(context, "보기 방식 · 책갈피 목록"), Icons.tune, onTools),
+                action(
+                  tr(context, "보기 방식"),
+                  Icons.view_day_outlined,
+                  onView ?? onTools,
+                ),
               ]),
               section(tr(context, "02  선택·편집"), [
                 editing ??
@@ -459,7 +365,60 @@ class CyReaderWorkspace extends StatelessWidget {
             ],
           ),
         ),
-        Expanded(child: child),
+        Expanded(
+          child: Column(
+            children: [
+              Container(
+                padding: const EdgeInsets.symmetric(
+                  horizontal: 16,
+                  vertical: 6,
+                ),
+                decoration: BoxDecoration(
+                  color: theme.colorScheme.surface,
+                  border: Border(
+                    bottom: BorderSide(color: theme.colorScheme.outlineVariant),
+                  ),
+                ),
+                child: Row(
+                  children: [
+                    TextButton.icon(
+                      onPressed: onSearch,
+                      icon: const Icon(Icons.search, size: 18),
+                      label: Text(tr(context, '문서 검색')),
+                    ),
+                    const Spacer(),
+                    IconButton(
+                      tooltip: tr(context, '이전 페이지'),
+                      onPressed: onPrevious,
+                      icon: const Icon(Icons.chevron_left),
+                    ),
+                    TextButton(
+                      onPressed: onPage,
+                      child: Text(pageLabel ?? tr(context, '페이지 이동')),
+                    ),
+                    IconButton(
+                      tooltip: tr(context, '다음 페이지'),
+                      onPressed: onNext,
+                      icon: const Icon(Icons.chevron_right),
+                    ),
+                    const SizedBox(width: 12),
+                    IconButton(
+                      tooltip: tr(context, '축소'),
+                      onPressed: onZoomOut,
+                      icon: const Icon(Icons.remove),
+                    ),
+                    IconButton(
+                      tooltip: tr(context, '확대'),
+                      onPressed: onZoomIn,
+                      icon: const Icon(Icons.add),
+                    ),
+                  ],
+                ),
+              ),
+              Expanded(child: child),
+            ],
+          ),
+        ),
       ],
     );
   }

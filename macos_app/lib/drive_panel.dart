@@ -307,22 +307,34 @@ class _DriveHomeRecentState extends State<DriveHomeRecent> {
                   padding: const EdgeInsets.symmetric(vertical: 20),
                   child: Text(tr(context, '아직 동기화한 PDF가 없습니다. PDF를 열어 주세요.')),
                 ),
-              for (final file in sync.files.take(5))
+              for (final entry
+                  in sync.files.take(5).toList().asMap().entries) ...[
+                if (entry.key == 0)
+                  Padding(
+                    padding: const EdgeInsets.only(top: 16, bottom: 4),
+                    child: Text(
+                      tr(context, '이어서 읽기'),
+                      style: Theme.of(context).textTheme.labelLarge?.copyWith(
+                        color: Theme.of(context).colorScheme.primary,
+                      ),
+                    ),
+                  ),
                 ListTile(
                   contentPadding: EdgeInsets.zero,
                   leading: const Icon(Icons.cloud_outlined),
                   title: Text(
-                    file.name,
+                    entry.value.name,
                     maxLines: 2,
                     overflow: TextOverflow.ellipsis,
                   ),
                   subtitle: Text(
-                    tr(context, '{0}페이지에서 이어 읽기', ['${file.page}']),
+                    tr(context, '{0}페이지에서 이어 읽기', ['${entry.value.page}']),
                   ),
                   onTap: _opening || _refreshing || sync.busy
                       ? null
-                      : () => _open(file),
+                      : () => _open(entry.value),
                 ),
+              ],
               Align(
                 alignment: Alignment.centerRight,
                 child: TextButton.icon(

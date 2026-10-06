@@ -799,11 +799,12 @@ class _AdvancedPdfReaderPageState extends State<AdvancedPdfReaderPage> {
                 ]
               : [
                   const DriveStatus(),
-                  IconButton(
-                    tooltip: tr(context, "검색"),
-                    onPressed: _searcher == null ? null : _showSearch,
-                    icon: Icon(Icons.search),
-                  ),
+                  if (!CyReaderWorkspace.isWide(context))
+                    IconButton(
+                      tooltip: tr(context, "검색"),
+                      onPressed: _searcher == null ? null : _showSearch,
+                      icon: Icon(Icons.search),
+                    ),
                   IconButton(
                     tooltip: _bookmarks.contains(_currentPage)
                         ? tr(context, "책갈피 삭제")
@@ -828,6 +829,22 @@ class _AdvancedPdfReaderPageState extends State<AdvancedPdfReaderPage> {
           onPage: _pageCount == 0 ? null : _goToPage,
           onBookmark: _toggleBookmark,
           onTools: _showMobileTools,
+          onBookmarks: _showBookmarks,
+          onView: () async {
+            final view = await cyChooseView(context, _viewMode.index);
+            if (view != null && mounted) {
+              setState(() => _viewMode = _ViewMode.values[view]);
+            }
+          },
+          pageLabel: _pageCount == 0
+              ? tr(context, '페이지 이동')
+              : '$_currentPage / $_pageCount',
+          onPrevious: _currentPage > 1
+              ? () => _controller.goToPage(pageNumber: _currentPage - 1)
+              : null,
+          onNext: _currentPage < _pageCount
+              ? () => _controller.goToPage(pageNumber: _currentPage + 1)
+              : null,
           onZoomIn: _controller.zoomUp,
           onZoomOut: _controller.zoomDown,
           onSave: () => _export(_ExportFormat.pdf),
