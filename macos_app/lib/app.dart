@@ -517,49 +517,81 @@ class _LibraryPageState extends State<LibraryPage> {
                           itemBuilder: (_, index) {
                             final item = shown[index];
                             return Card(
-                              child: ListTile(
-                                contentPadding: EdgeInsets.symmetric(
-                                  horizontal: 16,
-                                  vertical: 8,
-                                ),
-                                leading: Container(
-                                  padding: EdgeInsets.all(10),
-                                  decoration: BoxDecoration(
-                                    color: theme.colorScheme.primaryContainer,
-                                    borderRadius: BorderRadius.circular(10),
+                              shape: _recentOnly && index == 0
+                                  ? RoundedRectangleBorder(
+                                      borderRadius: BorderRadius.circular(16),
+                                      side: BorderSide(
+                                        color: theme.colorScheme.primary,
+                                      ),
+                                    )
+                                  : null,
+                              child: Column(
+                                crossAxisAlignment: CrossAxisAlignment.stretch,
+                                children: [
+                                  if (_recentOnly && index == 0)
+                                    Padding(
+                                      padding: const EdgeInsets.fromLTRB(
+                                        16,
+                                        16,
+                                        16,
+                                        0,
+                                      ),
+                                      child: Text(
+                                        tr(context, '이어서 읽기'),
+                                        style: theme.textTheme.labelLarge
+                                            ?.copyWith(
+                                              color: theme.colorScheme.primary,
+                                            ),
+                                      ),
+                                    ),
+                                  ListTile(
+                                    contentPadding: EdgeInsets.symmetric(
+                                      horizontal: 16,
+                                      vertical: 8,
+                                    ),
+                                    leading: Container(
+                                      padding: EdgeInsets.all(10),
+                                      decoration: BoxDecoration(
+                                        color:
+                                            theme.colorScheme.primaryContainer,
+                                        borderRadius: BorderRadius.circular(10),
+                                      ),
+                                      child: Icon(
+                                        Icons.description_outlined,
+                                        color: theme
+                                            .colorScheme
+                                            .onPrimaryContainer,
+                                      ),
+                                    ),
+                                    title: Text(
+                                      item.name,
+                                      maxLines: 1,
+                                      overflow: TextOverflow.ellipsis,
+                                      style: theme.textTheme.titleSmall,
+                                    ),
+                                    subtitle: Text(
+                                      tr(context, "{0}페이지에서 이어 읽기 · {1}", [
+                                        item.lastPage,
+                                        _date(item.openedAt),
+                                      ]),
+                                    ),
+                                    onTap: () => _open(item),
+                                    trailing: IconButton(
+                                      tooltip: item.favorite
+                                          ? tr(context, "즐겨찾기 해제")
+                                          : tr(context, "즐겨찾기에 추가"),
+                                      onPressed: () => _favorite(item),
+                                      color: item.favorite
+                                          ? theme.colorScheme.primary
+                                          : theme.colorScheme.onSurfaceVariant,
+                                      icon: Icon(
+                                        item.favorite
+                                            ? Icons.star
+                                            : Icons.star_border,
+                                      ),
+                                    ),
                                   ),
-                                  child: Icon(
-                                    Icons.description_outlined,
-                                    color: theme.colorScheme.onPrimaryContainer,
-                                  ),
-                                ),
-                                title: Text(
-                                  item.name,
-                                  maxLines: 1,
-                                  overflow: TextOverflow.ellipsis,
-                                  style: theme.textTheme.titleSmall,
-                                ),
-                                subtitle: Text(
-                                  tr(context, "{0}페이지에서 이어 읽기 · {1}", [
-                                    item.lastPage,
-                                    _date(item.openedAt),
-                                  ]),
-                                ),
-                                onTap: () => _open(item),
-                                trailing: IconButton(
-                                  tooltip: item.favorite
-                                      ? tr(context, "즐겨찾기 해제")
-                                      : tr(context, "즐겨찾기에 추가"),
-                                  onPressed: () => _favorite(item),
-                                  color: item.favorite
-                                      ? theme.colorScheme.primary
-                                      : theme.colorScheme.onSurfaceVariant,
-                                  icon: Icon(
-                                    item.favorite
-                                        ? Icons.star
-                                        : Icons.star_border,
-                                  ),
-                                ),
+                                ],
                               ),
                             );
                           },

@@ -78,6 +78,10 @@ try:
         app.toggle_tools()
         app.update()
         assert app.rail.winfo_ismapped()
+        # 좁은 창에서 패널을 펼쳐도 상단 도구가 모두 창 안에 배치된다.
+        for control in app.reading_tools.winfo_children():
+            assert control.winfo_ismapped()
+            assert control.winfo_x() + control.winfo_width() <= app.reading_tools.winfo_width()
         app.toggle_tools()
         app.geometry("1200x800")
         app.update()

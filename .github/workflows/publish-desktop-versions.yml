@@ -1,0 +1,71 @@
+name: 데스크톱 버전 배포 시작
+
+on:
+  workflow_dispatch:
+  push:
+    branches: [main]
+    paths:
+      - macos_app/pubspec.yaml
+      - native_windows/version.py
+
+permissions:
+  contents: write
+  actions: write
+
+concurrency:
+  group: desktop-versions-${{ github.ref }}
+  cancel-in-progress: false
+
+jobs:
+  publish:
+    if: github.ref == 'refs/heads/main'
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+          ref: ${{ github.sha }}
+      - name: 새 버전의 태그와 기존 릴리스 빌드 연결
+        env:
+          GH_TOKEN: ${{ github.token }}
+          GH_REPO: ${{ github.repository }}
+          BEFORE_SHA: ${{ github.event.before }}
+          EVENT_NAME: ${{ github.event_name }}
+        shell: bash
+        run: |
+          set -euo pipefail
+          for platform in macos windows; do
+            if [[ "$platform" == macos ]]; then
+              source=macos_app/pubspec.yaml
+              version=$(sed -n 's/^version: \([^+]*\).*/\1/p' "$source")
+              workflow=build-macos.yml
+            else
+              source=native_windows/version.py
+              version=$(sed -n 's/^APP_VERSION = "\([^"]*\)"/\1/p' "$source")
+              workflow=build-windows.yml
+            fi
+            [[ "$version" =~ ^[0-9]+\.[0-9]+\.[0-9]+$ ]]
+            if [[ "$EVENT_NAME" == push ]]; then
+              previous=$(git show "$BEFORE_SHA:$source")
+              if [[ "$platform" == macos ]]; then
+                old_version=$(sed -n 's/^version: \([^+]*\).*/\1/p' <<< "$previous")
+              else
+                old_version=$(sed -n 's/^APP_VERSION = "\([^"]*\)"/\1/p' <<< "$previous")
+              fi
+              [[ "$old_version" != "$version" ]] || continue
+            fi
+            tag="$platform-v$version"
+            if git rev-parse --verify "refs/tags/$tag" >/dev/null 2>&1; then
+              # 공개된 태그는 이동하거나 덮어쓰지 않는다.
+              if gh release view "$tag" >/dev/null 2>&1; then
+                continue
+              fi
+              [[ "$(git rev-list -n 1 "$tag")" == "$GITHUB_SHA" ]]
+            else
+              git tag "$tag" "$GITHUB_SHA"
+              git push origin "refs/tags/$tag"
+            fi
+            # GITHUB_TOKEN의 태그 push는 워크플로를 시작하지 않아 명시적으로 실행한다.
+            gh workflow run "$workflow" --ref "$tag"
+          done

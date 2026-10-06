@@ -80,7 +80,7 @@ class RoundedButton(tk.Canvas):
         width, height = max(self.winfo_width(), 2), self.height
         radius = min(self.radius, height // 2, width // 2)
         background, foreground = self._palette()
-        outline = background if self.variant == "primary" else (COLORS["line"] if not self.hovered else COLORS["blue"])
+        outline = background if self.variant not in {"selected"} and not self.hovered else COLORS["blue"]
         focused = self.focus_get() == self
         if focused:
             outline = COLORS["blue"]
@@ -305,23 +305,8 @@ class CyViewer(TkinterDnD.Tk):
         self.bind("<FocusIn>", reveal_focused, add="+")
         self._button(sidebar, tr('＋  PDF 열기'), self.open_pdf, "Primary.TButton").pack(fill="x", pady=(0, 20))
         navigation = self._section(sidebar, tr('01  문서 탐색'))
-        page_controls = tk.Frame(navigation, bg=COLORS["sidebar"])
-        page_controls.pack(fill="x", pady=(0, 8))
-        previous = self._button(page_controls, tr('◀ 이전'), self.previous_page)
-        previous.configure(width=1)
-        previous.grid(row=0, column=0, sticky="ew")
-        go_to = self._button(page_controls, tr('이동'), self.go_to_page)
-        go_to.configure(width=1)
-        go_to.grid(row=0, column=1, sticky="ew", padx=6)
-        following = self._button(page_controls, tr('다음 ▶'), self.next_page)
-        following.configure(width=1)
-        following.grid(row=0, column=2, sticky="ew")
-        for column in range(3):
-            page_controls.grid_columnconfigure(column, weight=1, uniform="page_navigation")
-        quick_actions = tk.Frame(navigation, bg=COLORS["sidebar"])
-        quick_actions.pack(fill="x")
-        self._button(quick_actions, "☆", self.toggle_bookmark).pack(side="left")
-        self._button(quick_actions, "OCR", self.ocr_document).pack(side="left", fill="x", expand=True, padx=(8, 0))
+        self._button(navigation, tr('이 페이지 책갈피'), self.toggle_bookmark).pack(fill='x', pady=(0, 4))
+        self._button(navigation, tr('책갈피 목록'), self.show_bookmarks).pack(fill='x')
         editing = self._section(sidebar, tr('02  선택·편집'))
         tk.Label(
             editing,
@@ -329,6 +314,7 @@ class CyViewer(TkinterDnD.Tk):
             justify="left", anchor="w", bg=COLORS["sidebar"], fg=COLORS["muted"],
             font=("Malgun Gothic", 9),
         ).pack(fill="x", pady=(0, 6))
+        self._button(editing, tr('문서 전체 OCR'), self.ocr_document).pack(fill='x', pady=(8, 0))
         save_actions = self._section(sidebar, tr('03  저장·내보내기'))
         self._button(save_actions, tr('PDF로 저장'), self.save_as).pack(fill="x", pady=(0, 8))
         image_saves = tk.Frame(save_actions, bg=COLORS["sidebar"])
@@ -362,20 +348,52 @@ class CyViewer(TkinterDnD.Tk):
         content.pack(side="left", fill="both", expand=True)
         tools = tk.Frame(content, bg=COLORS["surface"], padx=20, pady=13)
         tools.pack(fill="x", padx=16, pady=(16, 10))
-        view_controls = tk.Frame(tools, bg=COLORS["surface"])
+        view_controls = self.reading_tools = tk.Frame(tools, bg=COLORS["surface"])
         view_controls.pack(fill="x")
-        tk.Label(view_controls, text=tr('읽기'), bg=COLORS["blue_soft"], fg=COLORS["blue"], padx=9, pady=4, font=("Malgun Gothic", 9, "bold")).pack(side="left", padx=(0, 12))
+        reading_mode = tk.Label(view_controls, text=tr('읽기'), bg=COLORS["blue_soft"], fg=COLORS["blue"], padx=9, pady=4, font=("Malgun Gothic", 9, "bold"))
+        page_controls = tk.Frame(view_controls, bg=COLORS["sidebar"])
+        previous = self._button(page_controls, tr('◀ 이전'), self.previous_page)
+        previous.configure(width=72)
+        previous.grid(row=0, column=0, sticky="ew")
+        go_to = self._button(page_controls, tr('이동'), self.go_to_page)
+        go_to.configure(width=60)
+        go_to.grid(row=0, column=1, sticky="ew", padx=6)
+        following = self._button(page_controls, tr('다음 ▶'), self.next_page)
+        following.configure(width=72)
+        following.grid(row=0, column=2, sticky="ew")
+        for column in range(3):
+            page_controls.grid_columnconfigure(column, weight=1, uniform="page_navigation")
         self.view_mode_var = tk.StringVar(value=tr('스크롤 보기'))
         view_selector = ttk.Combobox(view_controls, textvariable=self.view_mode_var, state="readonly", width=11, values=(tr('스크롤 보기'), tr('좌우 보기')), font=("Malgun Gothic", 9))
-        view_selector.pack(side="left", padx=(0, 12), ipady=4)
         view_selector.bind("<<ComboboxSelected>>", self._change_view_mode)
         self.selection_state = tk.Label(
             view_controls, text=tr('선택 없음'), bg=COLORS["canvas"], fg=COLORS["muted"],
             padx=10, pady=4, font=("Malgun Gothic", 9, "bold"),
         )
-        self.selection_state.pack(side="left", padx=(0, 12))
-        self._button(view_controls, "−", lambda: self.change_zoom(-0.2)).pack(side="left", padx=2)
-        self._button(view_controls, "+", lambda: self.change_zoom(0.2)).pack(side="left", padx=2)
+        zoom_controls = tk.Frame(view_controls, bg=COLORS['surface'])
+        self._button(zoom_controls, "−", lambda: self.change_zoom(-0.2)).pack(side="left", padx=2)
+        self._button(zoom_controls, "+", lambda: self.change_zoom(0.2)).pack(side="left", padx=2)
+        toolbar_items = [reading_mode, page_controls, view_selector, self.selection_state, zoom_controls]
+        toolbar_layout = [None]
+        def fit_reading_tools(event):
+            # 문서 도구 패널을 펼친 작은 창에서도 탐색 버튼을 가리지 않는다.
+            needed = sum(widget.winfo_reqwidth() for widget in toolbar_items) + 48
+            compact = view_controls.winfo_width() < needed
+            if toolbar_layout[0] == compact: return
+            toolbar_layout[0] = compact
+            for widget in toolbar_items: widget.grid_forget()
+            if compact:
+                page_controls.grid(row=0, column=0, columnspan=2, sticky='w', pady=(0, 8))
+                zoom_controls.grid(row=0, column=2, sticky='e', pady=(0, 8))
+                reading_mode.grid(row=1, column=0, sticky='w', padx=(0, 8))
+                view_selector.grid(row=1, column=1, sticky='w', padx=(0, 8), ipady=4)
+                self.selection_state.grid(row=1, column=2, sticky='e')
+            else:
+                for column, widget in enumerate(toolbar_items):
+                    widget.grid(row=0, column=column, sticky='w', padx=(0, 8))
+            view_controls.columnconfigure(1, weight=1)
+        view_controls.bind('<Configure>', fit_reading_tools)
+        self.selection_state.bind('<Configure>', fit_reading_tools)
         search_box = tk.Frame(tools, bg=COLORS["canvas"], padx=8, pady=6)
         search_box.pack(fill="x", pady=(12, 0))
         tk.Label(search_box, text=tr('문서 검색'), bg=COLORS["canvas"], fg=COLORS["muted"], font=("Malgun Gothic", 9, "bold")).pack(side="left", padx=(2, 8))
@@ -459,7 +477,11 @@ class CyViewer(TkinterDnD.Tk):
         layout = tk.Frame(canvas,bg=COLORS['canvas'],padx=24,pady=24)
         window = canvas.create_window((0,0),window=layout,anchor='nw')
         layout.bind('<Configure>',lambda _:canvas.configure(scrollregion=canvas.bbox('all')))
-        canvas.bind('<Configure>',lambda e:canvas.itemconfigure(window,width=e.width))
+        def fit_library(event):
+            width = min(event.width, 1120)
+            canvas.itemconfigure(window, width=width)
+            canvas.coords(window, max(0, (event.width - width) / 2), 0)
+        canvas.bind('<Configure>', fit_library)
         title = tk.Frame(layout,bg=COLORS['canvas'])
         title.pack(fill='x',pady=(0,16))
         tk.Label(title,text=tr('문서함'),font=('Malgun Gothic',24,'bold'),bg=COLORS['canvas'],fg=COLORS['ink']).pack(side='left')
@@ -531,29 +553,9 @@ class CyViewer(TkinterDnD.Tk):
         if not rows:
             holder = tk.Frame(frame,bg=COLORS['canvas'])
             holder.pack(fill='x')
-            intro = tk.Frame(holder,bg=COLORS['canvas'],padx=0,pady=24)
-            if not cloud and self.library_filter != 'favorites':
-                tk.Label(intro,text=tr('문서 작업 공간'),bg=COLORS['canvas'],fg=COLORS['blue'],font=('Malgun Gothic',10,'bold')).pack(anchor='w',pady=(0,16))
-                tk.Label(intro,text=tr('문서를 열고,\n바로 읽으세요.'),bg=COLORS['canvas'],fg=COLORS['ink'],font=('Malgun Gothic',26,'bold'),justify='left').pack(anchor='w',pady=(0,12))
-                tk.Label(intro,text=tr('최근 문서와 읽던 페이지를 한곳에서.\nPDF를 선택하거나 이 창에 끌어놓으세요.'),bg=COLORS['canvas'],fg=COLORS['muted'],font=('Malgun Gothic',11),justify='left',wraplength=400).pack(anchor='w',pady=(0,24))
-                for heading,detail in [('찾고 읽기','문서 검색 · 확대 · 보기 방식 변경'),('중요한 페이지 남기기','책갈피로 필요한 곳을 빠르게 찾기'),('표시하고 저장하기','텍스트 표시 · OCR · PDF와 이미지 저장')]:
-                    tk.Label(intro,text=tr(heading),bg=COLORS['canvas'],fg=COLORS['ink'],font=('Malgun Gothic',11,'bold')).pack(anchor='w',pady=(8,4))
-                    tk.Label(intro,text=tr(detail),bg=COLORS['canvas'],fg=COLORS['muted'],font=('Malgun Gothic',10)).pack(anchor='w')
-            panel = tk.Frame(holder,bg=COLORS['surface'],padx=32,pady=32,highlightbackground=COLORS['line'],highlightthickness=1)
-            if not cloud and self.library_filter != 'favorites':
-                def arrange(event):
-                    intro.grid_forget();panel.grid_forget()
-                    if event.width >= 760:
-                        holder.columnconfigure(0,weight=1);holder.columnconfigure(1,weight=1)
-                        intro.grid(row=0,column=0,sticky='nw',padx=(0,32))
-                        panel.grid(row=0,column=1,sticky='new')
-                    else:
-                        holder.columnconfigure(0,weight=1);holder.columnconfigure(1,weight=0)
-                        panel.grid(row=0,column=0,sticky='ew')
-                        intro.grid(row=1,column=0,sticky='nw')
-                holder.bind('<Configure>',arrange)
-            else: panel.pack(fill='x')
-            title = '즐겨찾는 문서가 없습니다' if self.library_filter == 'favorites' else '어떤 문서를 읽을까요?'
+            panel = tk.Frame(holder,bg=COLORS['surface'],padx=24,pady=24,highlightbackground=COLORS['line'],highlightthickness=1)
+            panel.pack(fill='x')
+            title = '즐겨찾는 문서가 없습니다' if self.library_filter == 'favorites' else '문서를 열고,\n바로 읽으세요.'
             detail = '문서 옆의 별을 누르면 여기에 모아 볼 수 있습니다.' if self.library_filter == 'favorites' else 'PDF를 선택하거나 이 창에 끌어놓으세요.'
             if cloud: title,detail = 'Drive 최근 파일 · 최대 5개','아직 동기화한 PDF가 없습니다. PDF를 열어 주세요.'
             tk.Label(panel,text=tr(title),font=('Malgun Gothic',20,'bold'),bg=COLORS['surface'],fg=COLORS['ink'],wraplength=360,justify='left').pack(anchor='w',pady=(0,12))
@@ -561,13 +563,18 @@ class CyViewer(TkinterDnD.Tk):
             if not cloud and self.library_filter != 'favorites':
                 self._button(panel,tr('PDF 열기'),self.open_pdf,'Primary.TButton').pack(fill='x',pady=(24,0))
             if self.library_filter == 'favorites': self._button(panel,tr('전체 문서 보기'),lambda:self.select_library_filter('all')).pack(anchor='w',pady=(16,0))
-        for row in rows:
+        for index, row in enumerate(rows):
             name = row.get('name','PDF') if cloud else Path(row).name
             command = (lambda value=row:self.drive_ui.download(value)) if cloud else (lambda value=row:self.load_pdf(Path(value)))
             card = tk.Frame(frame,bg=COLORS['surface'],padx=16,pady=12,highlightbackground=COLORS['line'],highlightthickness=1)
             card.pack(fill='x',pady=(0,8))
-            tk.Label(card,text='☁' if cloud else '▤',font=('Segoe UI',20),bg=COLORS['blue_soft'],fg=COLORS['blue'],padx=10,pady=8).pack(side='left',padx=(0,16))
-            copy = tk.Frame(card,bg=COLORS['surface']);copy.pack(side='left',fill='x',expand=True)
+            if index == 0 and self.library_filter == 'recent':
+                card.configure(highlightbackground=COLORS['blue'])
+                tk.Label(card,text=tr('이어서 읽기'),bg=COLORS['surface'],fg=COLORS['blue'],font=('Malgun Gothic',10,'bold')).pack(anchor='w',pady=(0,8))
+            document_row = tk.Frame(card, bg=COLORS['surface'])
+            document_row.pack(fill='x')
+            tk.Label(document_row,text='☁' if cloud else '▤',font=('Segoe UI',20),bg=COLORS['blue_soft'],fg=COLORS['blue'],padx=10,pady=8).pack(side='left',padx=(0,16))
+            copy = tk.Frame(document_row,bg=COLORS['surface']);copy.pack(side='left',fill='x',expand=True)
             button = tk.Button(copy,text=name,anchor='w',relief='flat',bg=COLORS['surface'],fg=COLORS['ink'],font=('Malgun Gothic',11,'bold'),cursor='hand2',takefocus=True,command=command,state='disabled' if cloud and self.drive_ui.busy else 'normal')
             button.pack(fill='x')
             page = row.get('description','') if cloud else self.library_state.get(row,{}).get('page',1)
@@ -581,7 +588,7 @@ class CyViewer(TkinterDnD.Tk):
                 item.configure(text=text + ('…' if text != title else ''))
             button.bind('<Configure>',fit_name)
             if not cloud:
-                star = self._button(card,'★' if self.library_state.get(row,{}).get('favorite') else '☆',lambda value=row:self.toggle_favorite(value))
+                star = self._button(document_row,'★' if self.library_state.get(row,{}).get('favorite') else '☆',lambda value=row:self.toggle_favorite(value))
                 star.configure(width=44);star.pack(side='right',padx=(8,0))
         if cloud:
             tk.Label(frame,text=self.drive_ui.status,wraplength=600,justify='left',bg=COLORS['canvas'],fg=COLORS['muted']).pack(fill='x',pady=8)

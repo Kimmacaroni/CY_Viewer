@@ -56,6 +56,8 @@ PR에서는 빌드만 확인하고 배포하지 않습니다.
 
 사용자가 배포를 금지하지 않은 작업은 검증부터 실제 배포 확인까지 완료한다.
 
+`publish-desktop-versions.yml`은 main에서 Mac/Windows 소스 버전이 바뀌면 해당 커밋에 플랫폼 버전 태그를 만들고 기존 빌드 워크플로를 명시적으로 실행한다. 기존 공개 태그를 이동하거나 덮어쓰지 않는다. 설치 파일은 기존 플랫폼별 분석·테스트·설치 검사가 성공한 뒤 게시한다. 수동 실행은 아직 릴리스가 없는 현재 버전의 배포를 재시도할 때 사용한다. GitHub의 GITHUB_TOKEN으로 만든 태그 push는 새 워크플로를 시작하지 않으므로 workflow_dispatch를 사용한다. 근거: [GitHub 워크플로 실행 안내](https://docs.github.com/en/actions/how-tos/write-workflows/choose-when-workflows-run/trigger-a-workflow).
+
 배포 사이트는 `/download/`에서 제공하며 사이트 변경도 Pages 배포를 실행한다.
 앱의 자동 업데이트는 플랫폼별 정식 릴리스를 조회한다. Windows는 설치 스크립트와 `native_windows/version.py` 버전을 함께 올린다.
 상세 동작과 제한은 [다운로드·업데이트 안내](DOWNLOAD_AND_UPDATES.md)를 따른다.

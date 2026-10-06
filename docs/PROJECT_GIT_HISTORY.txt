@@ -1,0 +1,1080 @@
+5275787c64012850d5c18e9645a10e6aab0f2bd4 2026-09-30T11:28:40+09:00  (HEAD -> main, origin/main, origin/HEAD) Merge pull request #28 from Kimmacaroni/codex/mac-release-notes
+199add9729cbf1c2ee8d94ef8351578b2b7af3a0 2026-09-30T11:12:38+09:00  (origin/codex/mac-release-notes) Mac 릴리스 안내를 브라우저 업데이트 경로에 맞춤
+M	.github/workflows/build-macos.yml
+
+195abf643659eab915428e15a659a76b84935361 2026-09-30T11:11:12+09:00  (codex/mac-release-notes-local) Mac 릴리스 안내를 브라우저 업데이트 경로에 맞춤
+M	.github/workflows/build-macos.yml
+
+f24d8f5ed50153c58aa8cd588af845e10897f588 2026-09-30T11:10:10+09:00  (tag: macos-v1.10.1) Merge pull request #27 from Kimmacaroni/codex/mac-update-browser-handoff
+91461a77dc7adddda234475040acd0b35935d36b 2026-09-30T11:04:10+09:00  (origin/codex/mac-update-browser-handoff) Mac 업데이트 DMG를 브라우저에서 받도록 변경
+M	README.md
+M	docs/DOWNLOAD_AND_UPDATES.md
+M	localization/en.json
+M	macos_app/lib/cy_translations.dart
+M	macos_app/macos/Runner/MainFlutterWindow.swift
+M	macos_app/pubspec.yaml
+M	macos_app/web/flutter_bootstrap.js
+M	macos_app/web/index.html
+M	native_windows/cy_translations.py
+M	site/download/index.html
+M	site/download/translations.js
+M	tests/check_mac_updater.py
+
+0922e75d46b3d7dbe043869842c157d5d02e1d4a 2026-09-28T22:25:09+09:00  Merge pull request #26 from Kimmacaroni/codex/remove-download-repo
+a56385adcb0fc1681a2ca6003b3d97147cc5fe47 2026-09-28T22:24:45+09:00  (origin/codex/remove-download-repo) 분리 다운로드 저장소 제거에 앞서 기록과 릴리스 검증 보존
+M	docs/RELEASES.md
+A	docs/archive/download-repository/SHA256SUMS-v1.0.0-original.txt
+A	docs/archive/download-repository/verification.json
+
+50f08b9f59fe4d0edcf4279d734f05b1b65860ad 2026-09-28T21:24:43+09:00  (tag: windows-v1.7.0, tag: macos-v1.10.0) Merge pull request #25 from Kimmacaroni/codex/mac-parity-ui
+5e915a5f77bf1687534abb4c685894b2c1c8b313 2026-09-28T21:15:58+09:00  (origin/codex/mac-parity-ui) Windows 가상 화면 크기를 반영한 반응형 실행 검사
+M	native_windows/tests/smoke.py
+
+34a5cabf3623f046f6512a214afa9a89ce5e0c57 2026-09-28T21:12:26+09:00  Mac 기준으로 Windows와 웹 문서함 및 테마 통일
+M	README.md
+M	docs/CY_DESIGN_SYSTEM.md
+M	installer/CYViewer.iss
+M	localization/en.json
+M	macos_app/lib/app.dart
+M	macos_app/lib/cy_design.dart
+M	macos_app/lib/cy_recent_files.dart
+M	macos_app/lib/cy_translations.dart
+M	macos_app/lib/web_main.dart
+M	macos_app/macos/Runner/MainFlutterWindow.swift
+M	macos_app/pubspec.yaml
+A	macos_app/test/library_parity_test.dart
+M	macos_app/web/flutter_bootstrap.js
+M	macos_app/web/index.html
+M	native_windows/cy_translations.py
+M	native_windows/cy_viewer.py
+A	native_windows/design.py
+M	native_windows/recent_files.py
+M	native_windows/tests/smoke.py
+A	native_windows/tests/test_library_state.py
+M	native_windows/version.py
+M	site/download/index.html
+M	site/download/translations.js
+
+16670aa8eff2e2cc5aa2b503b889a99ca1e43e13 2026-09-28T20:53:38+09:00  Merge pull request #24 from Kimmacaroni/codex/drive-home-recents
+f9590464eb1619276d6512db962f2539d9e3abef 2026-09-28T20:53:14+09:00  (origin/codex/drive-home-recents) fix: 홈 최근 문서 배포의 웹앱 코드 캐시 갱신
+A	macos_app/web/flutter_bootstrap.js
+M	macos_app/web/index.html
+
+2a9bf15aa669bd5decec3a618ca446c768c17dbd 2026-09-28T20:47:10+09:00  (tag: windows-v1.6.0, tag: macos-v1.9.0) Merge pull request #23 from Kimmacaroni/codex/drive-home-recents
+3c1ffd117f4bc78c50e5d342f450ca7677d4027a 2026-09-28T20:46:47+09:00  feat: Drive 최근 문서 5개를 모든 플랫폼 홈에 표시
+M	README.md
+M	docs/GOOGLE_DRIVE_SYNC.md
+M	installer/CYViewer.iss
+M	localization/en.json
+M	macos_app/lib/app.dart
+M	macos_app/lib/cy_translations.dart
+M	macos_app/lib/drive_panel.dart
+M	macos_app/lib/web_main.dart
+M	macos_app/macos/Runner/MainFlutterWindow.swift
+M	macos_app/pubspec.yaml
+A	macos_app/test/drive_home_recent_test.dart
+M	native_windows/cy_translations.py
+M	native_windows/cy_viewer.py
+M	native_windows/drive_ui.py
+M	native_windows/version.py
+M	site/download/index.html
+M	site/download/translations.js
+
+4a4478a69e0e521bba8ecad2ec3a79997d0a40c1 2026-09-28T20:36:19+09:00  Merge pull request #22 from Kimmacaroni/codex/mac-required-guide
+aa1b1fba2c30f2ac6beead25ab0ebcb765496a7e 2026-09-28T20:36:02+09:00  (origin/codex/mac-required-guide) fix: 설치 안내창 스타일과 번역 캐시 갱신
+M	site/download/index.html
+
+5956e6d38cd50fd6dbf3576ac49810e4f1ea1124 2026-09-28T20:32:20+09:00  Merge pull request #21 from Kimmacaroni/codex/mac-required-guide
+91a8bbf831981b99f9a1051e888cf059a7799af7 2026-09-28T20:30:59+09:00  feat: 상단 Mac 필독 버튼과 실행 안내창 추가
+M	localization/en.json
+M	site/download/index.html
+A	site/download/mac-help.js
+M	site/download/style.css
+M	site/download/translations.js
+
+8c0c11cbe385e2337310766a24b299f0dbf03cf5 2026-09-28T20:26:21+09:00  Merge pull request #20 from Kimmacaroni/codex/mac-install-help
+26e53c2200f0e9751b9b80adf771fde965c701cc 2026-09-28T20:26:01+09:00  (origin/codex/mac-install-help) docs: Mac 실행 차단 해결 안내를 다운로드 사이트에 추가
+M	localization/en.json
+M	site/download/index.html
+M	site/download/style.css
+M	site/download/translations.js
+
+d720b228cedd581cc8a31d2d01a9da97f1126236 2026-09-28T20:13:49+09:00  Merge pull request #19 from Kimmacaroni/codex/drive-release-downloads
+7bc28ac6a7bf54102f5b5b4c0cd21821c12651d2 2026-09-28T20:13:30+09:00  (origin/codex/drive-release-downloads) docs: Drive 동기화 릴리스와 다운로드 안내 갱신
+M	README.md
+M	docs/RECENT_FILES.md
+M	site/download/index.html
+
+39721af82ad8f328d5e02e14f526b87b8f7c8cf4 2026-09-27T20:27:41+09:00  (tag: windows-v1.5.0, tag: macos-v1.8.0) Merge pull request #18 from Kimmacaroni/codex/drive-sync
+60f63c621484c009e90a938a3449908db9ec5e39 2026-09-27T20:22:14+09:00  (origin/codex/drive-sync) build: Windows OAuth 값을 배포 빌드에 주입
+M	.github/workflows/build-windows.yml
+
+e25bbbf63a6f6d3bf2a3ad36914dce2bd27c5754 2026-09-27T20:21:53+09:00  build: Mac OAuth 값을 배포 빌드에 주입
+M	.github/workflows/build-macos.yml
+
+f6b2d4f09841368ae1b639e50be6f1792f01cf03 2026-09-27T20:21:02+09:00  fix: 데스크톱 OAuth 필수 빌드 설정 지원
+M	.gitignore
+M	docs/GOOGLE_DRIVE_SYNC.md
+M	macos_app/lib/drive_auth_native.dart
+M	native_windows/drive_sync.py
+
+a2da86bdc2237fc3c7a17c1733191c87866e1e61 2026-09-27T20:17:24+09:00  feat: 개인 Google Drive로 PDF 읽기 상태 동기화
+M	README.md
+M	docs/CY_DESIGN_SYSTEM.md
+A	docs/GOOGLE_DRIVE_SYNC.md
+M	installer/CYViewer.iss
+M	localization/en.json
+M	macos_app/lib/advanced_reader.dart
+M	macos_app/lib/app.dart
+M	macos_app/lib/cy_design.dart
+M	macos_app/lib/cy_translations.dart
+A	macos_app/lib/drive_auth.dart
+A	macos_app/lib/drive_auth_browser.dart
+A	macos_app/lib/drive_auth_native.dart
+A	macos_app/lib/drive_auth_stub.dart
+A	macos_app/lib/drive_panel.dart
+A	macos_app/lib/drive_sync.dart
+M	macos_app/lib/web_main.dart
+M	macos_app/macos/Runner/MainFlutterWindow.swift
+M	macos_app/macos/Runner/Release.entitlements
+M	macos_app/pubspec.lock
+M	macos_app/pubspec.yaml
+A	macos_app/test/drive_panel_test.dart
+A	macos_app/test/drive_sync_test.dart
+A	macos_app/web/drive-auth.js
+M	macos_app/web/index.html
+A	macos_app/web/privacy/index.html
+M	native_windows/cy_translations.py
+M	native_windows/cy_viewer.py
+A	native_windows/drive_sync.py
+A	native_windows/drive_ui.py
+A	native_windows/tests/test_drive_sync.py
+M	native_windows/version.py
+M	site/download/translations.js
+
+c72c89296e2bbaf1dbfd159eb6cc506e3c288388 2026-09-27T14:46:18+09:00  Merge pull request #17 from Kimmacaroni/codex/native-web-controls
+fcec186d40578c82d24d1b7917c5613e20aa248e 2026-09-27T14:42:49+09:00  (origin/codex/native-web-controls) fix: 웹 파일 선택과 인쇄에 직접 HTML 입력 경로 적용
+M	docs/CY_DESIGN_SYSTEM.md
+M	docs/WEB_PRINT_RANGE.md
+M	macos_app/lib/cy_design.dart
+A	macos_app/lib/web_control_geometry.dart
+M	macos_app/lib/web_inline_print.dart
+M	macos_app/lib/web_main.dart
+A	macos_app/lib/web_native_control.dart
+A	macos_app/lib/web_native_control_browser.dart
+A	macos_app/lib/web_native_control_stub.dart
+M	macos_app/lib/web_pdf_picker_browser.dart
+A	macos_app/test/web_control_geometry_test.dart
+M	macos_app/web/index.html
+
+f61f53bf98264bf48617fbd1d886438f26274cc4 2026-09-27T14:32:16+09:00  Merge pull request #16 from Kimmacaroni/codex/ios-input-check
+d590d45a1f9c4d738c5d314883dc7124b39580be 2026-09-27T14:31:48+09:00  (origin/codex/ios-input-check) diag: iPhone 파일 선택과 iPad 인쇄 기본 입력 점검 페이지
+A	macos_app/web/input-check/check.js
+A	macos_app/web/input-check/index.html
+
+c5c16759e6e9e0a8224767505b8b74e4fbe19857 2026-09-27T14:24:07+09:00  Merge pull request #15 from Kimmacaroni/codex/web-input-unlock
+7318e97757204537de5b83fff65ab0470b8c579b 2026-09-27T14:21:29+09:00  (origin/codex/web-input-unlock) fix: 최근 저장 및 공유 지연으로 인한 웹 입력 잠김 해제
+M	docs/WEB_PRINT_RANGE.md
+M	macos_app/lib/web_main.dart
+M	macos_app/lib/web_pdf_picker_browser.dart
+M	macos_app/test/web_app_test.dart
+
+9d1f362aac45b992a0dfb8e751647038ecc219b8 2026-09-27T14:10:04+09:00  Merge pull request #14 from Kimmacaroni/codex/web-inline-full-print
+c9f1d0dffc0445646075b2e3680eaa63ee1fec75 2026-09-27T14:06:28+09:00  (origin/codex/web-inline-full-print) test: 인쇄 취소 검증의 페이지 저장소 분리
+M	macos_app/test/web_print_test.dart
+
+c3a460c26a46e7e38f0edc0d4727e3ac9a57500a 2026-09-27T14:05:46+09:00  feat: 웹앱 전체 페이지 기본 인쇄와 내부 시스템 인쇄 연결
+M	docs/CY_DESIGN_SYSTEM.md
+M	docs/WEB_PRINT_RANGE.md
+M	localization/en.json
+M	macos_app/lib/cy_translations.dart
+A	macos_app/lib/web_inline_print.dart
+M	macos_app/lib/web_main.dart
+M	macos_app/lib/web_print_platform_browser.dart
+M	macos_app/lib/web_print_platform_stub.dart
+M	macos_app/macos/Runner/MainFlutterWindow.swift
+A	macos_app/test/web_inline_print_test.dart
+M	macos_app/test/web_print_test.dart
+M	native_windows/cy_translations.py
+M	site/download/translations.js
+
+3e8d6302a11138271e151b52ba553077eaa52a73 2026-09-27T13:11:38+09:00  Merge pull request #13 from Kimmacaroni/codex/print-interaction-recovery
+d4ce11a5523b99ea5cc893caabed47aa591950a1 2026-09-27T13:08:49+09:00  (origin/codex/print-interaction-recovery) fix: 웹 인쇄 중복 실행과 대기 후 입력 잠김 방지
+M	docs/WEB_PRINT_RANGE.md
+M	localization/en.json
+M	macos_app/lib/cy_translations.dart
+M	macos_app/lib/web_main.dart
+M	macos_app/lib/web_print.dart
+M	macos_app/macos/Runner/MainFlutterWindow.swift
+M	macos_app/test/web_print_test.dart
+M	native_windows/cy_translations.py
+M	site/download/translations.js
+
+d63784b9d1eae53d9451888c7bf110ca1757b987 2026-09-27T12:54:29+09:00  Merge pull request #12 from Kimmacaroni/codex/web-print-range
+a11e177d57a07bc3fd3c833ed44c4d2a043adfd5 2026-09-27T12:50:22+09:00  (origin/codex/web-print-range) fix: iPad 웹 인쇄 범위 선택과 PDF 직접 열기
+M	docs/CY_DESIGN_SYSTEM.md
+A	docs/WEB_PRINT_RANGE.md
+M	localization/en.json
+M	macos_app/lib/cy_translations.dart
+M	macos_app/lib/web_main.dart
+A	macos_app/lib/web_print.dart
+A	macos_app/lib/web_print_platform.dart
+A	macos_app/lib/web_print_platform_browser.dart
+A	macos_app/lib/web_print_platform_stub.dart
+M	macos_app/macos/Runner/MainFlutterWindow.swift
+A	macos_app/test/fixtures/print-pages.pdf
+A	macos_app/test/web_print_test.dart
+M	native_windows/cy_translations.py
+M	site/download/translations.js
+
+ab7758129b7470dfbaf04f76925982116390bc4d 2026-09-27T12:32:22+09:00  Merge pull request #11 from Kimmacaroni/codex/recent-five
+a491dc4e414a96474528b0f04410fd7db36835e8 2026-09-27T12:23:21+09:00  (tag: windows-v1.4.0, tag: macos-v1.7.0, origin/codex/recent-five) feat: 모든 플랫폼 최근 열어본 PDF 5개 지원
+M	.gitignore
+M	README.md
+M	docs/CY_DESIGN_SYSTEM.md
+A	docs/RECENT_FILES.md
+M	installer/CYViewer.iss
+M	localization/en.json
+M	macos_app/lib/advanced_reader.dart
+M	macos_app/lib/app.dart
+M	macos_app/lib/cy_design.dart
+A	macos_app/lib/cy_recent_files.dart
+M	macos_app/lib/cy_translations.dart
+A	macos_app/lib/recent_web_store.dart
+A	macos_app/lib/recent_web_store_browser.dart
+A	macos_app/lib/recent_web_store_stub.dart
+M	macos_app/lib/web_main.dart
+M	macos_app/macos/Runner/MainFlutterWindow.swift
+M	macos_app/pubspec.yaml
+A	macos_app/test/recent_layout_test.dart
+A	macos_app/test/recent_library_test.dart
+M	macos_app/web/index.html
+A	macos_app/web/recent-pdfs.js
+M	native_windows/cy_translations.py
+M	native_windows/cy_viewer.py
+A	native_windows/recent_files.py
+M	native_windows/tests/smoke.py
+A	native_windows/tests/test_recent_files.py
+M	native_windows/version.py
+M	site/download/index.html
+M	site/download/translations.js
+A	tests/package-lock.json
+A	tests/package.json
+A	tests/recent-pdfs.test.cjs
+
+a7dd17cedb5801525197936972009dd460d48639 2026-09-27T12:07:24+09:00  Merge pull request #10 from Kimmacaroni/codex/multilingual-release-links
+6a7649c1d475ef640c475858a0c3d48bfe1b7d70 2026-09-27T12:04:01+09:00  (origin/codex/multilingual-release-links) docs: 다국어 정식 배포 다운로드 링크 갱신
+M	README.md
+M	docs/MULTILINGUAL_RELEASE.md
+M	site/download/index.html
+
+add34098bc34ad436e805203889fd90ebd5535a4 2026-09-27T12:01:08+09:00  Merge pull request #9 from Kimmacaroni/codex/public-multilingual
+4445d9ee65effd78578ce2eb35c34305fcadbdcc 2026-09-27T11:56:36+09:00  (tag: windows-v1.3.0, tag: macos-v1.6.0, origin/codex/public-multilingual) fix: 공유 링크보다 저장한 언어 선택 우선
+M	macos_app/lib/cy_localization.dart
+
+9793f93e0c88ecc18ba25ccc662d8b9945c1e838 2026-09-27T11:55:39+09:00  feat: 공개 배포 전 플랫폼 한국어 영어 지원
+M	README.md
+M	docs/CY_DESIGN_SYSTEM.md
+A	docs/MULTILINGUAL_RELEASE.md
+M	installer/CYViewer.iss
+A	localization/en.json
+M	macos_app/lib/advanced_reader.dart
+M	macos_app/lib/app.dart
+A	macos_app/lib/cy_browser_locale.dart
+A	macos_app/lib/cy_browser_locale_stub.dart
+A	macos_app/lib/cy_browser_locale_web.dart
+M	macos_app/lib/cy_design.dart
+A	macos_app/lib/cy_localization.dart
+A	macos_app/lib/cy_translations.dart
+M	macos_app/lib/main.dart
+M	macos_app/lib/web_main.dart
+M	macos_app/lib/web_pdf_load_guard.dart
+M	macos_app/lib/web_pdf_picker_browser.dart
+M	macos_app/lib/web_pdf_picker_stub.dart
+M	macos_app/macos/Runner/MainFlutterWindow.swift
+M	macos_app/pubspec.yaml
+A	macos_app/test/localization_test.dart
+A	macos_app/web/manifest-en.json
+M	macos_app/web/manifest.json
+A	native_windows/cy_localization.py
+A	native_windows/cy_translations.py
+M	native_windows/cy_viewer.py
+A	native_windows/tests/test_localization.py
+M	native_windows/updater.py
+M	native_windows/version.py
+A	scripts/generate_localizations.py
+M	site/download/downloads.js
+M	site/download/index.html
+A	site/download/language.js
+M	site/download/style.css
+A	site/download/translations.js
+M	tests/downloads.test.cjs
+
+37bb86d2d2bf90c75e7b8f56094f8823a2873a6f 2026-09-27T10:23:11+09:00  Merge pull request #8 from Kimmacaroni/codex/fix-native-file-button
+a215f814c43566b23bdb65a3f2d68427ca1955bc 2026-09-27T10:22:52+09:00  (origin/codex/fix-native-file-button) 투명 PDF 입력을 제거하고 기본 파일 선택 버튼 터치 영역 확장
+M	docs/WEB_INSTALLED_PICKER_FIX.md
+M	macos_app/lib/web_pdf_picker_browser.dart
+M	macos_app/web/index.html
+A	macos_app/web/pdf-picker.css
+
+c26f122f28dd04856d465ee491cb5076a95a8eec 2026-09-27T09:58:26+09:00  Merge pull request #7 from Kimmacaroni/codex/fix-installed-file-picker
+190d867808fa09b761cb19d646ce697df948727f 2026-09-27T09:58:07+09:00  (origin/codex/fix-installed-file-picker) 설치형 웹앱 PDF 열기를 단일 HTML 파일 입력으로 통합
+A	docs/WEB_INSTALLED_PICKER_FIX.md
+M	macos_app/lib/web_main.dart
+M	macos_app/lib/web_pdf_picker_browser.dart
+M	macos_app/lib/web_pdf_picker_stub.dart
+
+853f038c88e782d863a94b07ebca278ad63263b6 2026-09-27T09:46:02+09:00  Merge pull request #6 from Kimmacaroni/codex/fix-web-app-icon
+1135c22d3f9bdc55e066fabedd512cf13888dbbe 2026-09-27T09:45:43+09:00  (origin/codex/fix-web-app-icon) 아이폰 홈 화면 CY 로고와 웹 아이콘 크기 선언 복구
+A	docs/WEB_APP_ICON_FIX.md
+A	macos_app/web/apple-touch-icon.png
+A	macos_app/web/favicon.png
+A	macos_app/web/icons/cy-viewer-256.png
+A	macos_app/web/icons/cy-viewer-512.png
+M	macos_app/web/index.html
+M	macos_app/web/manifest.json
+M	site/download/index.html
+
+0e160020f0962472f71a1abd28308a6400848196 2026-09-27T09:42:09+09:00  웹 PDF 대기 처리 배포 결과 기록
+M	docs/WEB_PDF_LOADING_FIX.md
+
+aac189b7e1274eef3ef5ca270c19addfa09a69b1 2026-09-27T09:38:48+09:00  Merge pull request #5 from Kimmacaroni/codex/fix-web-pdf-loading
+b2c2d1944af1f28c3a9acca70b4930eaee97a7ce 2026-09-27T09:38:22+09:00  (origin/codex/fix-web-pdf-loading) 웹 PDF 초기화 실패와 무한 대기 처리 및 기본 뷰어 복구 추가
+A	docs/WEB_PDF_LOADING_FIX.md
+M	macos_app/lib/web_main.dart
+A	macos_app/lib/web_pdf_load_guard.dart
+M	macos_app/lib/web_pdf_picker_browser.dart
+M	macos_app/lib/web_pdf_picker_stub.dart
+A	macos_app/test/web_pdf_load_guard_test.dart
+
+f09335572beef43cc194a2e7f892332b2290cb79 2026-09-26T21:41:31+09:00  공개 사이트 파일 일치와 실제 업데이트 피드 확인 기록
+M	docs/DOWNLOAD_AND_UPDATES.md
+
+36623c6719cfe3e34edf85fb23d9e4f99428954a 2026-09-26T21:36:37+09:00  배포 사이트 최신 다운로드 링크와 업데이트 검증 기록 갱신
+M	AGENTS.md
+M	README.md
+M	docs/DOWNLOAD_AND_UPDATES.md
+M	docs/RELEASES.md
+M	site/download/index.html
+M	site/download/style.css
+
+40f86bae38411f688170e190b29e9d63f47be839 2026-09-26T21:30:22+09:00  (tag: windows-v1.2.0, tag: macos-v1.5.0) Merge pull request #4 from Kimmacaroni/codex/download-and-updates
+a57fecf3007bfe21b44b8b9b7233078cdaeb581b 2026-09-26T21:25:19+09:00  (origin/codex/download-and-updates) Windows 버전 검사에서 UTF-8 소스를 명시적으로 읽기
+M	native_windows/tests/test_updater.py
+
+431d90604a32fcaec802078817d11fac536b946d 2026-09-26T21:22:32+09:00  배포 사이트와 업데이트 검증을 릴리스 파이프라인에 통합
+M	.github/workflows/build-macos.yml
+M	.github/workflows/build-windows.yml
+M	.github/workflows/deploy-web.yml
+
+7c067f6e3f4d51bfcc066a50d5f09ca0332ba67a 2026-09-26T21:22:11+09:00  OS별 배포 사이트와 앱 내 업데이트 알림·설치 흐름 추가
+M	.gitignore
+M	docs/CY_DESIGN_SYSTEM.md
+A	docs/DOWNLOAD_AND_UPDATES.md
+M	installer/CYViewer.iss
+M	macos_app/lib/app.dart
+M	macos_app/macos/Runner/DebugProfile.entitlements
+M	macos_app/macos/Runner/MainFlutterWindow.swift
+M	macos_app/macos/Runner/Release.entitlements
+M	macos_app/pubspec.yaml
+M	native_windows/cy_viewer.py
+A	native_windows/tests/install_smoke.ps1
+A	native_windows/tests/test_updater.py
+A	native_windows/updater.py
+A	native_windows/version.py
+A	site/download/downloads.js
+A	site/download/icon.png
+A	site/download/index.html
+A	site/download/library.png
+A	site/download/style.css
+A	tests/check_mac_updater.py
+A	tests/downloads.test.cjs
+
+f6407f994114d697adf7f452b90d44ddd50673cb 2026-09-26T21:08:59+09:00  기본 배포 원칙과 전 플랫폼 릴리스 검증 기록
+M	AGENTS.md
+M	README.md
+M	docs/DESIGN_REVIEW.md
+M	docs/RELEASES.md
+
+95d5b9890ec2c4ccdc851ae4e62d745886c54703 2026-09-26T21:02:58+09:00  (tag: windows-v1.1.0, tag: macos-v1.4.0) Merge pull request #3 from Kimmacaroni/codex/design-refresh
+a914e7f54b71cd36dd39a1e0151980b8ddd237ed 2026-09-26T20:58:43+09:00  (origin/codex/design-refresh) Windows 검사 로그를 UTF-8로 출력
+M	native_windows/tests/smoke.py
+
+73237b1a526259dae3f6459395319ae89240c24a 2026-09-26T20:56:57+09:00  Windows 설치 파일 자동 빌드·검사·릴리스 추가
+A	.github/workflows/build-windows.yml
+
+3596a4390c38e3a328c6e594b608069c62fc63cb 2026-09-26T20:56:36+09:00  통합 디자인의 Mac 1.4.0 및 Windows 1.1.0 배포 준비
+M	docs/DESIGN_REVIEW.md
+M	installer/CYViewer.iss
+M	macos_app/pubspec.yaml
+A	native_windows/tests/smoke.py
+
+d7c8806590d31adfb22b2e77378e1bf4f4fd98ea 2026-09-26T20:51:42+09:00  Mac·Windows·웹의 시작 화면과 문서 도구 구조 통일
+M	docs/CY_DESIGN_SYSTEM.md
+M	docs/DESIGN_REVIEW.md
+M	macos_app/lib/advanced_reader.dart
+M	macos_app/lib/cy_design.dart
+M	macos_app/lib/web_main.dart
+M	macos_app/test/design_layout_test.dart
+M	macos_app/test/web_app_test.dart
+M	macos_app/test/widget_test.dart
+M	native_windows/cy_viewer.py
+M	output/design/native-library-light.png
+A	output/design/reader-workspace-light.png
+M	output/design/web-desktop-dark.png
+M	output/design/web-mobile-light.png
+
+6bf9ea0558293798f43586acaab33236a79681cc 2026-09-26T20:40:04+09:00  전 플랫폼 문서 작업 공간과 접근성 개선
+A	docs/CY_DESIGN_SYSTEM.md
+A	docs/DESIGN_REVIEW.md
+M	macos_app/lib/advanced_reader.dart
+M	macos_app/lib/app.dart
+A	macos_app/lib/cy_design.dart
+M	macos_app/lib/web_main.dart
+M	macos_app/lib/web_pdf_picker_browser.dart
+A	macos_app/test/design_layout_test.dart
+M	macos_app/test/web_app_test.dart
+M	native_windows/cy_viewer.py
+A	output/design/native-library-light.png
+A	output/design/web-desktop-dark.png
+A	output/design/web-mobile-light.png
+
+25f5930023459d32af065915c22f04ffe9ce0eeb 2026-09-13T22:04:34+09:00  (origin/codex/archive-download-pages) 이전 웹앱 주소를 본 프로젝트로 연결
+M	flutter_service_worker.js
+M	index.html
+
+866a3d859b9fe1f5d7e3a2c26278fa5d34bd745e 2026-09-13T22:00:54+09:00  (origin/codex/archive-download-history) 본 프로젝트로 다운로드 통합 안내
+M	README.md
+
+d9eb2113c634be2664bfd12c5dcd96bfa6d2d072 2026-09-13T21:59:57+09:00  (tag: macos-v1.3.1) 다운로드와 웹앱 배포를 본 저장소로 통합
+M	.github/workflows/build-macos.yml
+A	.github/workflows/deploy-web.yml
+M	README.md
+A	docs/RELEASES.md
+M	docs/USER_GUIDE.md
+M	macos_app/README.md
+
+d8b5f8885ce836cf1462db05940bedb5cad3cae7 2026-09-13T17:25:47+09:00  Deploy native Safari PDF input
+M	flutter_bootstrap.js
+M	main.dart.js
+
+86d1c8cb423011c19b43a2fd0120fe6fea0633c1 2026-09-13T17:25:31+09:00  (tag: v1.1.0, tag: ios-v1.3.0-build7) Use native Safari file input for PDFs
+M	macos_app/lib/web_main.dart
+M	macos_app/lib/web_pdf_picker_browser.dart
+M	macos_app/lib/web_pdf_picker_stub.dart
+
+8fc08bb30723b336e7b5040c7251b6ef466b509a 2026-09-13T17:18:45+09:00  Deploy Safari PDF picker fix 1.3.1
+M	.last_build_id
+M	flutter_bootstrap.js
+M	main.dart.js
+M	version.json
+
+f6170a02f832bf82e579937f2cd5508e64ab5d71 2026-09-13T17:18:33+09:00  Fix PDF selection in iPhone web app
+M	macos_app/lib/web_main.dart
+A	macos_app/lib/web_pdf_picker.dart
+A	macos_app/lib/web_pdf_picker_browser.dart
+A	macos_app/lib/web_pdf_picker_stub.dart
+M	macos_app/pubspec.lock
+M	macos_app/pubspec.yaml
+
+27bf8730c5fe25d54924350a23560b5a07ab7dbb 2026-09-13T16:31:24+09:00  Configure iOS Personal Team signing
+M	macos_app/ios/Runner.xcodeproj/project.pbxproj
+
+ff9d6aa3b4766622261dda1de403ed3322786ae8 2026-09-13T16:17:28+09:00  Deploy CYViewer iPhone web app 1.3.0
+A	.last_build_id
+A	.nojekyll
+A	assets/AssetManifest.bin
+A	assets/AssetManifest.bin.json
+A	assets/FontManifest.json
+A	assets/NOTICES
+A	assets/assets/cy_viewer_icon.png
+A	assets/fonts/MaterialIcons-Regular.otf
+A	assets/packages/cupertino_icons/assets/CupertinoIcons.ttf
+A	assets/packages/material_ui/shaders/ink_sparkle.frag
+A	assets/packages/pdfrx/assets/pdfium.wasm
+A	assets/packages/pdfrx/assets/pdfium_client.js
+A	assets/packages/pdfrx/assets/pdfium_worker.js
+A	assets/shaders/ink_sparkle.frag
+A	assets/shaders/stretch_effect.frag
+A	canvaskit/canvaskit.js
+A	canvaskit/canvaskit.js.symbols
+A	canvaskit/canvaskit.wasm
+A	canvaskit/chromium/canvaskit.js
+A	canvaskit/chromium/canvaskit.js.symbols
+A	canvaskit/chromium/canvaskit.wasm
+A	canvaskit/skwasm.js
+A	canvaskit/skwasm.js.symbols
+A	canvaskit/skwasm.wasm
+A	canvaskit/skwasm_heavy.js
+A	canvaskit/skwasm_heavy.js.symbols
+A	canvaskit/skwasm_heavy.wasm
+A	canvaskit/webparagraph/canvaskit.js
+A	canvaskit/webparagraph/canvaskit.js.symbols
+A	canvaskit/webparagraph/canvaskit.wasm
+A	canvaskit/wimp.js
+A	canvaskit/wimp.js.symbols
+A	canvaskit/wimp.wasm
+A	flutter.js
+A	flutter_bootstrap.js
+A	flutter_service_worker.js
+A	index.html
+A	main.dart.js
+A	manifest.json
+A	version.json
+
+96d33ab03b8fd9697678e3d66dfe0034ef93245e 2026-09-13T16:17:03+09:00  Add installable iPhone web viewer
+M	README.md
+M	macos_app/README.md
+M	macos_app/analysis_options.yaml
+A	macos_app/lib/web_main.dart
+M	macos_app/pubspec.yaml
+A	macos_app/test/web_app_test.dart
+A	macos_app/web/index.html
+A	macos_app/web/manifest.json
+
+ef878538a8b5334fe8a1c02feabaf7c2a391dfeb 2026-09-13T15:10:30+09:00  Add iOS viewer and macOS shortcuts
+A	macos_app/.metadata
+M	macos_app/README.md
+A	macos_app/ios/.gitignore
+A	macos_app/ios/Flutter/AppFrameworkInfo.plist
+A	macos_app/ios/Flutter/Debug.xcconfig
+A	macos_app/ios/Flutter/Release.xcconfig
+A	macos_app/ios/Runner.xcodeproj/project.pbxproj
+A	macos_app/ios/Runner.xcodeproj/project.xcworkspace/contents.xcworkspacedata
+A	macos_app/ios/Runner.xcodeproj/project.xcworkspace/xcshareddata/IDEWorkspaceChecks.plist
+A	macos_app/ios/Runner.xcodeproj/project.xcworkspace/xcshareddata/WorkspaceSettings.xcsettings
+A	macos_app/ios/Runner.xcodeproj/xcshareddata/xcschemes/Runner.xcscheme
+A	macos_app/ios/Runner.xcworkspace/contents.xcworkspacedata
+A	macos_app/ios/Runner.xcworkspace/xcshareddata/IDEWorkspaceChecks.plist
+A	macos_app/ios/Runner.xcworkspace/xcshareddata/WorkspaceSettings.xcsettings
+A	macos_app/ios/Runner/AppDelegate.swift
+A	macos_app/ios/Runner/Assets.xcassets/AppIcon.appiconset/Contents.json
+A	macos_app/ios/Runner/Assets.xcassets/AppIcon.appiconset/Icon-App-1024x1024@1x.png
+A	macos_app/ios/Runner/Assets.xcassets/AppIcon.appiconset/Icon-App-20x20@1x.png
+A	macos_app/ios/Runner/Assets.xcassets/AppIcon.appiconset/Icon-App-20x20@2x.png
+A	macos_app/ios/Runner/Assets.xcassets/AppIcon.appiconset/Icon-App-20x20@3x.png
+A	macos_app/ios/Runner/Assets.xcassets/AppIcon.appiconset/Icon-App-29x29@1x.png
+A	macos_app/ios/Runner/Assets.xcassets/AppIcon.appiconset/Icon-App-29x29@2x.png
+A	macos_app/ios/Runner/Assets.xcassets/AppIcon.appiconset/Icon-App-29x29@3x.png
+A	macos_app/ios/Runner/Assets.xcassets/AppIcon.appiconset/Icon-App-40x40@1x.png
+A	macos_app/ios/Runner/Assets.xcassets/AppIcon.appiconset/Icon-App-40x40@2x.png
+A	macos_app/ios/Runner/Assets.xcassets/AppIcon.appiconset/Icon-App-40x40@3x.png
+A	macos_app/ios/Runner/Assets.xcassets/AppIcon.appiconset/Icon-App-50x50@1x.png
+A	macos_app/ios/Runner/Assets.xcassets/AppIcon.appiconset/Icon-App-50x50@2x.png
+A	macos_app/ios/Runner/Assets.xcassets/AppIcon.appiconset/Icon-App-57x57@1x.png
+A	macos_app/ios/Runner/Assets.xcassets/AppIcon.appiconset/Icon-App-57x57@2x.png
+A	macos_app/ios/Runner/Assets.xcassets/AppIcon.appiconset/Icon-App-60x60@2x.png
+A	macos_app/ios/Runner/Assets.xcassets/AppIcon.appiconset/Icon-App-60x60@3x.png
+A	macos_app/ios/Runner/Assets.xcassets/AppIcon.appiconset/Icon-App-72x72@1x.png
+A	macos_app/ios/Runner/Assets.xcassets/AppIcon.appiconset/Icon-App-72x72@2x.png
+A	macos_app/ios/Runner/Assets.xcassets/AppIcon.appiconset/Icon-App-76x76@1x.png
+A	macos_app/ios/Runner/Assets.xcassets/AppIcon.appiconset/Icon-App-76x76@2x.png
+A	macos_app/ios/Runner/Assets.xcassets/AppIcon.appiconset/Icon-App-83.5x83.5@2x.png
+A	macos_app/ios/Runner/Assets.xcassets/LaunchImage.imageset/Contents.json
+A	macos_app/ios/Runner/Assets.xcassets/LaunchImage.imageset/LaunchImage.png
+A	macos_app/ios/Runner/Assets.xcassets/LaunchImage.imageset/LaunchImage@2x.png
+A	macos_app/ios/Runner/Assets.xcassets/LaunchImage.imageset/LaunchImage@3x.png
+A	macos_app/ios/Runner/Assets.xcassets/LaunchImage.imageset/README.md
+A	macos_app/ios/Runner/Base.lproj/LaunchScreen.storyboard
+A	macos_app/ios/Runner/Base.lproj/Main.storyboard
+A	macos_app/ios/Runner/Info.plist
+A	macos_app/ios/Runner/Runner-Bridging-Header.h
+A	macos_app/ios/Runner/SceneDelegate.swift
+A	macos_app/ios/RunnerTests/RunnerTests.swift
+M	macos_app/lib/advanced_reader.dart
+M	macos_app/lib/app.dart
+A	macos_app/lib/app_commands.dart
+M	macos_app/lib/main.dart
+M	macos_app/macos/Runner/Assets.xcassets/AppIcon.appiconset/Contents.json
+M	macos_app/macos/Runner/Assets.xcassets/AppIcon.appiconset/app_icon_1024.png
+M	macos_app/macos/Runner/Assets.xcassets/AppIcon.appiconset/app_icon_128.png
+M	macos_app/macos/Runner/Assets.xcassets/AppIcon.appiconset/app_icon_16.png
+M	macos_app/macos/Runner/Assets.xcassets/AppIcon.appiconset/app_icon_256.png
+M	macos_app/macos/Runner/Assets.xcassets/AppIcon.appiconset/app_icon_32.png
+M	macos_app/macos/Runner/Assets.xcassets/AppIcon.appiconset/app_icon_512.png
+M	macos_app/macos/Runner/Assets.xcassets/AppIcon.appiconset/app_icon_64.png
+M	macos_app/macos/Runner/Base.lproj/MainMenu.xib
+M	macos_app/macos/Runner/MainFlutterWindow.swift
+M	macos_app/pubspec.lock
+M	macos_app/pubspec.yaml
+
+9c118a63cee1556234143e37799cdbcd6f5efc93 2026-09-13T14:34:54+09:00  Add Korean CYViewer test PDF
+A	"output/pdf/CYViewer_\355\225\234\352\265\255\354\226\264_\352\270\260\353\212\245_\355\205\214\354\212\244\355\212\270.pdf"
+
+060f67e2fe00f1b24b489d962d1a17fc01f627ec 2026-09-12T18:01:54+09:00  Update macOS package workflow for v1.1.3
+M	.github/workflows/build-macos.yml
+
+2b81899055c02fa8ff82d92ec8b00f53cd15cb25 2026-09-12T18:01:26+09:00  Fix macOS PDF rendering and default to Korean
+M	macos_app/lib/advanced_reader.dart
+M	macos_app/lib/app.dart
+M	macos_app/macos/Runner.xcodeproj/project.pbxproj
+M	macos_app/macos/Runner/Base.lproj/MainMenu.xib
+M	macos_app/macos/Runner/Info.plist
+M	macos_app/pubspec.yaml
+
+9f972535a808901cedea385978dabe85960833c3 2026-09-12T13:30:48+09:00  Update macOS package workflow for v1.1.2
+M	.github/workflows/build-macos.yml
+
+a2456875ec9e0986d7cc760075934f550709405b 2026-09-12T13:30:23+09:00  Fix macOS Finder PDF opening
+M	macos_app/lib/app.dart
+M	macos_app/macos/Runner/AppDelegate.swift
+M	macos_app/macos/Runner/DebugProfile.entitlements
+M	macos_app/macos/Runner/MainFlutterWindow.swift
+M	macos_app/pubspec.yaml
+
+1c2ff7281a0b378ac0972cf73ab4f77ccb6959d1 2026-09-11T13:03:48+00:00  (origin/refactor/feature-organization) docs: add CY Viewer refactor report
+A	docs/REFACTOR_REPORT_2026-09-11_KO.md
+M	docs/WORK_LOG.md
+
+343a46acbdc8eee6cd68103207c5b885766a47cf 2026-09-11T12:06:42+00:00  refactor: 기능별 구현 경계와 구조 검증 정리
+M	.gitignore
+M	README.md
+A	docs/FEATURE_MAP.md
+M	docs/HERMES_AGENT_HANDOFF_KO.md
+M	docs/USER_GUIDE.md
+M	docs/WORK_LOG.md
+M	macos_app/lib/app.dart
+M	personal_pdf_viewer/README.md
+M	personal_pdf_viewer/lib/app.dart
+A	scripts/verify_structure.py
+A	tests/test_verify_structure.py
+
+145b9945293feff0733b719428720a81e13995f8 2026-09-11T11:41:29+00:00  docs: QA 거부 사유와 상태 기준 보완
+M	AGENTS.md
+M	docs/HERMES_AGENT_HANDOFF_KO.md
+M	docs/WORK_LOG.md
+
+4ba609a68eaafffa81f6f1e1d1991b74888b1904 2026-09-11T11:30:59+00:00  docs: CY뷰어 인수인계 및 작업 기록 표준 추가
+M	AGENTS.md
+A	docs/HERMES_AGENT_HANDOFF_KO.md
+A	docs/WORK_LOG.md
+
+9b1e74a34566c4b9abf01546ec64c8220635822f 2026-09-08T03:05:07+09:00  Update macOS package workflow for v1.1.1
+M	.github/workflows/build-macos.yml
+
+e26e6267c2937563a6f5030006f693b91b2ac8dd 2026-09-08T02:09:20+09:00  Fix macOS PDF reader startup errors
+M	macos_app/lib/advanced_reader.dart
+M	macos_app/pubspec.yaml
+M	macos_app/test/widget_test.dart
+
+bc5f0c1b781de843f0c5ace1f85985359fd55345 2026-09-07T23:34:00+09:00  Persist macOS sandbox file access
+M	.github/workflows/build-macos.yml
+M	macos_app/lib/advanced_reader.dart
+M	macos_app/lib/app.dart
+M	macos_app/macos/Runner/MainFlutterWindow.swift
+M	macos_app/macos/Runner/Release.entitlements
+
+cddd4eeebb1f149a7c6dfb5e35fd0e6e0cd140a5 2026-09-07T23:26:16+09:00  (origin/codex/macos-runtime-hardening) Persist macOS sandbox file access
+M	.github/workflows/build-macos.yml
+M	macos_app/lib/advanced_reader.dart
+M	macos_app/lib/app.dart
+M	macos_app/macos/Runner/MainFlutterWindow.swift
+M	macos_app/macos/Runner/Release.entitlements
+
+3b22c14a4424d9254fb270d337564890d1188e90 2026-09-07T23:19:57+09:00  Harden macOS viewer stability and builds
+M	macos_app/lib/advanced_reader.dart
+M	macos_app/lib/app.dart
+M	macos_app/macos/Runner.xcodeproj/project.pbxproj
+M	macos_app/macos/Runner/MainFlutterWindow.swift
+M	macos_app/test/widget_test.dart
+
+ff14b13030332edb9138bc2758e5c92b84827af2 2026-09-07T23:04:13+09:00  Add CYViewer conversation and work record
+A	"docs/CY\353\267\260\354\226\264_\353\214\200\355\231\224\353\260\217\354\236\221\354\227\205\352\270\260\353\241\235.docx"
+
+1a42b181083a0281ad372529560936cbbcc50cb2 2026-09-07T22:33:32+09:00  Prepare macOS v1.1.0 package
+M	.github/workflows/build-macos.yml
+M	macos_app/pubspec.yaml
+
+2b2c3d3b161d6a01cc332b3fad007a8b4550a9c7 2026-09-07T22:26:33+09:00  Add macOS OCR view modes and exports
+M	macos_app/README.md
+M	macos_app/lib/advanced_reader.dart
+M	macos_app/macos/Runner/MainFlutterWindow.swift
+M	macos_app/pubspec.lock
+M	macos_app/pubspec.yaml
+
+37d97719282f9573e05c5b6a0fef600415a7a3fd 2026-09-07T22:11:04+09:00  Add macOS drag-and-drop and native printing
+M	macos_app/README.md
+M	macos_app/lib/advanced_reader.dart
+M	macos_app/lib/app.dart
+M	macos_app/macos/Flutter/GeneratedPluginRegistrant.swift
+M	macos_app/macos/Runner/DebugProfile.entitlements
+M	macos_app/macos/Runner/Release.entitlements
+M	macos_app/pubspec.lock
+M	macos_app/pubspec.yaml
+
+64858d7ff4ef07b292d44d18bcab696b2575ecba 2026-09-07T21:51:32+09:00  Add standalone macOS app to main repository
+A	.github/workflows/build-macos.yml
+A	macos_app/.gitignore
+A	macos_app/README.md
+A	macos_app/analysis_options.yaml
+A	macos_app/assets/cy_viewer_icon.png
+A	macos_app/lib/advanced_reader.dart
+A	macos_app/lib/app.dart
+A	macos_app/lib/main.dart
+A	macos_app/macos/.gitignore
+A	macos_app/macos/Flutter/Flutter-Debug.xcconfig
+A	macos_app/macos/Flutter/Flutter-Release.xcconfig
+A	macos_app/macos/Flutter/GeneratedPluginRegistrant.swift
+A	macos_app/macos/Runner.xcodeproj/project.pbxproj
+A	macos_app/macos/Runner.xcodeproj/project.xcworkspace/xcshareddata/IDEWorkspaceChecks.plist
+A	macos_app/macos/Runner.xcodeproj/xcshareddata/xcschemes/Runner.xcscheme
+A	macos_app/macos/Runner.xcworkspace/contents.xcworkspacedata
+A	macos_app/macos/Runner.xcworkspace/xcshareddata/IDEWorkspaceChecks.plist
+A	macos_app/macos/Runner/AppDelegate.swift
+A	macos_app/macos/Runner/Assets.xcassets/AppIcon.appiconset/Contents.json
+A	macos_app/macos/Runner/Assets.xcassets/AppIcon.appiconset/app_icon_1024.png
+A	macos_app/macos/Runner/Assets.xcassets/AppIcon.appiconset/app_icon_128.png
+A	macos_app/macos/Runner/Assets.xcassets/AppIcon.appiconset/app_icon_16.png
+A	macos_app/macos/Runner/Assets.xcassets/AppIcon.appiconset/app_icon_256.png
+A	macos_app/macos/Runner/Assets.xcassets/AppIcon.appiconset/app_icon_32.png
+A	macos_app/macos/Runner/Assets.xcassets/AppIcon.appiconset/app_icon_512.png
+A	macos_app/macos/Runner/Assets.xcassets/AppIcon.appiconset/app_icon_64.png
+A	macos_app/macos/Runner/Base.lproj/MainMenu.xib
+A	macos_app/macos/Runner/Configs/AppInfo.xcconfig
+A	macos_app/macos/Runner/Configs/Debug.xcconfig
+A	macos_app/macos/Runner/Configs/Release.xcconfig
+A	macos_app/macos/Runner/Configs/Warnings.xcconfig
+A	macos_app/macos/Runner/DebugProfile.entitlements
+A	macos_app/macos/Runner/Info.plist
+A	macos_app/macos/Runner/MainFlutterWindow.swift
+A	macos_app/macos/Runner/Release.entitlements
+A	macos_app/macos/RunnerTests/RunnerTests.swift
+A	macos_app/pubspec.lock
+A	macos_app/pubspec.yaml
+A	macos_app/test/widget_test.dart
+
+45e0a30af9cd356325541f570b8c8b8bd19dfb66 2026-09-07T21:48:54+09:00  Add macOS download instructions
+M	README.md
+
+b9de47e10dbfc8126db4b7a846954bf1912a3d39 2026-09-07T21:31:20+09:00  Add CYViewer download guide
+A	README.md
+
+4d2a1a306d536f1f641b5a94740452ec4d8cb637 2026-09-07T21:22:41+09:00  Exclude system metadata from installer
+M	installer/CYViewer.iss
+
+4c455ab440202ed77c7e248115a961cda92de84a 2026-09-07T21:21:45+09:00  Apply CYViewer icon to Windows title bar
+M	CYViewer-OneFile.spec
+M	CYViewer.spec
+M	installer/CYViewer.iss
+M	native_windows/cy_viewer.py
+
+08cde4fe02b66146e47f46fd4457697024f6c3b6 2026-09-07T21:13:02+09:00  Add configurable Windows installer
+M	README.md
+M	docs/USER_GUIDE.md
+A	installer/CYViewer.iss
+
+c770ae39a452d7f50cf249633f89fbc74920ffad 2026-09-07T21:05:40+09:00  Add single-file Windows distribution
+A	CYViewer-OneFile.spec
+M	README.md
+M	docs/USER_GUIDE.md
+
+39ea5f9094e9167e422f951f783b5342da6f0660 2026-09-07T21:01:05+09:00  (tag: v1.0.0) Use CYViewer icon in native window title bar
+A	CYViewer.spec
+M	native_windows/cy_viewer.py
+
+87b8f97f1bb44ac96acd7abca1b36c215b8f2a03 2026-09-07T20:55:28+09:00  Prepare public CYViewer distribution documentation
+M	.gitignore
+A	README.md
+D	docs/AUDIT_2026-09-07.md
+D	docs/CY_DESIGN_SYSTEM.md
+A	docs/USER_GUIDE.md
+D	docs/WORK_LOG.md
+
+b10a7b83e722f2f48e7fa55cc3f7125e1ab11355 2026-09-07T20:48:56+09:00  Replace CYViewer app icons across platforms
+M	personal_pdf_viewer/android/app/src/main/res/mipmap-hdpi/ic_launcher.png
+M	personal_pdf_viewer/android/app/src/main/res/mipmap-mdpi/ic_launcher.png
+M	personal_pdf_viewer/android/app/src/main/res/mipmap-xhdpi/ic_launcher.png
+M	personal_pdf_viewer/android/app/src/main/res/mipmap-xxhdpi/ic_launcher.png
+M	personal_pdf_viewer/android/app/src/main/res/mipmap-xxxhdpi/ic_launcher.png
+M	personal_pdf_viewer/assets/cy_viewer_icon.png
+M	personal_pdf_viewer/ios/Runner/Assets.xcassets/AppIcon.appiconset/Icon-App-1024x1024@1x.png
+M	personal_pdf_viewer/ios/Runner/Assets.xcassets/AppIcon.appiconset/Icon-App-20x20@1x.png
+M	personal_pdf_viewer/ios/Runner/Assets.xcassets/AppIcon.appiconset/Icon-App-20x20@2x.png
+M	personal_pdf_viewer/ios/Runner/Assets.xcassets/AppIcon.appiconset/Icon-App-20x20@3x.png
+M	personal_pdf_viewer/ios/Runner/Assets.xcassets/AppIcon.appiconset/Icon-App-29x29@1x.png
+M	personal_pdf_viewer/ios/Runner/Assets.xcassets/AppIcon.appiconset/Icon-App-29x29@2x.png
+M	personal_pdf_viewer/ios/Runner/Assets.xcassets/AppIcon.appiconset/Icon-App-29x29@3x.png
+M	personal_pdf_viewer/ios/Runner/Assets.xcassets/AppIcon.appiconset/Icon-App-40x40@1x.png
+M	personal_pdf_viewer/ios/Runner/Assets.xcassets/AppIcon.appiconset/Icon-App-40x40@2x.png
+M	personal_pdf_viewer/ios/Runner/Assets.xcassets/AppIcon.appiconset/Icon-App-40x40@3x.png
+M	personal_pdf_viewer/ios/Runner/Assets.xcassets/AppIcon.appiconset/Icon-App-60x60@2x.png
+M	personal_pdf_viewer/ios/Runner/Assets.xcassets/AppIcon.appiconset/Icon-App-60x60@3x.png
+M	personal_pdf_viewer/ios/Runner/Assets.xcassets/AppIcon.appiconset/Icon-App-76x76@1x.png
+M	personal_pdf_viewer/ios/Runner/Assets.xcassets/AppIcon.appiconset/Icon-App-76x76@2x.png
+M	personal_pdf_viewer/ios/Runner/Assets.xcassets/AppIcon.appiconset/Icon-App-83.5x83.5@2x.png
+M	personal_pdf_viewer/macos/Runner/Assets.xcassets/AppIcon.appiconset/app_icon_1024.png
+M	personal_pdf_viewer/macos/Runner/Assets.xcassets/AppIcon.appiconset/app_icon_128.png
+M	personal_pdf_viewer/macos/Runner/Assets.xcassets/AppIcon.appiconset/app_icon_16.png
+M	personal_pdf_viewer/macos/Runner/Assets.xcassets/AppIcon.appiconset/app_icon_256.png
+M	personal_pdf_viewer/macos/Runner/Assets.xcassets/AppIcon.appiconset/app_icon_32.png
+M	personal_pdf_viewer/macos/Runner/Assets.xcassets/AppIcon.appiconset/app_icon_512.png
+M	personal_pdf_viewer/macos/Runner/Assets.xcassets/AppIcon.appiconset/app_icon_64.png
+M	personal_pdf_viewer/windows/runner/resources/app_icon.ico
+M	windows_print/Assets/CYViewer.ico
+M	windows_print/Assets/SplashScreen.png
+M	windows_print/Assets/Square150x150Logo.png
+M	windows_print/Assets/Square44x44Logo.png
+M	windows_print/Assets/StoreLogo.png
+M	windows_print/Assets/Wide310x150Logo.png
+M	windows_print/Package.appxmanifest
+
+8cb2a9cba5d503a5a9d2fd428a566c95547b12a3 2026-09-07T20:41:57+09:00  Add Windows system print preview integration
+M	.gitignore
+M	docs/WORK_LOG.md
+M	native_windows/cy_viewer.py
+A	windows_print/App.xaml
+A	windows_print/App.xaml.cs
+A	windows_print/Assets/CYViewer.ico
+A	windows_print/Assets/SplashScreen.png
+A	windows_print/Assets/Square150x150Logo.png
+A	windows_print/Assets/Square44x44Logo.png
+A	windows_print/Assets/StoreLogo.png
+A	windows_print/Assets/Wide310x150Logo.png
+A	windows_print/CYViewer.Print.csproj
+A	windows_print/MainWindow.xaml
+A	windows_print/MainWindow.xaml.cs
+A	windows_print/Package.appxmanifest
+A	windows_print/app.manifest
+A	windows_print/install_print_module.ps1
+
+6f488aa376dc2455537dfbcf114a26a784bfe3d5 2026-09-07T20:07:31+09:00  Fix printer driver return value handling
+M	native_windows/cy_viewer.py
+
+7c3e2ea9e8c8d69386f8aff5226f429cf19b9f6b 2026-09-07T20:02:02+09:00  Restore native in-app print workflow
+M	native_windows/cy_viewer.py
+
+1c59ba387ea64e532bae9ff1e13f10d233605990 2026-09-07T19:55:21+09:00  Use Windows PDF print preview and spooler flow
+M	native_windows/cy_viewer.py
+
+ddac43df2ff0d2f66e677a0b02b1039fa6dfe78d 2026-09-07T19:48:45+09:00  Add in-app print preview
+M	native_windows/cy_viewer.py
+
+ebb087b81e82c4d0498b75aed9939fc33939346c 2026-09-07T19:46:03+09:00  Add scroll and side-by-side PDF views
+M	native_windows/cy_viewer.py
+
+fba46b2f50da65c8e285698611ead666acb75c3a 2026-09-07T19:37:09+09:00  Add native Windows print dialog and recent viewer controls
+M	native_windows/cy_viewer.py
+
+5fb4209edc802b649fddaa0623bec37bcc674426 2026-09-07T19:19:14+09:00  Wrap welcome text and hide OCR console
+M	native_windows/cy_viewer.py
+
+cbcbd3a7bd302d22f05c2c3b36c1ec28c611e663 2026-09-07T19:15:58+09:00  Open PDFs by drag and drop
+M	native_windows/cy_viewer.py
+
+9210ef930735c0a9cf2de3caf2fc9246814df344 2026-09-07T19:13:20+09:00  Group document search controls
+M	native_windows/cy_viewer.py
+
+8810231d780c035b369b21dcd4a69a99800546aa 2026-09-07T19:11:03+09:00  Add image export and printing controls
+M	native_windows/cy_viewer.py
+
+0272231bce2f0f6770f00f05e3f4613f74f6fa1a 2026-09-07T19:07:19+09:00  Balance sidebar navigation and bookmark controls
+M	native_windows/cy_viewer.py
+
+5d34f262f81ea384755dc1ad27e15b97f4cd4cfc 2026-09-07T18:57:15+09:00  Run OCR across entire document
+M	native_windows/cy_viewer.py
+
+551a8789bf6e487a4f8bce887f1256fe26fec2c0 2026-09-07T18:51:49+09:00  Polish rounded button rendering
+M	native_windows/cy_viewer.py
+
+0df2e516dba0dfff84216e41aca8a0c04c5b58d0 2026-09-07T18:48:55+09:00  Render clean rounded viewer controls
+M	native_windows/cy_viewer.py
+
+e07ae1d6695cd70c2abb8570fe7ac6c86a9cefa1 2026-09-07T18:46:16+09:00  Simplify viewer buttons and add navigation arrows
+M	native_windows/cy_viewer.py
+
+0962c045bdcb6d35e61d05b414a2d4edf21ce377 2026-09-07T18:40:21+09:00  Group page navigation controls
+M	native_windows/cy_viewer.py
+
+4c2a68821196f81b425879ad22f2c9f0692a9d6e 2026-09-07T18:37:26+09:00  Modernize CY viewer controls and layout
+M	native_windows/cy_viewer.py
+
+480a79e0816aae6647722e5cac8b4fd149981f1d 2026-09-07T18:33:21+09:00  Separate regular and bold PDF fonts
+M	native_windows/cy_viewer.py
+
+4eb154adecb487abb352beec207a521f12f0837f 2026-09-07T18:29:21+09:00  Preserve source font size when editing PDF text
+M	native_windows/cy_viewer.py
+
+9c379d771f2d5519ab557e7b8c4aa9fd873bad4a 2026-09-07T18:25:50+09:00  Fix OCR TSV output parsing
+M	native_windows/cy_viewer.py
+
+7b5cce175e8a3506a52908c9262150d89058dcc5 2026-09-07T18:21:44+09:00  Replace text cleanly for bold formatting
+M	native_windows/cy_viewer.py
+
+49bd93accbbfe61cacc6a076fe6ea11be5f58937 2026-09-07T18:18:54+09:00  Make text editing and bolding resilient
+M	native_windows/cy_viewer.py
+
+b15b76bab5d7a4a1dcd12c01ebf15e31d6e28187 2026-09-07T18:15:29+09:00  Handle Korean OCR output encoding
+M	native_windows/cy_viewer.py
+
+8edbb38bb1c498cffba88609b1c9d4805d81ef95 2026-09-07T18:10:37+09:00  Restrict PDF selection to text lines
+M	native_windows/cy_viewer.py
+
+c0716a3609fccc9e0c2c82a9acc4e3033eea0d84 2026-09-07T18:02:52+09:00  Apply selection actions across whitespace
+M	native_windows/cy_viewer.py
+
+4ad3d405209c60e8ce152a3672fe3668cae2071f 2026-09-07T17:56:12+09:00  Move PDF edit actions to context menu
+M	native_windows/cy_viewer.py
+
+f2d854c86596d70ce7dc231ff465f3dd2e61697d 2026-09-07T17:52:39+09:00  Add Korean and English OCR support
+M	native_windows/cy_viewer.py
+A	native_windows/tessdata/eng.traineddata
+A	native_windows/tessdata/kor.traineddata
+
+19321dae6c5431717baef32ccb16a0eeabddfbdc 2026-09-07T17:46:12+09:00  Highlight selected PDF text
+M	native_windows/cy_viewer.py
+
+6b2aba02a01d90f890ec4e27bd0f321fde7ea0fb 2026-09-07T17:27:53+09:00  Add visible text selection feedback
+M	native_windows/cy_viewer.py
+
+b0c147ef9a6b6264719fd7ecc27b845929dbc1ea 2026-09-07T17:12:37+09:00  Show selected PDF content details
+M	native_windows/cy_viewer.py
+
+8821c61a41801223f6d57ac57e2edd1a50d46cd2 2026-09-07T17:08:59+09:00  Apply design system to CY viewer
+M	native_windows/cy_viewer.py
+
+4bfb169cfd6c80df7e889088037d1066a0e588e2 2026-09-07T17:03:34+09:00  Add persistent CY viewer design guidelines
+A	AGENTS.md
+A	docs/CY_DESIGN_SYSTEM.md
+
+7a84ab09ef12e96a86172ee7ed8e3accb187898f 2026-09-07T16:57:41+09:00  Redesign PDF editing workspace
+M	native_windows/cy_viewer.py
+
+bd07ab16eed71915549a0f0652c749447600678b 2026-09-07T16:50:08+09:00  Add PDF annotation and text editing tools
+M	native_windows/cy_viewer.py
+
+977282fb88a598a07bb6e7cfb0defbbff4fbacb0 2026-09-07T16:30:47+09:00  Add standalone Windows CY viewer
+A	native_windows/cy_viewer.py
+
+c75bb30b87085d729210064ddef6ffb2c4ebd67f 2026-09-07T16:18:24+09:00  Force software rendering on Windows
+M	personal_pdf_viewer/windows/runner/main.cpp
+
+99152e458345047412d011fa54c0a26283ab677a 2026-09-07T15:53:23+09:00  Fix text selection tools and audit CY viewer
+A	docs/AUDIT_2026-09-07.md
+M	personal_pdf_viewer/README.md
+M	personal_pdf_viewer/lib/advanced_reader.dart
+M	personal_pdf_viewer/lib/main.dart
+M	personal_pdf_viewer/test/widget_test.dart
+
+370b4ec8b70a4d5b1e9cab3cffd4e4a9cb537f77 2026-09-07T15:11:04+09:00  Add Korean work log and setup guide
+A	docs/WORK_LOG.md
+
+0b5291841a547556df3bf4d7acfa7920d52c605c 2026-09-07T15:08:34+09:00  Initial CY Viewer PDF app
+A	.gitignore
+A	personal_pdf_viewer/.gitignore
+A	personal_pdf_viewer/.metadata
+A	personal_pdf_viewer/README.md
+A	personal_pdf_viewer/analysis_options.yaml
+A	personal_pdf_viewer/android/.gitignore
+A	personal_pdf_viewer/android/app/build.gradle.kts
+A	personal_pdf_viewer/android/app/src/debug/AndroidManifest.xml
+A	personal_pdf_viewer/android/app/src/main/AndroidManifest.xml
+A	personal_pdf_viewer/android/app/src/main/kotlin/com/personalpdf/pdfapp/MainActivity.kt
+A	personal_pdf_viewer/android/app/src/main/res/drawable-v21/launch_background.xml
+A	personal_pdf_viewer/android/app/src/main/res/drawable/launch_background.xml
+A	personal_pdf_viewer/android/app/src/main/res/mipmap-hdpi/ic_launcher.png
+A	personal_pdf_viewer/android/app/src/main/res/mipmap-mdpi/ic_launcher.png
+A	personal_pdf_viewer/android/app/src/main/res/mipmap-xhdpi/ic_launcher.png
+A	personal_pdf_viewer/android/app/src/main/res/mipmap-xxhdpi/ic_launcher.png
+A	personal_pdf_viewer/android/app/src/main/res/mipmap-xxxhdpi/ic_launcher.png
+A	personal_pdf_viewer/android/app/src/main/res/values-night/styles.xml
+A	personal_pdf_viewer/android/app/src/main/res/values/styles.xml
+A	personal_pdf_viewer/android/app/src/profile/AndroidManifest.xml
+A	personal_pdf_viewer/android/build.gradle.kts
+A	personal_pdf_viewer/android/gradle.properties
+A	personal_pdf_viewer/android/gradle/wrapper/gradle-wrapper.properties
+A	personal_pdf_viewer/android/settings.gradle.kts
+A	personal_pdf_viewer/assets/cy_viewer_icon.png
+A	personal_pdf_viewer/ios/.gitignore
+A	personal_pdf_viewer/ios/Flutter/AppFrameworkInfo.plist
+A	personal_pdf_viewer/ios/Flutter/Debug.xcconfig
+A	personal_pdf_viewer/ios/Flutter/Release.xcconfig
+A	personal_pdf_viewer/ios/Runner.xcodeproj/project.pbxproj
+A	personal_pdf_viewer/ios/Runner.xcodeproj/project.xcworkspace/contents.xcworkspacedata
+A	personal_pdf_viewer/ios/Runner.xcodeproj/project.xcworkspace/xcshareddata/IDEWorkspaceChecks.plist
+A	personal_pdf_viewer/ios/Runner.xcodeproj/project.xcworkspace/xcshareddata/WorkspaceSettings.xcsettings
+A	personal_pdf_viewer/ios/Runner.xcodeproj/xcshareddata/xcschemes/Runner.xcscheme
+A	personal_pdf_viewer/ios/Runner.xcworkspace/contents.xcworkspacedata
+A	personal_pdf_viewer/ios/Runner.xcworkspace/xcshareddata/IDEWorkspaceChecks.plist
+A	personal_pdf_viewer/ios/Runner.xcworkspace/xcshareddata/WorkspaceSettings.xcsettings
+A	personal_pdf_viewer/ios/Runner/AppDelegate.swift
+A	personal_pdf_viewer/ios/Runner/Assets.xcassets/AppIcon.appiconset/Contents.json
+A	personal_pdf_viewer/ios/Runner/Assets.xcassets/AppIcon.appiconset/Icon-App-1024x1024@1x.png
+A	personal_pdf_viewer/ios/Runner/Assets.xcassets/AppIcon.appiconset/Icon-App-20x20@1x.png
+A	personal_pdf_viewer/ios/Runner/Assets.xcassets/AppIcon.appiconset/Icon-App-20x20@2x.png
+A	personal_pdf_viewer/ios/Runner/Assets.xcassets/AppIcon.appiconset/Icon-App-20x20@3x.png
+A	personal_pdf_viewer/ios/Runner/Assets.xcassets/AppIcon.appiconset/Icon-App-29x29@1x.png
+A	personal_pdf_viewer/ios/Runner/Assets.xcassets/AppIcon.appiconset/Icon-App-29x29@2x.png
+A	personal_pdf_viewer/ios/Runner/Assets.xcassets/AppIcon.appiconset/Icon-App-29x29@3x.png
+A	personal_pdf_viewer/ios/Runner/Assets.xcassets/AppIcon.appiconset/Icon-App-40x40@1x.png
+A	personal_pdf_viewer/ios/Runner/Assets.xcassets/AppIcon.appiconset/Icon-App-40x40@2x.png
+A	personal_pdf_viewer/ios/Runner/Assets.xcassets/AppIcon.appiconset/Icon-App-40x40@3x.png
+A	personal_pdf_viewer/ios/Runner/Assets.xcassets/AppIcon.appiconset/Icon-App-60x60@2x.png
+A	personal_pdf_viewer/ios/Runner/Assets.xcassets/AppIcon.appiconset/Icon-App-60x60@3x.png
+A	personal_pdf_viewer/ios/Runner/Assets.xcassets/AppIcon.appiconset/Icon-App-76x76@1x.png
+A	personal_pdf_viewer/ios/Runner/Assets.xcassets/AppIcon.appiconset/Icon-App-76x76@2x.png
+A	personal_pdf_viewer/ios/Runner/Assets.xcassets/AppIcon.appiconset/Icon-App-83.5x83.5@2x.png
+A	personal_pdf_viewer/ios/Runner/Assets.xcassets/LaunchImage.imageset/Contents.json
+A	personal_pdf_viewer/ios/Runner/Assets.xcassets/LaunchImage.imageset/LaunchImage.png
+A	personal_pdf_viewer/ios/Runner/Assets.xcassets/LaunchImage.imageset/LaunchImage@2x.png
+A	personal_pdf_viewer/ios/Runner/Assets.xcassets/LaunchImage.imageset/LaunchImage@3x.png
+A	personal_pdf_viewer/ios/Runner/Assets.xcassets/LaunchImage.imageset/README.md
+A	personal_pdf_viewer/ios/Runner/Base.lproj/LaunchScreen.storyboard
+A	personal_pdf_viewer/ios/Runner/Base.lproj/Main.storyboard
+A	personal_pdf_viewer/ios/Runner/Info.plist
+A	personal_pdf_viewer/ios/Runner/Runner-Bridging-Header.h
+A	personal_pdf_viewer/ios/Runner/SceneDelegate.swift
+A	personal_pdf_viewer/ios/RunnerTests/RunnerTests.swift
+A	personal_pdf_viewer/lib/advanced_reader.dart
+A	personal_pdf_viewer/lib/app.dart
+A	personal_pdf_viewer/lib/main.dart
+A	personal_pdf_viewer/macos/.gitignore
+A	personal_pdf_viewer/macos/Flutter/Flutter-Debug.xcconfig
+A	personal_pdf_viewer/macos/Flutter/Flutter-Release.xcconfig
+A	personal_pdf_viewer/macos/Flutter/GeneratedPluginRegistrant.swift
+A	personal_pdf_viewer/macos/Runner.xcodeproj/project.pbxproj
+A	personal_pdf_viewer/macos/Runner.xcodeproj/project.xcworkspace/xcshareddata/IDEWorkspaceChecks.plist
+A	personal_pdf_viewer/macos/Runner.xcodeproj/xcshareddata/xcschemes/Runner.xcscheme
+A	personal_pdf_viewer/macos/Runner.xcworkspace/contents.xcworkspacedata
+A	personal_pdf_viewer/macos/Runner.xcworkspace/xcshareddata/IDEWorkspaceChecks.plist
+A	personal_pdf_viewer/macos/Runner/AppDelegate.swift
+A	personal_pdf_viewer/macos/Runner/Assets.xcassets/AppIcon.appiconset/Contents.json
+A	personal_pdf_viewer/macos/Runner/Assets.xcassets/AppIcon.appiconset/app_icon_1024.png
+A	personal_pdf_viewer/macos/Runner/Assets.xcassets/AppIcon.appiconset/app_icon_128.png
+A	personal_pdf_viewer/macos/Runner/Assets.xcassets/AppIcon.appiconset/app_icon_16.png
+A	personal_pdf_viewer/macos/Runner/Assets.xcassets/AppIcon.appiconset/app_icon_256.png
+A	personal_pdf_viewer/macos/Runner/Assets.xcassets/AppIcon.appiconset/app_icon_32.png
+A	personal_pdf_viewer/macos/Runner/Assets.xcassets/AppIcon.appiconset/app_icon_512.png
+A	personal_pdf_viewer/macos/Runner/Assets.xcassets/AppIcon.appiconset/app_icon_64.png
+A	personal_pdf_viewer/macos/Runner/Base.lproj/MainMenu.xib
+A	personal_pdf_viewer/macos/Runner/Configs/AppInfo.xcconfig
+A	personal_pdf_viewer/macos/Runner/Configs/Debug.xcconfig
+A	personal_pdf_viewer/macos/Runner/Configs/Release.xcconfig
+A	personal_pdf_viewer/macos/Runner/Configs/Warnings.xcconfig
+A	personal_pdf_viewer/macos/Runner/DebugProfile.entitlements
+A	personal_pdf_viewer/macos/Runner/Info.plist
+A	personal_pdf_viewer/macos/Runner/MainFlutterWindow.swift
+A	personal_pdf_viewer/macos/Runner/Release.entitlements
+A	personal_pdf_viewer/macos/RunnerTests/RunnerTests.swift
+A	personal_pdf_viewer/pubspec.lock
+A	personal_pdf_viewer/pubspec.yaml
+A	personal_pdf_viewer/test/widget_test.dart
+A	personal_pdf_viewer/windows/.gitignore
+A	personal_pdf_viewer/windows/CMakeLists.txt
+A	personal_pdf_viewer/windows/flutter/CMakeLists.txt
+A	personal_pdf_viewer/windows/flutter/generated_plugin_registrant.cc
+A	personal_pdf_viewer/windows/flutter/generated_plugin_registrant.h
+A	personal_pdf_viewer/windows/flutter/generated_plugins.cmake
+A	personal_pdf_viewer/windows/runner/CMakeLists.txt
+A	personal_pdf_viewer/windows/runner/Runner.rc
+A	personal_pdf_viewer/windows/runner/flutter_window.cpp
+A	personal_pdf_viewer/windows/runner/flutter_window.h
+A	personal_pdf_viewer/windows/runner/main.cpp
+A	personal_pdf_viewer/windows/runner/resource.h
+A	personal_pdf_viewer/windows/runner/resources/app_icon.ico
+A	personal_pdf_viewer/windows/runner/resources/cy_viewer_icon.svg
+A	personal_pdf_viewer/windows/runner/runner.exe.manifest
+A	personal_pdf_viewer/windows/runner/utils.cpp
+A	personal_pdf_viewer/windows/runner/utils.h
+A	personal_pdf_viewer/windows/runner/win32_window.cpp
+A	personal_pdf_viewer/windows/runner/win32_window.h
+

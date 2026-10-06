@@ -12,7 +12,7 @@ void main() {
     await tester.pumpAndSettle();
 
     expect(find.text('CY뷰어'), findsOneWidget);
-    expect(find.text('어떤 문서를 읽을까요?'), findsOneWidget);
+    expect(find.text('문서를 열고,\n바로 읽으세요.'), findsOneWidget);
     expect(find.text('PDF 열기'), findsOneWidget);
   });
   testWidgets('최근 사본 저장이 멈춰도 문서에서 돌아오면 파일 입력이 새로 활성화된다', (tester) async {

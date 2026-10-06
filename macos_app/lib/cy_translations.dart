@@ -536,4 +536,8 @@ const cyEnglish = <String, String>{
   "다운로드 페이지를 열지 못했습니다": "Could not open the download page",
   "다운로드한 DMG를 열고 CY뷰어를 종료한 뒤 CYViewer.app을 Applications로 옮겨 교체하세요. 기존에 앱에서 받은 DMG는 사용하지 마세요.": "Open the downloaded DMG, quit CY Viewer, then move CYViewer.app to Applications to replace it. Do not use a DMG previously downloaded by the app.",
   "앱에서 새 버전을 알리고 공식 설치 파일을 브라우저에서 받습니다. DMG를 열고 CYViewer.app을 Applications로 옮겨 기존 앱을 교체해 주세요. 현재 Mac 배포본은 Apple 서명·공증 전이므로 마지막 교체는 직접 진행합니다.": "The app notifies you of a new version and opens the official installer in your browser. Open the DMG and move CYViewer.app to Applications to replace the old app. The Mac release is not yet Apple-signed or notarized, so replacement is manual.",
+  "이어서 읽기": "Continue reading",
+  "이전 페이지": "Previous page",
+  "다음 페이지": "Next page",
+  "보기 방식": "Page layout",
 };
