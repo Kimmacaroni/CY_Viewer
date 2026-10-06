@@ -348,33 +348,52 @@ class CyViewer(TkinterDnD.Tk):
         content.pack(side="left", fill="both", expand=True)
         tools = tk.Frame(content, bg=COLORS["surface"], padx=20, pady=13)
         tools.pack(fill="x", padx=16, pady=(16, 10))
-        view_controls = tk.Frame(tools, bg=COLORS["surface"])
+        view_controls = self.reading_tools = tk.Frame(tools, bg=COLORS["surface"])
         view_controls.pack(fill="x")
-        tk.Label(view_controls, text=tr('읽기'), bg=COLORS["blue_soft"], fg=COLORS["blue"], padx=9, pady=4, font=("Malgun Gothic", 9, "bold")).pack(side="left", padx=(0, 12))
+        reading_mode = tk.Label(view_controls, text=tr('읽기'), bg=COLORS["blue_soft"], fg=COLORS["blue"], padx=9, pady=4, font=("Malgun Gothic", 9, "bold"))
         page_controls = tk.Frame(view_controls, bg=COLORS["sidebar"])
-        page_controls.pack(side="left", padx=(0, 12))
         previous = self._button(page_controls, tr('◀ 이전'), self.previous_page)
-        previous.configure(width=52)
+        previous.configure(width=72)
         previous.grid(row=0, column=0, sticky="ew")
         go_to = self._button(page_controls, tr('이동'), self.go_to_page)
-        go_to.configure(width=52)
+        go_to.configure(width=60)
         go_to.grid(row=0, column=1, sticky="ew", padx=6)
         following = self._button(page_controls, tr('다음 ▶'), self.next_page)
-        following.configure(width=52)
+        following.configure(width=72)
         following.grid(row=0, column=2, sticky="ew")
         for column in range(3):
             page_controls.grid_columnconfigure(column, weight=1, uniform="page_navigation")
         self.view_mode_var = tk.StringVar(value=tr('스크롤 보기'))
         view_selector = ttk.Combobox(view_controls, textvariable=self.view_mode_var, state="readonly", width=11, values=(tr('스크롤 보기'), tr('좌우 보기')), font=("Malgun Gothic", 9))
-        view_selector.pack(side="left", padx=(0, 12), ipady=4)
         view_selector.bind("<<ComboboxSelected>>", self._change_view_mode)
         self.selection_state = tk.Label(
             view_controls, text=tr('선택 없음'), bg=COLORS["canvas"], fg=COLORS["muted"],
             padx=10, pady=4, font=("Malgun Gothic", 9, "bold"),
         )
-        self.selection_state.pack(side="right", padx=(12, 0))
-        self._button(view_controls, "−", lambda: self.change_zoom(-0.2)).pack(side="left", padx=2)
-        self._button(view_controls, "+", lambda: self.change_zoom(0.2)).pack(side="left", padx=2)
+        zoom_controls = tk.Frame(view_controls, bg=COLORS['surface'])
+        self._button(zoom_controls, "−", lambda: self.change_zoom(-0.2)).pack(side="left", padx=2)
+        self._button(zoom_controls, "+", lambda: self.change_zoom(0.2)).pack(side="left", padx=2)
+        toolbar_items = [reading_mode, page_controls, view_selector, self.selection_state, zoom_controls]
+        toolbar_layout = [None]
+        def fit_reading_tools(event):
+            # 문서 도구 패널을 펼친 작은 창에서도 탐색 버튼을 가리지 않는다.
+            needed = sum(widget.winfo_reqwidth() for widget in toolbar_items) + 48
+            compact = view_controls.winfo_width() < needed
+            if toolbar_layout[0] == compact: return
+            toolbar_layout[0] = compact
+            for widget in toolbar_items: widget.grid_forget()
+            if compact:
+                page_controls.grid(row=0, column=0, columnspan=2, sticky='w', pady=(0, 8))
+                zoom_controls.grid(row=0, column=2, sticky='e', pady=(0, 8))
+                reading_mode.grid(row=1, column=0, sticky='w', padx=(0, 8))
+                view_selector.grid(row=1, column=1, sticky='w', padx=(0, 8), ipady=4)
+                self.selection_state.grid(row=1, column=2, sticky='e')
+            else:
+                for column, widget in enumerate(toolbar_items):
+                    widget.grid(row=0, column=column, sticky='w', padx=(0, 8))
+            view_controls.columnconfigure(1, weight=1)
+        view_controls.bind('<Configure>', fit_reading_tools)
+        self.selection_state.bind('<Configure>', fit_reading_tools)
         search_box = tk.Frame(tools, bg=COLORS["canvas"], padx=8, pady=6)
         search_box.pack(fill="x", pady=(12, 0))
         tk.Label(search_box, text=tr('문서 검색'), bg=COLORS["canvas"], fg=COLORS["muted"], font=("Malgun Gothic", 9, "bold")).pack(side="left", padx=(2, 8))
