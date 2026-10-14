@@ -6,7 +6,8 @@ datas = [
     ('personal_pdf_viewer/windows/runner/resources/app_icon.ico', 'assets'),
     ('personal_pdf_viewer/assets/cy_viewer_icon.png', 'assets'),
 ]
-binaries = []
+datas.append(('build/pdfcraft/THIRD_PARTY_NOTICES.txt', 'pdfcraft'))
+binaries = [('build/pdfcraft/cy-pdfcraft.exe', 'pdfcraft')]
 hiddenimports = ['win32ui']
 tmp_ret = collect_all('tkinterdnd2')
 datas += tmp_ret[0]; binaries += tmp_ret[1]; hiddenimports += tmp_ret[2]

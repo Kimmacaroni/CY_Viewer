@@ -85,3 +85,7 @@ CY Viewer supports **한국어 and English**. It follows the device language by 
 별도 유료 서버나 결제 등록은 필요하지 않습니다. 개인 Drive의 남은 저장 공간을 사용하며,
 앱 재실행 또는 연결 만료 시 다시 연결합니다. 연결하지 않아도 기존 로컬 기능을 사용할 수 있습니다.
 [개인정보 안내](https://kimmacaroni.github.io/CY_Viewer/privacy/) · [동기화 구성과 제한](docs/GOOGLE_DRIVE_SYNC.md)
+
+## PdfCraft 페이지 구성·병합
+
+Mac·Windows 리더의 **페이지 구성·병합**에서 페이지를 추출·재정렬하고 다른 PDF를 이어 붙여 새 파일로 저장할 수 있습니다. 원본은 변경하지 않습니다. 웹·iPhone용 연결은 이 버전에 포함되지 않습니다. [구조·사용 방법·검증](docs/PDFCRAFT_INTEGRATION.md)을 참고하세요.

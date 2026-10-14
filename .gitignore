@@ -16,3 +16,7 @@ tests/node_modules/
 
 # 배포용 OAuth 설정은 CI에서만 생성
 native_windows/drive_build_config.py
+
+# PdfCraft 실행 모듈의 빌드 결과
+pdfcraft_bridge/target/
+build/pdfcraft/

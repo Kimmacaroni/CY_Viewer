@@ -6,6 +6,10 @@ on:
     paths:
       - "macos_app/**"
       - "tests/check_mac_updater.py"
+      - "pdfcraft_bridge/**"
+      - "scripts/build_pdfcraft.py"
+      - "tests/pdfcraft_integration.py"
+      - "tests/pdfcraft_macos_smoke.swift"
       - ".github/workflows/build-macos.yml"
   push:
     branches: [main]
@@ -13,6 +17,10 @@ on:
     paths:
       - "macos_app/**"
       - "tests/check_mac_updater.py"
+      - "pdfcraft_bridge/**"
+      - "scripts/build_pdfcraft.py"
+      - "tests/pdfcraft_integration.py"
+      - "tests/pdfcraft_macos_smoke.swift"
       - ".github/workflows/build-macos.yml"
 
 permissions:
@@ -21,7 +29,7 @@ permissions:
 jobs:
   build:
     runs-on: macos-15
-    timeout-minutes: 30
+    timeout-minutes: 40
     outputs:
       version: ${{ steps.version.outputs.version }}
     defaults:
@@ -38,6 +46,17 @@ jobs:
           channel: stable
           cache: true
 
+      - uses: dtolnay/rust-toolchain@1.95.0
+      - name: Build PdfCraft page engine
+        working-directory: .
+        env:
+          MACOSX_DEPLOYMENT_TARGET: '10.15'
+        run: python3 scripts/build_pdfcraft.py
+      - name: Test PdfCraft round trips
+        working-directory: .
+        run: |
+          python3 -m pip install --user --break-system-packages pymupdf
+          python3 tests/pdfcraft_integration.py
       - name: Test update release validation
         working-directory: .
         run: python3 tests/check_mac_updater.py
@@ -74,6 +93,27 @@ jobs:
           fi
           flutter build macos --release --dart-define="CY_VIEWER_DESKTOP_CLIENT_SECRET=$CY_VIEWER_DESKTOP_CLIENT_SECRET"
 
+      - name: Embed sandboxed PdfCraft engine
+        run: |
+          app="build/macos/Build/Products/Release/CYViewer.app"
+          cp ../build/pdfcraft/cy-pdfcraft "$app/Contents/MacOS/"
+          cp ../build/pdfcraft/THIRD_PARTY_NOTICES.txt "$app/Contents/Resources/"
+          codesign --force --sign - --entitlements ../pdfcraft_bridge/macos-helper.entitlements "$app/Contents/MacOS/cy-pdfcraft"
+          codesign --force --sign - --entitlements macos/Runner/Release.entitlements "$app"
+          codesign --verify --deep --strict "$app"
+      - name: Test sandboxed PdfCraft subprocess
+        working-directory: .
+        run: |
+          test_app="build/PdfcraftSmoke.app"
+          mkdir -p "$test_app/Contents/MacOS"
+          swiftc tests/pdfcraft_macos_smoke.swift -o "$test_app/Contents/MacOS/Run"
+          cp build/pdfcraft/cy-pdfcraft "$test_app/Contents/MacOS/"
+          cat > "$test_app/Contents/Info.plist" <<'EOF'
+          <?xml version="1.0" encoding="UTF-8"?><plist version="1.0"><dict><key>CFBundleIdentifier</key><string>com.kimmacaroni.cyviewer.pdfcraft-smoke</string><key>CFBundleExecutable</key><string>Run</string><key>CFBundlePackageType</key><string>APPL</string></dict></plist>
+          EOF
+          codesign --force --sign - --entitlements pdfcraft_bridge/macos-helper.entitlements "$test_app/Contents/MacOS/cy-pdfcraft"
+          codesign --force --sign - --entitlements macos_app/macos/Runner/Release.entitlements "$test_app"
+          "$test_app/Contents/MacOS/Run"
       - name: Create DMG
         env:
           PACKAGE_VERSION: ${{ steps.version.outputs.version }}
@@ -116,6 +156,8 @@ jobs:
         run: |
           cat > notes.md <<'EOF'
           Mac 업데이트는 앱의 안내에서 공식 릴리스 설치 파일을 브라우저로 받아 진행합니다. 앱 안에서 받은 이전 DMG는 사용하지 마세요. DMG를 연 뒤 Applications로 직접 옮겨 교체합니다.
+
+          PdfCraft 기반 페이지 구성·병합을 추가했습니다. 원본을 유지하면서 선택한 페이지를 새 PDF에 저장하고 다른 PDF를 이어 붙일 수 있습니다.
 
           macOS용 CY뷰어 설치 파일입니다. DMG를 열고 CYViewer.app을 Applications 폴더로 옮겨 주세요.
 

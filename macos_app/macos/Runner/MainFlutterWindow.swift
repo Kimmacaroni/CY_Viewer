@@ -103,6 +103,33 @@ class MainFlutterWindow: NSWindow {
   private func handleFileAccess(call: FlutterMethodCall, result: @escaping FlutterResult) {
     do {
       switch call.method {
+      case "savePageCopy":
+        guard let arguments = call.arguments as? [String: Any],
+              let bytes = arguments["bytes"] as? FlutterStandardTypedData,
+              let name = arguments["name"] as? String,
+              let originals = arguments["originals"] as? [String] else {
+          throw FileAccessError.invalidArguments
+        }
+        let panel = NSSavePanel()
+        panel.nameFieldStringValue = name
+        panel.allowedFileTypes = ["pdf"]
+        panel.canCreateDirectories = true
+        guard panel.runModal() == .OK, let url = panel.url else { result(nil); return }
+        let target = url.standardizedFileURL.resolvingSymlinksInPath()
+        let targetID = try? target.resourceValues(forKeys: [.fileResourceIdentifierKey]).fileResourceIdentifier
+        for path in originals {
+          let source = URL(fileURLWithPath: path).standardizedFileURL.resolvingSymlinksInPath()
+          let sourceID = try? source.resourceValues(forKeys: [.fileResourceIdentifierKey]).fileResourceIdentifier
+          if source == target || (targetID != nil && sourceID != nil &&
+              (targetID as? NSObject)?.isEqual(sourceID) == true) {
+            result(FlutterError(code: "original_protected", message: cyNativeTr("원본과 다른 이름으로 저장하세요."), details: nil))
+            return
+          }
+        }
+        let accessing = url.startAccessingSecurityScopedResource()
+        defer { if accessing { url.stopAccessingSecurityScopedResource() } }
+        try bytes.data.write(to: url, options: .atomic)
+        result(url.path)
       case "takePendingFiles":
         result(IncomingFileCoordinator.shared.takePendingPaths())
       case "createBookmark":
@@ -882,5 +909,33 @@ private let cyNativeEnglish: [String: String] = [
   "이전 페이지": "Previous page",
   "다음 페이지": "Next page",
   "보기 방식": "Page layout",
+  "페이지 구성·병합": "Organize and combine pages",
+  "페이지를 골라 새 PDF로 저장하세요.": "Choose pages to save as a new PDF.",
+  "원본은 그대로 유지됩니다. 추가한 PDF는 아래 순서로 이어 붙입니다.": "Your original stays unchanged. Added PDFs are appended in the order below.",
+  "저장할 페이지와 순서": "Pages and order to save",
+  "예: 1-3, 5 · 순서 변경: 3, 1, 2": "Example: 1-3, 5 · Reorder: 3, 1, 2",
+  "추가할 PDF가 없으면 선택한 페이지만 저장합니다.": "Without added PDFs, only the selected pages are saved.",
+  "합칠 PDF 선택": "Choose PDFs to combine",
+  "PDF 추가": "Add PDF",
+  "선택 제거": "Remove selection",
+  "PDF는 20개까지 합칠 수 있습니다.": "You can combine up to 20 PDFs.",
+  "새 PDF로 저장": "Save as a new PDF",
+  "PDF를 구성하고 있습니다…": "Preparing the PDF…",
+  "새 PDF를 저장했습니다. 원본은 변경하지 않았습니다.": "Saved the new PDF. The original is unchanged.",
+  "원본과 다른 이름으로 저장하세요.": "Save under a different name from the original.",
+  "페이지 구성에는 원본 PDF를 사용합니다. 화면의 임시 표시는 포함되지 않습니다.": "Page organization uses the original PDF. Temporary marks on screen are not included.",
+  "페이지 범위를 입력하세요.": "Enter a page range.",
+  "페이지 범위는 1-3, 5 형식으로 입력하세요.": "Enter pages in the form 1-3, 5.",
+  "같은 페이지를 두 번 선택할 수 없습니다.": "Select each page only once.",
+  "한 파일은 256MB까지 처리할 수 있습니다.": "Each file can be up to 256 MB.",
+  "페이지 처리 모듈이 없습니다. 최신 CY뷰어 설치 파일로 다시 설치하세요.": "The page engine is missing. Reinstall using the latest CY Viewer installer.",
+  "암호화되거나 전자서명된 PDF는 페이지 구성에 사용할 수 없습니다.": "Encrypted or digitally signed PDFs cannot be organized.",
+  "암호화된 PDF는 페이지 구성에 사용할 수 없습니다.": "Encrypted PDFs cannot be organized.",
+  "전자서명된 PDF는 페이지 구성에 사용할 수 없습니다.": "Digitally signed PDFs cannot be organized.",
+  "PDF 처리 시간이 초과됐습니다. 원본은 변경하지 않았습니다.": "PDF processing timed out. The original is unchanged.",
+  "결과 PDF의 페이지 수가 일치하지 않습니다.": "The resulting PDF page count does not match.",
+  "한 번에 선택할 수 있는 페이지가 너무 많습니다.": "Too many pages selected.",
+  "한 파일은 256MB, 전체는 512MB까지 처리할 수 있습니다.": "Each file can be up to 256 MB, with a total of 512 MB.",
+  "PDF는 1개부터 20개까지 선택하세요.": "Select between 1 and 20 PDFs.",
 ]
 // END GENERATED TRANSLATIONS

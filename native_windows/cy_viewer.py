@@ -17,6 +17,9 @@ import subprocess
 import sys
 import tempfile
 import uuid
+import queue
+import threading
+from pdfcraft import compose_pdf, parse_pages, save_copy
 from urllib.parse import quote
 from pathlib import Path
 from tkinter import filedialog, messagebox, simpledialog, ttk
@@ -314,6 +317,7 @@ class CyViewer(TkinterDnD.Tk):
             justify="left", anchor="w", bg=COLORS["sidebar"], fg=COLORS["muted"],
             font=("Malgun Gothic", 9),
         ).pack(fill="x", pady=(0, 6))
+        self._button(editing, tr('페이지 구성·병합'), self.organize_pages).pack(fill='x', pady=(8, 0))
         self._button(editing, tr('문서 전체 OCR'), self.ocr_document).pack(fill='x', pady=(8, 0))
         save_actions = self._section(sidebar, tr('03  저장·내보내기'))
         self._button(save_actions, tr('PDF로 저장'), self.save_as).pack(fill="x", pady=(0, 8))
@@ -1157,6 +1161,112 @@ class CyViewer(TkinterDnD.Tk):
         if changed is not None and changed.strip():
             if messagebox.askyesno(tr('문구 수정'), tr('기존 문구를 새 문구로 바꿉니다. 이 변경은 저장 전까지 되돌릴 수 없습니다. 계속할까요?'), parent=self):
                 self._replace_selected_text(changed.strip(), bold=False)
+
+    def organize_pages(self) -> None:
+        if not self.document:
+            return
+        dialog = tk.Toplevel(self)
+        dialog.title(tr('페이지 구성·병합'))
+        dialog.geometry('560x520')
+        dialog.configure(bg=COLORS['surface'])
+        dialog.transient(self)
+        dialog.grab_set()
+        body = tk.Frame(dialog, bg=COLORS['surface'], padx=24, pady=24)
+        body.pack(fill='both', expand=True)
+        tk.Label(body, text=tr('페이지를 골라 새 PDF로 저장하세요.'), bg=COLORS['surface'], fg=COLORS['ink'], font=('Malgun Gothic', 13, 'bold'), wraplength=480, anchor='w').pack(fill='x')
+        tk.Label(body, text=tr('원본은 그대로 유지됩니다. 추가한 PDF는 아래 순서로 이어 붙입니다.'), bg=COLORS['surface'], fg=COLORS['muted'], wraplength=480, justify='left').pack(fill='x', pady=(8, 16))
+        tk.Label(body, text=f'{self.document_path.name if self.document_path else "PDF"} · {len(self.document)}', bg=COLORS['surface'], fg=COLORS['ink'], anchor='w', wraplength=480).pack(fill='x')
+        tk.Label(body, text=tr('저장할 페이지와 순서'), bg=COLORS['surface'], fg=COLORS['ink'], anchor='w').pack(fill='x', pady=(12, 4))
+        entry = ttk.Entry(body)
+        entry.insert(0, f'1-{len(self.document)}')
+        entry.pack(fill='x')
+        tk.Label(body, text=tr('예: 1-3, 5 · 순서 변경: 3, 1, 2'), bg=COLORS['surface'], fg=COLORS['muted'], anchor='w').pack(fill='x', pady=(4, 12))
+        additions: list[Path] = []
+        listing = tk.Listbox(body, height=5, bg=COLORS['surface'], fg=COLORS['ink'], selectbackground=COLORS['blue_soft'], selectforeground=COLORS['ink'])
+        listing.pack(fill='both', expand=True)
+        def refresh() -> None:
+            listing.delete(0, 'end')
+            for path in additions:
+                listing.insert('end', path.name)
+        def add() -> None:
+            chosen = filedialog.askopenfilenames(parent=dialog, title=tr('합칠 PDF 선택'), filetypes=[('PDF', '*.pdf')])
+            if len(additions) + len(chosen) > 19:
+                status.config(text=tr('PDF는 20개까지 합칠 수 있습니다.'))
+                return
+            additions.extend(Path(x) for x in chosen)
+            refresh()
+        def remove() -> None:
+            for index in reversed(listing.curselection()):
+                additions.pop(index)
+            refresh()
+        actions = tk.Frame(body, bg=COLORS['surface'])
+        actions.pack(fill='x', pady=8)
+        add_button = ttk.Button(actions, text=tr('PDF 추가'), command=add)
+        add_button.pack(side='left')
+        remove_button = ttk.Button(actions, text=tr('선택 제거'), command=remove)
+        remove_button.pack(side='left', padx=8)
+        status = tk.Label(body, text=tr('추가할 PDF가 없으면 선택한 페이지만 저장합니다.'), bg=COLORS['surface'], fg=COLORS['muted'], wraplength=480, justify='left')
+        status.pack(fill='x', pady=8)
+        running = False
+        def close() -> None:
+            if not running:
+                dialog.destroy()
+        dialog.protocol('WM_DELETE_WINDOW', close)
+        def save() -> None:
+            nonlocal running
+            if running:
+                return
+            try:
+                parse_pages(entry.get(), len(self.document))
+                if self.document.is_encrypted or self.document.metadata.get('encryption') or self.document.get_sigflags() > 0:
+                    raise ValueError('암호화되거나 전자서명된 PDF는 페이지 구성에 사용할 수 없습니다.')
+                selected = filedialog.asksaveasfilename(parent=dialog, title=tr('새 PDF로 저장'), defaultextension='.pdf', initialfile=f'{self.document_path.stem if self.document_path else "PDF"}-pages.pdf', filetypes=[('PDF', '*.pdf')])
+                if not selected:
+                    return
+                destination = Path(selected)
+                originals = ([self.document_path] if self.document_path else []) + additions
+                for path in originals:
+                    if destination.resolve() == path.resolve() or (destination.exists() and path.exists() and os.path.samefile(destination, path)):
+                        raise ValueError('원본과 다른 이름으로 저장하세요.')
+                snapshot = self.document.tobytes(encryption=pymupdf.PDF_ENCRYPT_KEEP)
+            except Exception as error:
+                status.config(text=tr(str(error)), fg=COLORS['red'])
+                return
+            running = True
+            for button in (add_button, remove_button, save_button):
+                button.state(['disabled'])
+            entry.state(['disabled'])
+            status.config(text=tr('PDF를 구성하고 있습니다…'), fg=COLORS['muted'])
+            results: queue.Queue = queue.Queue()
+            ranges, paths = entry.get(), list(additions)
+            title = self.document_path.name if self.document_path else 'PDF'
+            def worker() -> None:
+                try:
+                    data = compose_pdf(snapshot, title, ranges, paths)
+                    save_copy(data, destination, originals)
+                    results.put(None)
+                except Exception as error:
+                    results.put(error)
+            threading.Thread(target=worker, daemon=True).start()
+            def poll() -> None:
+                nonlocal running
+                try:
+                    error = results.get_nowait()
+                except queue.Empty:
+                    dialog.after(100, poll)
+                    return
+                running = False
+                for button in (add_button, remove_button, save_button):
+                    button.state(['!disabled'])
+                entry.state(['!disabled'])
+                if error:
+                    status.config(text=tr(str(error)), fg=COLORS['red'])
+                else:
+                    status.config(text=tr('새 PDF를 저장했습니다. 원본은 변경하지 않았습니다.') + '\n' + str(destination), fg=COLORS['blue'])
+            dialog.after(100, poll)
+        save_button = ttk.Button(body, text=tr('새 PDF로 저장'), style='Primary.TButton', command=save)
+        save_button.pack(fill='x', pady=(8, 0))
+        entry.focus_set()
 
     def save_as(self) -> None:
         if not self.document:
