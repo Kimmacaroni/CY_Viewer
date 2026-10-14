@@ -33,4 +33,20 @@ Rust 1.95 환경에서 `python3 scripts/build_pdfcraft.py`를 실행한다. 결�
 - Flutter: 범위 오류 및 좁은 화면·큰 글자 구성 화면 검사. 전체 기존 회귀 검사도 실행한다.
 - Mac: 앱 빌드·코드 서명 확인 및 실제 샌드박스 부모→배포 모듈→PDFKit 재열기 검사. 로컬 Linux에서 Mac GUI 검증했다고 보고하지 않는다.
 
-배포 설치 파일과 공개 버전의 확인 결과는 릴리스 완료 뒤 기록한다.
+로컬 결과: Flutter 분석 문제 없음, 전체 검사 54개 통과·기존 PDFium 런타임 검사 1개 제외, Windows 단위 20개 통과, Rust 테스트·Clippy 통과, 실제 모듈 독립 엔진 회귀 3개 통과. Linux의 Tk 런타임에서도 실제 대화상자 저장을 확인했다. 아래 이미지는 Linux에서 실행한 CY뷰어 Tk 구성 화면이며 Windows 실기기 화면으로 간주하지 않는다.
+
+![페이지 구성 화면](../output/design/pdfcraft-dialog-linux.png)
+
+## 공개 배포 확인 (2026-10-14)
+
+[PR #30](https://github.com/Kimmacaroni/CY_Viewer/pull/30)을 `e2d4760a0921387d52882e2b510c2b3357adf124`에 병합했다. Windows 빌드·설치·재설치·설치된 모듈 실행, Mac universal 앱·샌드박스 모듈·PDFKit 재열기 검사, 웹 빌드가 통과했다.
+
+- Windows 릴리스 Actions `38502248874`: 성공. 설치 파일 37,379,359바이트, SHA-256 `dd6097f356e91fcfd9e6df6530dd3558a3d995f7c944746529bd4609dc1e3044`.
+- Mac 릴리스 Actions `38502245134`: 성공. DMG 35,420,905바이트, SHA-256 `f23196d7d54b2e94e7bc6b1382f2748e0b1039192a9889543ebe05fdcdaeeb75`.
+- 두 파일을 각각 공식 공개 다운로드 주소에서 직접 내려받아 체크섬·파일 크기를 대조했다.
+- 공개 웹 `1.12.0+18`, 캐시 식별자 `pdfcraft-1.12.0-18` 확인. 실제 Chrome에서 PDF 열기·페이지 이동·보기 방식·책갈피 진입도 확인했다.
+- 한글 PDF를 합성해 재정렬 전후 텍스트와 페이지 픽셀 일치도 추가 확인했다. 웹 다운로드 검사 4개 통과.
+
+[다운로드](https://kimmacaroni.github.io/CY_Viewer/download/) · [Mac 릴리스](https://github.com/Kimmacaroni/CY_Viewer/releases/tag/macos-v1.12.0) · [Windows 릴리스](https://github.com/Kimmacaroni/CY_Viewer/releases/tag/windows-v1.9.0)
+
+실제 사용자 Mac의 저장창 클릭과 iPhone/iPad 실기기 검증은 이 기록에서 확인했다고 주장하지 않는다. 새 기능은 데스크톱에만 제공한다.
