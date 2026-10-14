@@ -19,7 +19,7 @@ func run() throws {
   for width in [300.0, 400.0] {
     var box = CGRect(x: 0, y: 0, width: width, height: 500)
     let data = NSData(bytes: &box, length: MemoryLayout<CGRect>.size)
-    context.beginPDFPage([kCGPDFContextMediaBox: data] as CFDictionary)
+    context.beginPDFPage([kCGPDFContextMediaBox as String: data] as CFDictionary)
     context.setFillColor(CGColor(gray: 0.5, alpha: 1))
     context.fill(CGRect(x: 20, y: 20, width: 50, height: 50))
     context.endPDFPage()

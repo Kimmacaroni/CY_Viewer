@@ -72,6 +72,11 @@ class PdfcraftRoundTrips(unittest.TestCase):
             encrypted = doc.tobytes(encryption=pymupdf.PDF_ENCRYPT_AES_256, owner_pw='owner', user_pw='')
         with self.assertRaises(RuntimeError): compose_pdf(encrypted, 'secret.pdf', '1', [], HELPER)
         with self.assertRaises(RuntimeError): compose_pdf(b'not a pdf', 'broken.pdf', '1', [], HELPER)
+        with pymupdf.open(stream=original, filetype='pdf') as doc:
+            signature = doc.get_new_xref()
+            doc.update_object(signature, '<< /Type /Sig /ByteRange [0 1 2 3] >>')
+            signed = doc.tobytes(garbage=0)
+        with self.assertRaises(RuntimeError): compose_pdf(signed, 'signed.pdf', '1', [], HELPER)
 
     def test_helper_never_overwrites_input_or_existing_output(self):
         with tempfile.TemporaryDirectory() as folder:
