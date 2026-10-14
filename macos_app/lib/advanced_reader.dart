@@ -648,8 +648,14 @@ class _AdvancedPdfReaderPageState extends State<AdvancedPdfReaderPage> {
               ),
               ListTile(
                 title: Text(tr(context, "문서 도구")),
-                subtitle: Text(tr(context, "macOS와 동일한 기능을 사용할 수 있습니다.")),
+                subtitle: Text(tr(context, "문서 탐색·읽기·저장 도구입니다.")),
               ),
+              if (Platform.isMacOS)
+                ListTile(
+                  leading: Icon(Icons.library_books_outlined),
+                  title: Text(tr(context, "페이지 구성·병합")),
+                  onTap: _busy ? null : () => run(_organizePages),
+                ),
               ListTile(
                 leading: Icon(Icons.bookmarks_outlined),
                 title: Text(tr(context, "책갈피 목록")),
@@ -709,12 +715,6 @@ class _AdvancedPdfReaderPageState extends State<AdvancedPdfReaderPage> {
                 title: Text(tr(context, "인쇄")),
                 onTap: () => run(_printDocument),
               ),
-              if (Platform.isMacOS)
-                ListTile(
-                  leading: Icon(Icons.library_books_outlined),
-                  title: Text(tr(context, "페이지 구성·병합")),
-                  onTap: _busy ? null : () => run(_organizePages),
-                ),
               ListTile(
                 leading: Icon(Icons.document_scanner_outlined),
                 title: Text(tr(context, "문서 전체 OCR")),
@@ -826,6 +826,14 @@ class _AdvancedPdfReaderPageState extends State<AdvancedPdfReaderPage> {
                 ]
               : [
                   const DriveStatus(),
+                  if (Platform.isMacOS && !CyReaderWorkspace.isWide(context))
+                    TextButton.icon(
+                      onPressed: _busy || _pageCount == 0
+                          ? null
+                          : _organizePages,
+                      icon: const Icon(Icons.library_books_outlined),
+                      label: Text(tr(context, '페이지 구성')),
+                    ),
                   if (!CyReaderWorkspace.isWide(context))
                     IconButton(
                       tooltip: tr(context, "검색"),

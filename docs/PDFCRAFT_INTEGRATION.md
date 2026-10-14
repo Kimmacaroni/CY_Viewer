@@ -50,3 +50,11 @@ Rust 1.95 환경에서 `python3 scripts/build_pdfcraft.py`를 실행한다. 결�
 [다운로드](https://kimmacaroni.github.io/CY_Viewer/download/) · [Mac 릴리스](https://github.com/Kimmacaroni/CY_Viewer/releases/tag/macos-v1.12.0) · [Windows 릴리스](https://github.com/Kimmacaroni/CY_Viewer/releases/tag/windows-v1.9.0)
 
 실제 사용자 Mac의 저장창 클릭과 iPhone/iPad 실기기 검증은 이 기록에서 확인했다고 주장하지 않는다. 새 기능은 데스크톱에만 제공한다.
+
+## Mac 새 기능 진입점 보완
+
+사용자가 Mac 설치 앱에서 새 기능을 찾지 못했다고 알려 기본 창의 배치를 다시 조사했다. 배포된 1.12.0 DMG를 직접 풀어 Info.plist의 1.12.0+18, Rust 모듈과 Dart 앱의 savePageCopy 연결을 확인했다. 사용자의 실제 설치 버전은 아직 확인하지 않았으므로 같은 설치본이라고 단정하지 않는다.
+
+MainMenu.xib의 기본 창은 800×600인데 왼쪽 패널은 폭 1100 이상에서만 나타난다. 기본 크기의 문서 도구 메뉴에서는 새 기능이 인쇄 아래에 있어 스크롤이 필요했다. Mac 1.12.1+19에서는 좁은 리더 상단에 이름이 있는 **페이지 구성** 버튼을 표시하고, 문서 도구 메뉴에서도 제목 다음 첫 행동으로 배치한다. 넓은 창의 선택·편집 그룹도 유지한다.
+
+Mac 호스트에서 800×600·큰 글자 설정으로 실제 리더를 만들어 상단 진입점과 스크롤하지 않은 메뉴 항목이 화면 안에 있는지 검사한다. Linux에서는 Mac 전용 검사를 건너뛰며 통과했다고 간주하지 않는다.
