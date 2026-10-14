@@ -5,7 +5,8 @@ import tempfile
 import shutil
 import tkinter as tk
 from types import SimpleNamespace
-from tkinter import messagebox
+from tkinter import messagebox, filedialog, ttk
+import time
 
 sys.stdout.reconfigure(encoding="utf-8")
 sys.path.insert(0, str(Path(__file__).resolve().parents[1]))
@@ -35,6 +36,36 @@ try:
         assert not app.welcome.winfo_ismapped()
         assert len(app.document) == 2
         assert app.page_images
+        # 실제 페이지 구성 대화상자에서 별도 파일 저장까지 실행한다.
+        output = Path(directory) / 'composed.pdf'
+        old_save = filedialog.asksaveasfilename
+        filedialog.asksaveasfilename = lambda **kwargs: str(output)
+        try:
+            app.organize_pages()
+            app.update()
+            dialog = next(w for w in app.winfo_children() if isinstance(w, tk.Toplevel))
+            def widgets(parent):
+                return [parent] + [w for child in parent.winfo_children() for w in widgets(child)]
+            entry = next(w for w in widgets(dialog) if isinstance(w, ttk.Entry))
+            entry.delete(0, 'end')
+            entry.insert(0, '2,1')
+            button = next(w for w in widgets(dialog) if isinstance(w, ttk.Button) and w.cget('style') == 'Primary.TButton')
+            button.invoke()
+            deadline = time.monotonic() + 30
+            while time.monotonic() < deadline and not output.exists():
+                app.update()
+                time.sleep(0.05)
+            assert output.exists(), '페이지 구성 결과가 저장되지 않았습니다.'
+            with pymupdf.open(output) as result:
+                assert len(result) == 2
+                assert 'page 2' in result[0].get_text()
+                assert 'page 1' in result[1].get_text()
+            assert app.document_path == path
+            time.sleep(0.2)
+            app.update()
+            dialog.destroy()
+        finally:
+            filedialog.asksaveasfilename = old_save
         app.next_page()
         assert app.page_number == 1
         app.toggle_bookmark()

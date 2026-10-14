@@ -17,6 +17,8 @@ import 'package:shared_preferences/shared_preferences.dart';
 
 import 'app_commands.dart';
 import 'cy_design.dart';
+import 'pdfcraft_dialog.dart';
+import 'pdfcraft_service.dart';
 
 enum _ReaderAction {
   bookmark,
@@ -402,6 +404,25 @@ class _AdvancedPdfReaderPageState extends State<AdvancedPdfReaderPage> {
     }
   }
 
+  Future<void> _organizePages() async {
+    if (_busy || _pdfData == null || _pageCount < 1 || !Platform.isMacOS) {
+      return;
+    }
+    await showDialog<void>(
+      context: context,
+      barrierDismissible: false,
+      builder: (_) => PdfcraftDialog(
+        source: PdfcraftSource(
+          widget.name,
+          _pdfData!,
+          originalPath: widget.path,
+        ),
+        pageCount: _pageCount,
+        hasTemporaryMarks: _marks.isNotEmpty,
+      ),
+    );
+  }
+
   Future<void> _export(_ExportFormat format) async {
     if (_busy) return;
     try {
@@ -688,6 +709,12 @@ class _AdvancedPdfReaderPageState extends State<AdvancedPdfReaderPage> {
                 title: Text(tr(context, "인쇄")),
                 onTap: () => run(_printDocument),
               ),
+              if (Platform.isMacOS)
+                ListTile(
+                  leading: Icon(Icons.library_books_outlined),
+                  title: Text(tr(context, "페이지 구성·병합")),
+                  onTap: _busy ? null : () => run(_organizePages),
+                ),
               ListTile(
                 leading: Icon(Icons.document_scanner_outlined),
                 title: Text(tr(context, "문서 전체 OCR")),
@@ -854,6 +881,12 @@ class _AdvancedPdfReaderPageState extends State<AdvancedPdfReaderPage> {
             children: [
               Text(tr(context, "문구를 드래그해 선택한 뒤 복사하거나 표시하세요.")),
               SizedBox(height: 8),
+              if (Platform.isMacOS)
+                TextButton.icon(
+                  onPressed: _busy || _pageCount == 0 ? null : _organizePages,
+                  icon: Icon(Icons.library_books_outlined),
+                  label: Text(tr(context, "페이지 구성·병합")),
+                ),
               OutlinedButton.icon(
                 onPressed: _busy ? null : _runOcr,
                 icon: Icon(Icons.document_scanner_outlined),
