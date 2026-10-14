@@ -574,4 +574,6 @@ const cyEnglish = <String, String>{
   "한 파일은 256MB, 전체는 512MB까지 처리할 수 있습니다.":
       "Each file can be up to 256 MB, with a total of 512 MB.",
   "PDF는 1개부터 20개까지 선택하세요.": "Select between 1 and 20 PDFs.",
+  "페이지 구성": "Organize pages",
+  "문서 탐색·읽기·저장 도구입니다.": "Tools for navigating, reading and saving documents.",
 };
