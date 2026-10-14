@@ -26,7 +26,8 @@ func run() throws {
   }
   context.closePDF()
   let original = try Data(contentsOf: source)
-  let executable = URL(fileURLWithPath: CommandLine.arguments[0]).deletingLastPathComponent().appendingPathComponent("cy-pdfcraft")
+  guard let parent = Bundle.main.executableURL else { throw NSError(domain: "CYPageSmoke", code: 4) }
+  let executable = parent.deletingLastPathComponent().appendingPathComponent("cy-pdfcraft")
   let process = Process()
   process.executableURL = executable
   let input = Pipe(), report = Pipe(), errors = Pipe()

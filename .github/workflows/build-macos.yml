@@ -113,7 +113,7 @@ jobs:
           EOF
           codesign --force --sign - --entitlements pdfcraft_bridge/macos-helper.entitlements "$test_app/Contents/MacOS/cy-pdfcraft"
           codesign --force --sign - --entitlements macos_app/macos/Runner/Release.entitlements "$test_app"
-          "$test_app/Contents/MacOS/Run"
+          "$PWD/$test_app/Contents/MacOS/Run"
       - name: Create DMG
         env:
           PACKAGE_VERSION: ${{ steps.version.outputs.version }}
