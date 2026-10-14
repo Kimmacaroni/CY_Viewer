@@ -6,6 +6,9 @@ import shutil
 import subprocess
 import sys
 
+sys.stdout.reconfigure(encoding="utf-8")
+sys.stderr.reconfigure(encoding="utf-8")
+
 ROOT = Path(__file__).resolve().parent.parent
 MANIFEST = ROOT / 'pdfcraft_bridge' / 'Cargo.toml'
 OUT = ROOT / 'build' / 'pdfcraft'
@@ -26,7 +29,7 @@ else:
     suffix = '.exe' if os.name == 'nt' else ''
     shutil.copy2(ROOT / 'pdfcraft_bridge' / 'target' / 'release' / f'cy-pdfcraft{suffix}', OUT)
 
-metadata = json.loads(subprocess.check_output(['cargo', 'metadata', '--locked', '--format-version', '1', '--manifest-path', str(MANIFEST)], text=True))
+metadata = json.loads(subprocess.check_output(['cargo', 'metadata', '--locked', '--format-version', '1', '--manifest-path', str(MANIFEST)], text=True, encoding="utf-8"))
 resolved = {n['id'] for n in metadata['resolve']['nodes']}
 sections = ['CY뷰어 페이지 처리 모듈 — 제3자 라이선스\nPdfCraft: https://github.com/storytold/pdfcraft\n고정 커밋: d9607ec3befcda3e78062ceb5e54b97563aedad1\nPdfCraft 코드는 MIT 조건으로 사용하며 ArtCraft 브랜드·자산은 포함하지 않습니다.\n']
 for package in sorted(metadata['packages'], key=lambda p: (p['name'], p['version'])):
