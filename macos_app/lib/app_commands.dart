@@ -17,16 +17,19 @@ class AppCommandDispatcher {
   static void initialize() {
     if (_initialized) return;
     _initialized = true;
-    _channel.setMethodCallHandler((call) async {
-      for (final handlers in _handlers.reversed) {
-        final callback = handlers[call.method];
-        if (callback != null) {
-          await callback();
-          return true;
-        }
+    _channel.setMethodCallHandler((call) => dispatch(call.method));
+  }
+
+  /// 현재 앞에 열린 작업 화면에서 시스템 메뉴 명령을 처리한다.
+  static Future<bool> dispatch(String command) async {
+    for (final handlers in _handlers.reversed) {
+      final callback = handlers[command];
+      if (callback != null) {
+        await callback();
+        return true;
       }
-      return false;
-    });
+    }
+    return false;
   }
 
   static Map<String, AppCommandCallback> register(

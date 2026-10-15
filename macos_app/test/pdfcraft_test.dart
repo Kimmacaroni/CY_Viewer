@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:cy_viewer/pdfcraft_dialog.dart';
+import 'package:cy_viewer/app_commands.dart';
 import 'package:cy_viewer/cy_design.dart';
 import 'package:cy_viewer/pdfcraft_service.dart';
 
@@ -263,6 +264,39 @@ void main() {
     await tester.sendKeyUpEvent(LogicalKeyboardKey.metaLeft);
     await tester.pumpAndSettle();
     expect(backend.options, isNotNull);
+    expect(tester.takeException(), isNull);
+  });
+  testWidgets('Mac 메뉴 저장은 배경 리더 대신 현재 PDF 도구가 처리한다', (tester) async {
+    var backgroundSaves = 0;
+    final reader = AppCommandDispatcher.register({
+      'saveCopy': () {
+        backgroundSaves++;
+      },
+    });
+    addTearDown(() => AppCommandDispatcher.unregister(reader));
+    final backend = TestBackend();
+    await tester.pumpWidget(
+      MaterialApp(
+        home: PdfcraftDialog(
+          source: PdfcraftSource('menu.pdf', Uint8List(0)),
+          pageCount: 4,
+          backend: backend,
+          saveResult: (_) async => '/tmp/menu-result.pdf',
+        ),
+      ),
+    );
+    await tester.pumpAndSettle();
+    final handled = await tester.runAsync(
+      () => AppCommandDispatcher.dispatch('saveCopy'),
+    );
+    await tester.pumpAndSettle();
+    expect(handled, isTrue);
+    expect(backend.options, isNotNull);
+    expect(backgroundSaves, 0);
+    await tester.pumpWidget(const SizedBox.shrink());
+    await tester.pump();
+    await AppCommandDispatcher.dispatch('saveCopy');
+    expect(backgroundSaves, 1);
     expect(tester.takeException(), isNull);
   });
 }

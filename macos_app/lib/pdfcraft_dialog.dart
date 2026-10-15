@@ -4,6 +4,7 @@ import 'package:flutter/foundation.dart';
 import 'package:flutter/services.dart';
 
 import 'cy_localization.dart';
+import 'app_commands.dart';
 import 'pdfcraft_service.dart';
 import 'pdfcraft_browser_controls.dart';
 
@@ -98,16 +99,24 @@ class _PdfcraftDialogState extends State<PdfcraftDialog> {
     _savedResult = null;
   }
 
+  late final Map<String, AppCommandCallback> _commandHandlers;
+
   bool get _editable => _ready && !_busy && !_signed && _owner;
   @override
   void initState() {
     super.initState();
+    _commandHandlers = AppCommandDispatcher.register({
+      'saveCopy': () async {
+        if (_editable) await _save();
+      },
+    });
     _nextId = widget.pageCount;
     _inspect();
   }
 
   @override
   void dispose() {
+    AppCommandDispatcher.unregister(_commandHandlers);
     for (final c in [
       _range,
       _inputPassword,
