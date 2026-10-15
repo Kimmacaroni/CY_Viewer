@@ -116,9 +116,44 @@ fn finish_document(doc: &mut Document, f: &Finishing) -> Result<(), String> {
             return Err("자르기 여백은 0~1000mm로 입력하세요.".into());
         }
         // 화면 입력 순서: 왼쪽·위·오른쪽·아래. PDF는 왼쪽·아래·오른쪽·위.
-        let pt = [mm[0], mm[3], mm[2], mm[1]].map(|v| v * 72.0 / 25.4);
-        org::set_page_box(doc, &pages, org::PageBox::Crop, org::BoxSpec::Margins(pt))
-            .map_err(|e| format!("자르기 여백을 줄이세요: {e}"))?;
+        let refs = org::pages(doc).map_err(|e| e.to_string())?;
+        let boxes = org::page_boxes(doc).map_err(|e| e.to_string())?;
+        let mut plan = Vec::with_capacity(refs.len());
+        for (page, boxes) in refs.iter().zip(&boxes) {
+            // UserUnit는 상속하지 않는다. PdfCraft model과 같은 유효 범위로 해석한다.
+            let object = doc.get(page.obj);
+            let unit = object
+                .as_dict()
+                .and_then(|d| d.get(b"UserUnit"))
+                .and_then(|v| doc.resolve(v).as_f64())
+                .filter(|v| v.is_finite() && *v >= 1.0)
+                .unwrap_or(1.0)
+                .min(75000.0);
+            let pt = [mm[0], mm[3], mm[2], mm[1]].map(|v| v * 72.0 / 25.4 / unit);
+            let media = boxes[0];
+            let rect = [
+                media[0] + pt[0],
+                media[1] + pt[1],
+                media[2] - pt[2],
+                media[3] - pt[3],
+            ];
+            if rect[2] - rect[0] < 1.0 || rect[3] - rect[1] < 1.0 {
+                return Err("자르기 여백을 줄이세요. 페이지 영역을 남겨야 합니다.".into());
+            }
+            plan.push((page.obj, rect));
+        }
+        // 페이지마다 전체 트리를 다시 읽지 않고 한 번의 순회로 적용한다.
+        for (page, rect) in plan {
+            doc.update_dict(page, |d| {
+                d.set(
+                    b"CropBox".to_vec(),
+                    pdfcraft_cos::Object::Array(
+                        rect.into_iter().map(pdfcraft_cos::Object::Real).collect(),
+                    ),
+                )
+            })
+            .map_err(|e| e.to_string())?;
+        }
     }
     if f.remove_marks {
         for kind in [

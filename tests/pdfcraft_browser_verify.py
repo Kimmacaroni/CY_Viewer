@@ -9,12 +9,18 @@ if sys.argv[1] == 'prepare':
     original = fixture(['ONE', 'TWO', 'THREE', 'FOUR'])
     (root / 'source.pdf').write_bytes(original)
     (root / 'added.pdf').write_bytes(fixture(['ADDED']))
+    with pymupdf.open(stream=original,filetype='pdf') as doc:
+        doc.xref_set_key(doc[0].xref,'UserUnit','2')
+        (root/'scaled.pdf').write_bytes(doc.tobytes())
     with pymupdf.open(stream=original, filetype='pdf') as doc:
         (root / 'restricted.pdf').write_bytes(doc.tobytes(encryption=pymupdf.PDF_ENCRYPT_AES_256, owner_pw='owner', user_pw='reader', permissions=pymupdf.PDF_PERM_PRINT))
         signature=doc.get_new_xref();doc.update_object(signature,'<< /Type /Sig /ByteRange [0 1 2 3] >>')
         (root/'signed.pdf').write_bytes(doc.tobytes(garbage=0))
 else:
     data=json.loads((root/'results.json').read_text())
+    with pymupdf.open(stream=bytes(data['scaled']),filetype='pdf') as doc:
+        assert abs(doc[0].rect.width-(600-6*72/25.4)) < .001
+        assert abs(doc[1].rect.width-(300-6*72/25.4)) < .001
     with pymupdf.open(stream=bytes(data['finished']),filetype='pdf') as doc:
         for i,page in enumerate(doc):
             assert 'DRAFT' in page.get_text() and 'CY VIEWER' in page.get_text() and f'{i+1}/4' in page.get_text()

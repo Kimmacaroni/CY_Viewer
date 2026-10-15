@@ -185,6 +185,18 @@ class PdfcraftWorkbenchTests(unittest.TestCase):
         for finishing in [{'crop_mm': [100,100,100,100]}, {'crop_mm': [-1,0,0,0]}, {'watermark': '한글'}, {'watermark': ''}, {'header': '<<yyyy-mm-dd>>'}, {'background': [2,0,0]}]:
             with self.assertRaises(RuntimeError): tools_request(self.source, '거부', {'finishing': finishing}, helper=HELPER)
 
+    def test_crop_mm_honors_mixed_userunit_and_rotation(self):
+        with pymupdf.open(stream=self.source, filetype='pdf') as doc:
+            doc.xref_set_key(doc[0].xref, 'UserUnit', '2')
+            doc.xref_set_key(doc[1].xref, 'UserUnit', '3')
+            doc[1].set_rotation(90)
+            original = doc.tobytes()
+        _, data = tools_request(original, '도면', {'finishing': {'crop_mm': [2,3,4,5]}}, helper=HELPER)
+        with pymupdf.open(stream=data, filetype='pdf') as out:
+            for index, dimensions in enumerate([(600-6*72/25.4,800-8*72/25.4),(1200-8*72/25.4,900-6*72/25.4),(300-6*72/25.4,400-8*72/25.4)]):
+                self.assertAlmostEqual(out[index].rect.width, dimensions[0], places=3)
+                self.assertAlmostEqual(out[index].rect.height, dimensions[1], places=3)
+
     def test_image_optimization_retains_text_and_reduces_large_image(self):
         import random
         with pymupdf.open(stream=self.source, filetype='pdf') as doc:
