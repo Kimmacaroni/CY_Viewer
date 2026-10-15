@@ -103,3 +103,7 @@ CY Viewer supports **한국어 and English**. It follows the device language by 
 Mac·Windows 리더의 **페이지 구성·병합**에서 페이지를 추출·재정렬하고 다른 PDF를 이어 붙여 새 파일로 저장할 수 있습니다. 원본은 변경하지 않습니다. 웹·iPhone용 연결은 이 버전에 포함되지 않습니다. [구조·사용 방법·검증](docs/PDFCRAFT_INTEGRATION.md)을 참고하세요.
 
 PdfCraft 문서 마무리 확대: 워터마크·머리말·꼬리말·쪽 번호·여백 자르기·배경색·용량 최적화. 사용법과 제한은 [문서 마무리 안내](docs/PDFCRAFT_FINISHING.md)를 참고하세요.
+
+## Apple HIG 기준 화면
+
+문서함·툴바·PDF 도구는 Apple Human Interface Guidelines의 정보 위계·플랫폼 관례·접근성을 기준으로 정돈했습니다. 밝은/어두운 외형, 대비 강화, 큰 글자, 키보드 저장과 좁은 창을 지원합니다. [적용 범위·검증·한계](docs/APPLE_HIG_REFINEMENT.md)를 확인하세요.

@@ -139,3 +139,10 @@ CY뷰어 작업 인수 기록
 - 공개 웹 Chrome·WebKit에서 실제 마무리 PDF·기존 도구·암호 재입력·결과 열기 확인. OS별 출시·설치·샌드박스 및 공개 설치본 체크섬 확인. 전체 근거·한계·SHA-256은 docs/PDFCRAFT_FINISHING.md.
 - README 제작자·MIT 고지에 edit·optimize 범위를 반영하고 새 의존성 라이선스를 동봉했다. 사용자의 실제 Mac 설치 상태는 미확인.
 - 버전 변경 시 기존 publish-desktop-versions.yml이 태그·출시 빌드를 자동 실행한다. 별도 수동 태그 생성이나 main 직접 게시 경로를 추가할 필요가 없다. 이번 추가했던 중복 main 게시 경로는 c8ecaaf에서 제거했다.
+
+2026-10-15 Apple HIG 기준 화면 정리
+- 사용자가 Apple-Design-AI-Reference.txt를 지정해 공식 Apple 지침 기준 디자인 적용을 요청했다. 자료와 공식 macOS·툴바·사이드바·색상·타이포그래피·시트·접근성 원문을 대조했다. 비공개 원문은 Git에 복제하지 않았다.
+- PR #36 병합 3078de22, 후속 5f7deffe. 최종 웹·Mac 1.16.3+26, Windows 1.13.1. 중립 콘텐츠 표면·시스템 글꼴·대비 강화·명시적 선택 상태·작은 툴바·PDF 편집 작업 공간·고정 저장 영역·작은 화면 전체 화면·키보드 저장을 적용했다.
+- Windows의 고정 색상 검사 누락을 대비 기준으로 보완하고 필터 체크 표시를 유지했다. 검사 20개 통과. 기존 PdfCraft 기능·제작자·MIT 고지 유지, 엔진은 0.4.0을 유지한다.
+- Flutter 분석·65개, 필터 보완 후 배치 20개·Windows 단위 20개·GUI, 공개 웹 Chrome/어두운 WebKit PDF·ZIP·암호·결과 재열기, OS별 출시·샌드박스·설치와 공개 파일 체크섬을 확인했다. 상세한 범위·한계·SHA는 docs/APPLE_HIG_REFINEMENT.md.
+- UI 참조 기준은 docs/CY_DESIGN_SYSTEM.md 최신 Apple 항목 및 AGENTS.md에 추가했다. Flutter/Tk를 AppKit으로 전면 교체하거나 Apple 인증·모든 HIG 완전 준수를 의미하지 않는다. 사용자 Mac 실제 설치·VoiceOver 전체 조작은 미확인.
