@@ -21,6 +21,7 @@ class PdfToolsDialog(tk.Toplevel):
         self.plan = None
         self.undo_stack, self.redo_stack = [], []
         self.page_form_applied = False
+        self.applied_tasks = set()
         self.result_path = None
         self.snapshot = parent.document.tobytes(encryption=pymupdf.PDF_ENCRYPT_KEEP)
         self.original = parent.document_path
@@ -170,7 +171,7 @@ class PdfToolsDialog(tk.Toplevel):
         if not self.info:
             return
         task, count = self.task.current(), len(self.plan)
-        self.page_form_applied = False
+        self.page_form_applied = task in self.applied_tasks
         self.page_list.delete(0, 'end')
         for position, page in enumerate(self.plan):
             label = tr('빈 페이지') if page['index'] is None else tr('원본 {0}쪽', str(page['index'] + 1))
@@ -275,6 +276,7 @@ class PdfToolsDialog(tk.Toplevel):
         self.undo_stack = self.undo_stack[-30:]
         self.redo_stack.clear()
         self.plan = plan
+        self.applied_tasks.add(self.task.current())
         self.render()
         self.page_form_applied = True
         self.result_path = None
@@ -283,10 +285,14 @@ class PdfToolsDialog(tk.Toplevel):
     def apply_pages(self):
         if self.busy or not self.info or self.task.current() not in (0, 1, 2, 7):
             return
+        previous = self.page_form_applied
         try:
+            # 적용 버튼을 다시 누른 경우에만 같은 입력을 새 작업으로 실행한다.
+            self.page_form_applied = False
             self.commit_plan(self.options().get('page_plan', self.plan))
             self.status.config(text=tr('페이지 변경을 적용했습니다. 새 파일로 저장하세요.'))
         except Exception as error:
+            self.page_form_applied = previous
             self.status.config(text=tr(str(error)))
 
     def history(self, undo):
@@ -297,6 +303,7 @@ class PdfToolsDialog(tk.Toplevel):
             return
         target.append([dict(page) for page in self.plan])
         self.plan = source.pop()
+        self.applied_tasks.add(self.task.current())
         self.render()
         self.page_form_applied = True
         self.result_path = None
