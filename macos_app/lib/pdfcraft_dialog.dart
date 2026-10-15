@@ -1,9 +1,11 @@
 import 'package:file_picker/file_picker.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter/foundation.dart';
 import 'package:flutter/services.dart';
 
 import 'cy_localization.dart';
 import 'pdfcraft_service.dart';
+import 'pdfcraft_browser_controls.dart';
 
 class _PageEntry {
   const _PageEntry(this.id, this.index, [this.rotation = 0]);
@@ -80,6 +82,12 @@ class _PdfcraftDialogState extends State<PdfcraftDialog> {
   int _security = 0, _nextId = 0;
   String? _error, _savedPath, _savedExtension;
   String? _summary;
+  PdfcraftResult? _savedResult;
+  void _clearSaved() {
+    _savedPath = null;
+    _savedResult = null;
+  }
+
   bool get _editable => _ready && !_busy && !_signed && _owner;
   @override
   void initState() {
@@ -161,7 +169,7 @@ class _PdfcraftDialogState extends State<PdfcraftDialog> {
       _redo.clear();
       _plan = next;
       _selected.removeWhere((id) => !next.any((p) => p.id == id));
-      _savedPath = null;
+      _clearSaved();
       _error = null;
     });
   }
@@ -172,7 +180,7 @@ class _PdfcraftDialogState extends State<PdfcraftDialog> {
       to.add(_plan);
       _plan = from.removeLast();
       _selected.clear();
-      _savedPath = null;
+      _clearSaved();
       _error = null;
     });
   }
@@ -229,13 +237,37 @@ class _PdfcraftDialogState extends State<PdfcraftDialog> {
       if (mounted) {
         setState(() {
           _additions.addAll(staged);
-          _savedPath = null;
+          _clearSaved();
         });
       }
     } catch (e) {
       if (mounted) setState(() => _error = message(e));
     } finally {
       if (mounted) setState(() => _busy = false);
+    }
+  }
+
+  void _stageWebSources(List<PdfcraftSource> sources) {
+    try {
+      if (_additions.length + sources.length > 19) {
+        throw const FormatException('PDF는 20개까지 합칠 수 있습니다.');
+      }
+      final total =
+          widget.source.bytes.length +
+          [
+            ..._additions,
+            ...sources,
+          ].fold<int>(0, (n, s) => n + s.bytes.length);
+      if (total > 512 * 1024 * 1024) {
+        throw const FormatException('한 파일은 256MB, 전체는 512MB까지 처리할 수 있습니다.');
+      }
+      setState(() {
+        _additions.addAll(sources);
+        _clearSaved();
+        _error = null;
+      });
+    } catch (error) {
+      setState(() => _error = message(error));
     }
   }
 
@@ -300,7 +332,7 @@ class _PdfcraftDialogState extends State<PdfcraftDialog> {
   Future<void> _save() async {
     setState(() {
       _error = null;
-      _savedPath = null;
+      _clearSaved();
       _busy = true;
     });
     try {
@@ -312,6 +344,8 @@ class _PdfcraftDialogState extends State<PdfcraftDialog> {
       if (!mounted) return;
       final path = widget.saveResult != null
           ? await widget.saveResult!(result)
+          : kIsWeb
+          ? '${widget.source.name.replaceFirst(RegExp(r'\.pdf$', caseSensitive: false), '')}-edited.${result.extension}'
           : await _channel.invokeMethod<String>('savePageCopy', {
               'bytes': result.bytes,
               'extension': result.extension,
@@ -326,10 +360,13 @@ class _PdfcraftDialogState extends State<PdfcraftDialog> {
         setState(() {
           _savedPath = path;
           _savedExtension = result.extension;
-          _summary = tr(context, '{0}쪽 · 파일 {1}개를 저장했습니다.', [
-            result.pages,
-            result.files,
-          ]);
+          _savedResult = kIsWeb ? result : null;
+          _summary = kIsWeb
+              ? t('파일을 준비했습니다. 다운로드를 눌러 저장하세요.')
+              : tr(context, '{0}쪽 · 파일 {1}개를 저장했습니다.', [
+                  result.pages,
+                  result.files,
+                ]);
         });
       }
     } catch (e) {
@@ -350,7 +387,7 @@ class _PdfcraftDialogState extends State<PdfcraftDialog> {
       controller: controller,
       enabled: _editable,
       obscureText: obscure,
-      onChanged: (_) => setState(() => _savedPath = null),
+      onChanged: (_) => setState(_clearSaved),
       decoration: InputDecoration(labelText: t(label)),
     ),
   );
@@ -550,7 +587,7 @@ class _PdfcraftDialogState extends State<PdfcraftDialog> {
                     ? () => setState(() {
                         final item = _additions.removeAt(i);
                         _additions.insert(i - 1, item);
-                        _savedPath = null;
+                        _clearSaved();
                       })
                     : null,
                 icon: const Icon(Icons.arrow_upward),
@@ -561,7 +598,7 @@ class _PdfcraftDialogState extends State<PdfcraftDialog> {
                     ? () => setState(() {
                         final item = _additions.removeAt(i);
                         _additions.insert(i + 1, item);
-                        _savedPath = null;
+                        _clearSaved();
                       })
                     : null,
                 icon: const Icon(Icons.arrow_downward),
@@ -571,7 +608,7 @@ class _PdfcraftDialogState extends State<PdfcraftDialog> {
                 onPressed: _editable
                     ? () => setState(() {
                         _additions.removeAt(i);
-                        _savedPath = null;
+                        _clearSaved();
                       })
                     : null,
                 icon: const Icon(Icons.close),
@@ -579,14 +616,25 @@ class _PdfcraftDialogState extends State<PdfcraftDialog> {
             ],
           ),
         ),
-      Align(
-        alignment: Alignment.centerLeft,
-        child: TextButton.icon(
-          onPressed: _editable ? _add : null,
-          icon: const Icon(Icons.add),
-          label: Text(t('합칠 PDF 추가')),
+      if (kIsWeb)
+        PdfcraftBrowserPicker(
+          enabled: _editable,
+          onPicked: _stageWebSources,
+          onBusyChanged: (busy) => setState(() {
+            _busy = busy;
+            if (busy) _clearSaved();
+          }),
+          onError: (error) => setState(() => _error = message(error)),
+        )
+      else
+        Align(
+          alignment: Alignment.centerLeft,
+          child: TextButton.icon(
+            onPressed: _editable ? _add : null,
+            icon: const Icon(Icons.add),
+            label: Text(t('합칠 PDF 추가')),
+          ),
         ),
-      ),
       const Divider(height: 32),
       SwitchListTile(
         contentPadding: EdgeInsets.zero,
@@ -596,14 +644,14 @@ class _PdfcraftDialogState extends State<PdfcraftDialog> {
         onChanged: _editable
             ? (value) => setState(() {
                 _split = value;
-                _savedPath = null;
+                _clearSaved();
               })
             : null,
       ),
       if (_split)
         TextField(
           controller: _every,
-          onChanged: (_) => setState(() => _savedPath = null),
+          onChanged: (_) => setState(_clearSaved),
           enabled: _editable,
           keyboardType: TextInputType.number,
           decoration: InputDecoration(
@@ -648,7 +696,7 @@ class _PdfcraftDialogState extends State<PdfcraftDialog> {
                   child: TextField(
                     key: ValueKey('bookmark-name-${_bookmarks.indexOf(b)}'),
                     controller: b.title,
-                    onChanged: (_) => setState(() => _savedPath = null),
+                    onChanged: (_) => setState(_clearSaved),
                     enabled: _editable,
                     decoration: InputDecoration(
                       labelText: t('책갈피 이름'),
@@ -664,7 +712,7 @@ class _PdfcraftDialogState extends State<PdfcraftDialog> {
                   child: TextField(
                     key: ValueKey('bookmark-page-${_bookmarks.indexOf(b)}'),
                     controller: b.page,
-                    onChanged: (_) => setState(() => _savedPath = null),
+                    onChanged: (_) => setState(_clearSaved),
                     enabled: _editable,
                     keyboardType: TextInputType.number,
                     decoration: InputDecoration(labelText: t('원본 쪽')),
@@ -675,7 +723,7 @@ class _PdfcraftDialogState extends State<PdfcraftDialog> {
                   onPressed: _editable
                       ? () => setState(() {
                           b.removed = true;
-                          _savedPath = null;
+                          _clearSaved();
                         })
                       : null,
                   icon: const Icon(Icons.delete_outline),
@@ -689,7 +737,7 @@ class _PdfcraftDialogState extends State<PdfcraftDialog> {
           onPressed: _editable
               ? () => setState(() {
                   _bookmarks.add(_BookmarkEntry(null, '', 1));
-                  _savedPath = null;
+                  _clearSaved();
                 })
               : null,
           icon: const Icon(Icons.bookmark_add_outlined),
@@ -720,7 +768,7 @@ class _PdfcraftDialogState extends State<PdfcraftDialog> {
         onChanged: _editable
             ? (value) => setState(() {
                 _security = value!;
-                _savedPath = null;
+                _clearSaved();
               })
             : null,
       ),
@@ -838,6 +886,15 @@ class _PdfcraftDialogState extends State<PdfcraftDialog> {
                     ),
                   ),
                 ),
+              if (_savedPath != null && kIsWeb && _savedResult != null)
+                Padding(
+                  padding: const EdgeInsets.only(top: 8),
+                  child: PdfcraftBrowserDownload(
+                    key: ObjectKey(_savedResult),
+                    result: _savedResult!,
+                    name: _savedPath!,
+                  ),
+                ),
               if (_savedPath != null)
                 Padding(
                   padding: const EdgeInsets.only(top: 8),
@@ -860,13 +917,16 @@ class _PdfcraftDialogState extends State<PdfcraftDialog> {
           ),
           if (_savedPath != null && _savedExtension == 'pdf')
             TextButton.icon(
-              onPressed: () => Navigator.pop(context, _savedPath),
+              onPressed: () =>
+                  Navigator.pop(context, kIsWeb ? _savedResult : _savedPath),
               icon: const Icon(Icons.open_in_new),
               label: Text(t('결과 열기')),
             ),
           FilledButton(
             onPressed: _editable ? _save : null,
-            child: Text(t(_split ? '분할 ZIP으로 저장' : '새 PDF로 저장')),
+            child: Text(
+              t(kIsWeb ? '파일 준비' : (_split ? '분할 ZIP으로 저장' : '새 PDF로 저장')),
+            ),
           ),
         ],
       ),

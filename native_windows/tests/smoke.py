@@ -105,6 +105,33 @@ try:
             dialog.destroy()
         finally:
             filedialog.asksaveasfilename = old_save
+        # Windows도 페이지 변경 기록과 결과 바로 열기를 제공한다.
+        output = Path(directory) / 'history.pdf'
+        old_save = filedialog.asksaveasfilename
+        filedialog.asksaveasfilename = lambda **kwargs: str(output)
+        try:
+            dialog = PdfToolsDialog(app, {})
+            wait_tools()
+            dialog.task.current(7)
+            dialog.render()
+            field = dialog.fields['페이지 순서·추출']
+            field.delete(0, 'end'); field.insert(0, '2,1')
+            dialog.apply_button.invoke()
+            assert [page['index'] for page in dialog.plan] == [1, 0]
+            dialog.undo_button.invoke()
+            assert [page['index'] for page in dialog.plan] == [0, 1]
+            dialog.redo_button.invoke()
+            assert [page['index'] for page in dialog.plan] == [1, 0]
+            dialog.save_button.invoke()
+            wait_tools()
+            with pymupdf.open(output) as result:
+                assert 'page 2' in result[0].get_text()
+            dialog.open_button.invoke()
+            app.update()
+            assert app.document_path == output
+            app.load_pdf(path)
+        finally:
+            filedialog.asksaveasfilename = old_save
         # 암호 문서를 실제 리더에서 재입력해 열고 PDF 도구로 암호를 해제한다.
         encrypted = Path(directory) / 'encrypted.pdf'
         with pymupdf.open(path) as source:
@@ -217,4 +244,4 @@ try:
         app.document = None
 finally:
     app.destroy()
-print("Windows 시작 화면·PDF 렌더링·페이지 이동·책갈피·회전·분할 ZIP·암호 재입력·해제 저장 검사 통과")
+print("Windows 시작 화면·PDF 렌더링·페이지 이동·책갈피·회전·분할 ZIP·되돌리기·다시 실행·결과 열기·암호 재입력·해제 저장 검사 통과")

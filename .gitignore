@@ -20,3 +20,7 @@ native_windows/drive_build_config.py
 # PdfCraft 실행 모듈의 빌드 결과
 pdfcraft_bridge/target/
 build/pdfcraft/
+
+# 웹 PdfCraft WASM은 고정 소스로 CI에서 생성
+macos_app/web/pdfcraft/
+build/tools/

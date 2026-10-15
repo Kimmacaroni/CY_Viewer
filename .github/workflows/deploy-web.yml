@@ -6,6 +6,10 @@ on:
     paths:
       - "macos_app/**"
       - "site/**"
+      - "pdfcraft_bridge/**"
+      - "scripts/build_pdfcraft*.py"
+      - "tests/pdfcraft*"
+      - "tests/package*.json"
       - "tests/downloads.test.cjs"
       - ".github/workflows/deploy-web.yml"
   push:
@@ -13,6 +17,10 @@ on:
     paths:
       - "macos_app/**"
       - "site/**"
+      - "pdfcraft_bridge/**"
+      - "scripts/build_pdfcraft*.py"
+      - "tests/pdfcraft*"
+      - "tests/package*.json"
       - "tests/downloads.test.cjs"
       - ".github/workflows/deploy-web.yml"
 
@@ -36,6 +44,21 @@ jobs:
         with:
           channel: stable
           cache: true
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - uses: dtolnay/rust-toolchain@1.95.0
+      - name: Build browser PdfCraft engine
+        working-directory: .
+        run: python3 scripts/build_pdfcraft_web.py
+      - name: Test browser PdfCraft engine
+        working-directory: .
+        run: |
+          npm ci --prefix tests
+          python3 -m pip install pymupdf
+          node tests/pdfcraft_browser.cjs
+          npx --prefix tests playwright install --with-deps webkit
+          CY_TEST_BROWSER=webkit node tests/pdfcraft_browser.cjs
       - name: Test download site
         working-directory: .
         run: node --test tests/downloads.test.cjs
@@ -49,6 +72,11 @@ jobs:
         env:
           REPOSITORY_NAME: ${{ github.event.repository.name }}
         run: flutter build web --release --target lib/web_main.dart --base-href "/${REPOSITORY_NAME}/"
+      - name: Test browser PDF tools workflow
+        working-directory: .
+        run: |
+          node tests/pdfcraft_ui.cjs
+          CY_TEST_BROWSER=webkit node tests/pdfcraft_ui.cjs
       - name: Include download site
         run: cp -R ../site/download build/web/download
       - uses: actions/upload-pages-artifact@v3

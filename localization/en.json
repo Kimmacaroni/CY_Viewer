@@ -603,5 +603,16 @@
   "아래에서 새 암호 설정 또는 암호 해제를 선택하세요.\n새 암호는 문서 열기와 소유자 암호로 함께 사용합니다.": "Set a new password or remove encryption below.\nThe new password is used for opening and owner access.",
   "PDF 암호 입력": "Enter PDF password",
   "암호는 이 문서를 여는 동안만 사용하며 저장하지 않습니다.": "The password is only used while opening this document and is not saved.",
-  "문서 열기": "Open document"
+  "문서 열기": "Open document",
+  "파일 준비": "Prepare file",
+  "파일을 준비했습니다. 다운로드를 눌러 저장하세요.": "File ready. Select Download to save it.",
+  "페이지 변경 적용": "Apply page changes",
+  "되돌리기": "Undo",
+  "페이지 목록을 드래그해 순서를 바꿀 수 있습니다.": "Drag pages in the list to reorder them.",
+  "빈 페이지": "Blank page",
+  "원본 {0}쪽": "Original page {0}",
+  "페이지 순서·추출": "Reorder & extract pages",
+  "예: 3, 1, 2 또는 1-3, 5": "Example: 3, 1, 2 or 1-3, 5",
+  "페이지 변경을 적용했습니다. 새 파일로 저장하세요.": "Page changes applied. Save a new file.",
+  "PDF 처리 모듈을 불러오지 못했습니다. 연결을 확인하고 다시 시도하세요.": "Could not load the PDF engine. Check your connection and retry."
 }
