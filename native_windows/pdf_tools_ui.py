@@ -84,7 +84,7 @@ class PdfToolsDialog(tk.Toplevel):
         self.confirm = ttk.Entry(body, show='•')
         self.confirm.pack(fill='x', pady=4)
         ttk.Label(body, text=tr('새 암호 설정 시 위 두 칸에 같은 암호를 입력하세요.'), wraplength=600).pack(anchor='w')
-        self.status = ttk.Label(body, text=tr('문서를 확인하고 있습니다…'), wraplength=600)
+        self.status = ttk.Label(actions, text=tr('문서를 확인하고 있습니다…'), wraplength=600)
         self.status.pack(fill='x', pady=12)
         ttk.Button(actions, text=tr('페이지 추출·병합'), command=self.compose).pack(side='left')
         self.save_button = ttk.Button(actions, text=tr('새 파일로 저장'), command=self.save, state='disabled')
