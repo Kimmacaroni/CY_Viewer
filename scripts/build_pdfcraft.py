@@ -17,6 +17,8 @@ OUT.mkdir(parents=True, exist_ok=True)
 def cargo(command, *args):
     subprocess.run(['cargo', command, '--manifest-path', str(MANIFEST), *args], check=True)
 
+host = next(line.split(': ', 1)[1] for line in subprocess.check_output(['rustc', '-vV'], text=True).splitlines() if line.startswith('host: '))
+notice_targets = ['aarch64-apple-darwin', 'x86_64-apple-darwin'] if sys.platform == 'darwin' else [host]
 cargo('test', '--locked')
 if sys.platform == 'darwin':
     targets = ['aarch64-apple-darwin', 'x86_64-apple-darwin']
@@ -29,8 +31,10 @@ else:
     suffix = '.exe' if os.name == 'nt' else ''
     shutil.copy2(ROOT / 'pdfcraft_bridge' / 'target' / 'release' / f'cy-pdfcraft{suffix}', OUT)
 
-metadata = json.loads(subprocess.check_output(['cargo', 'metadata', '--locked', '--format-version', '1', '--manifest-path', str(MANIFEST)], text=True, encoding="utf-8"))
-resolved = {n['id'] for n in metadata['resolve']['nodes']}
+# 배포 대상에 실제 연결되는 의존성만 고지한다. UEFI 등 미사용 대상은 제외한다.
+metadatas = [json.loads(subprocess.check_output(['cargo', 'metadata', '--locked', '--format-version', '1', '--filter-platform', target, '--manifest-path', str(MANIFEST)], text=True, encoding='utf-8')) for target in notice_targets]
+metadata = metadatas[0]
+resolved = {n['id'] for data in metadatas for n in data['resolve']['nodes']}
 sections = ['CY뷰어 페이지 처리 모듈 — 제3자 라이선스\nPdfCraft: https://github.com/storytold/pdfcraft\n고정 커밋: d9607ec3befcda3e78062ceb5e54b97563aedad1\nPdfCraft 코드는 MIT 조건으로 사용하며 ArtCraft 브랜드·자산은 포함하지 않습니다.\n']
 for package in sorted(metadata['packages'], key=lambda p: (p['name'], p['version'])):
     if package['id'] not in resolved or package['source'] is None:

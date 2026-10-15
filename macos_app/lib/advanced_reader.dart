@@ -408,7 +408,7 @@ class _AdvancedPdfReaderPageState extends State<AdvancedPdfReaderPage> {
     if (_busy || _pdfData == null || _pageCount < 1 || !Platform.isMacOS) {
       return;
     }
-    await showDialog<void>(
+    final resultPath = await showDialog<String>(
       context: context,
       barrierDismissible: false,
       builder: (_) => PdfcraftDialog(
@@ -421,6 +421,17 @@ class _AdvancedPdfReaderPageState extends State<AdvancedPdfReaderPage> {
         hasTemporaryMarks: _marks.isNotEmpty,
       ),
     );
+    if (resultPath != null && mounted) {
+      await Navigator.of(context).push<int>(
+        MaterialPageRoute<int>(
+          builder: (_) => AdvancedPdfReaderPage(
+            path: resultPath,
+            name: File(resultPath).uri.pathSegments.last,
+            initialPage: 1,
+          ),
+        ),
+      );
+    }
   }
 
   Future<void> _export(_ExportFormat format) async {
@@ -653,7 +664,7 @@ class _AdvancedPdfReaderPageState extends State<AdvancedPdfReaderPage> {
               if (Platform.isMacOS)
                 ListTile(
                   leading: Icon(Icons.library_books_outlined),
-                  title: Text(tr(context, "페이지 구성·병합")),
+                  title: Text(tr(context, "PDF 도구")),
                   onTap: _busy ? null : () => run(_organizePages),
                 ),
               ListTile(
@@ -832,7 +843,7 @@ class _AdvancedPdfReaderPageState extends State<AdvancedPdfReaderPage> {
                           ? null
                           : _organizePages,
                       icon: const Icon(Icons.library_books_outlined),
-                      label: Text(tr(context, '페이지 구성')),
+                      label: Text(tr(context, 'PDF 도구')),
                     ),
                   if (!CyReaderWorkspace.isWide(context))
                     IconButton(
@@ -893,7 +904,7 @@ class _AdvancedPdfReaderPageState extends State<AdvancedPdfReaderPage> {
                 TextButton.icon(
                   onPressed: _busy || _pageCount == 0 ? null : _organizePages,
                   icon: Icon(Icons.library_books_outlined),
-                  label: Text(tr(context, "페이지 구성·병합")),
+                  label: Text(tr(context, "PDF 도구")),
                 ),
               OutlinedButton.icon(
                 onPressed: _busy ? null : _runOcr,

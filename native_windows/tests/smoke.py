@@ -66,6 +66,45 @@ try:
             dialog.destroy()
         finally:
             filedialog.asksaveasfilename = old_save
+        # 실제 새 PDF 도구 화면에서 회전과 ZIP 분할을 저장한다.
+        from pdf_tools_ui import PdfToolsDialog
+        import zipfile
+        output = Path(directory) / 'rotated.pdf'
+        old_save = filedialog.asksaveasfilename
+        filedialog.asksaveasfilename = lambda **kwargs: str(output)
+        try:
+            dialog = PdfToolsDialog(app, {})
+            def wait_tools():
+                deadline = time.monotonic() + 30
+                while dialog.busy and time.monotonic() < deadline:
+                    app.update()
+                    time.sleep(0.05)
+                assert not dialog.busy, 'PDF 도구 처리 시간 초과'
+                app.update()
+            wait_tools()
+            assert dialog.info['pages'] == 2
+            dialog.fields['대상 페이지'].delete(0, 'end')
+            dialog.fields['대상 페이지'].insert(0, '1')
+            dialog.save_button.invoke()
+            wait_tools()
+            with pymupdf.open(output) as result:
+                assert result[0].rotation == 90
+                assert result[1].rotation == 0
+            output = Path(directory) / 'split.zip'
+            dialog.task.current(3)
+            dialog.render()
+            dialog.save_button.invoke()
+            wait_tools()
+            with zipfile.ZipFile(output) as archive:
+                assert len(archive.namelist()) == 2
+                for index, name in enumerate(archive.namelist()):
+                    with pymupdf.open(stream=archive.read(name), filetype='pdf') as part:
+                        assert len(part) == 1
+                        assert f'page {index + 1}' in part[0].get_text()
+            assert app.document[0].rotation == 0
+            dialog.destroy()
+        finally:
+            filedialog.asksaveasfilename = old_save
         app.next_page()
         assert app.page_number == 1
         app.toggle_bookmark()

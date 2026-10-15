@@ -11,7 +11,7 @@ import pymupdf
 
 ROOT = Path(__file__).resolve().parent.parent
 sys.path.insert(0, str(ROOT / 'native_windows'))
-from pdfcraft import compose_pdf, save_copy
+from pdfcraft import compose_pdf, save_copy, tools_request
 HELPER = ROOT / 'build' / 'pdfcraft' / ('cy-pdfcraft.exe' if os.name == 'nt' else 'cy-pdfcraft')
 
 
@@ -87,5 +87,89 @@ class PdfcraftRoundTrips(unittest.TestCase):
             run = subprocess.run([str(HELPER)], input=json.dumps(request).encode(), capture_output=True)
             self.assertNotEqual(run.returncode, 0)
             self.assertEqual(source.read_bytes(), original)
+
+class PdfcraftWorkbenchTests(unittest.TestCase):
+    def setUp(self):
+        self.source = fixture(['ONE', 'TWO', 'THREE', 'FOUR'])
+
+    def test_page_editing_rotation_blank_delete_and_destination_mapping(self):
+        options = {'page_plan': [{'index': 3, 'rotation': 90}, {'index': None, 'rotation': 0}, {'index': 0, 'rotation': 180}]}
+        _, data = tools_request(self.source, '원본', options, helper=HELPER)
+        with pymupdf.open(stream=data, filetype='pdf') as out:
+            self.assertEqual(len(out), 3)
+            self.assertIn('FOUR', out[0].get_text())
+            self.assertEqual(out[1].get_text(), '')
+            self.assertIn('ONE', out[2].get_text())
+            self.assertEqual([p.rotation for p in out], [90, 0, 180])
+            self.assertEqual(out[2].get_links()[0]['page'], 0)
+            self.assertTrue(any(row[1] == 'First' and row[2] == 3 for row in out.get_toc()))
+
+    def test_metadata_and_actual_outline_edits(self):
+        info, _ = tools_request(self.source, '원본', {'inspect': True}, helper=HELPER)
+        self.assertEqual(info['bookmarks'][0]['title'], 'First')
+        _, data = tools_request(self.source, '원본', {
+            'metadata': {'Title': '한글 제목', 'Author': '작성자', 'Subject': '주제', 'Keywords': '검색어'},
+            'bookmarks': [{'action': 'update', 'path': [0], 'title': '수정한 책갈피', 'page': 2}, {'action': 'add', 'title': '마지막 장', 'page': 4}],
+        }, helper=HELPER)
+        with pymupdf.open(stream=data, filetype='pdf') as out:
+            self.assertEqual(out.metadata['title'], '한글 제목')
+            self.assertEqual(out.metadata['author'], '작성자')
+            self.assertEqual(out.get_toc(), [[1, '수정한 책갈피', 2], [1, '마지막 장', 4]])
+        _, removed = tools_request(data, '원본', {'bookmarks': [{'action': 'delete', 'path': [0]}]}, helper=HELPER)
+        with pymupdf.open(stream=removed, filetype='pdf') as out:
+            self.assertEqual(out.get_toc(), [[1, '마지막 장', 4]])
+
+    def test_split_zip_is_reopenable_and_preserves_pages(self):
+        import zipfile, io
+        report, data = tools_request(self.source, '원본', {'split_every': 3}, helper=HELPER)
+        self.assertEqual(report['pages'], 4)
+        with zipfile.ZipFile(io.BytesIO(data)) as archive:
+            self.assertEqual(archive.namelist(), ['part-001.pdf', 'part-002.pdf'])
+            counts = []
+            for name in archive.namelist():
+                with pymupdf.open(stream=archive.read(name), filetype='pdf') as out:
+                    counts.append(len(out))
+            self.assertEqual(counts, [3, 1])
+            with pymupdf.open(stream=archive.read('part-001.pdf'), filetype='pdf') as first:
+                self.assertIn('ONE', first[0].get_text())
+                self.assertTrue(any(row[1] == 'First' for row in first.get_toc()))
+            with pymupdf.open(stream=archive.read('part-002.pdf'), filetype='pdf') as last:
+                self.assertIn('FOUR', last[0].get_text())
+
+    def test_aes256_password_change_remove_and_encrypted_split(self):
+        import zipfile, io
+        _, encrypted = tools_request(self.source, '원본', {'new_password': '한글-암호-123'}, helper=HELPER)
+        with pymupdf.open(stream=encrypted, filetype='pdf') as doc:
+            self.assertTrue(doc.needs_pass)
+            self.assertFalse(doc.authenticate('wrong'))
+            self.assertTrue(doc.authenticate('한글-암호-123'))
+            self.assertIn('256-bit AES', doc.metadata['encryption'])
+            self.assertIn('ONE', doc[0].get_text())
+        with self.assertRaises(RuntimeError): tools_request(encrypted, '잠금', {'remove_password': True}, 'wrong', HELPER)
+        with self.assertRaises(RuntimeError): tools_request(encrypted, '잠금', {}, '한글-암호-123', HELPER)
+        _, changed = tools_request(encrypted, '잠금', {'new_password': 'changed'}, '한글-암호-123', HELPER)
+        with pymupdf.open(stream=changed, filetype='pdf') as doc:
+            self.assertFalse(doc.authenticate('한글-암호-123'))
+            self.assertTrue(doc.authenticate('changed'))
+        _, plain = tools_request(changed, '잠금', {'remove_password': True}, 'changed', HELPER)
+        with pymupdf.open(stream=plain, filetype='pdf') as doc:
+            self.assertFalse(doc.needs_pass)
+            self.assertIn('FOUR', doc[3].get_text())
+        _, zipped = tools_request(encrypted, '잠금', {'split_every': 2, 'new_password': 'parts'}, '한글-암호-123', HELPER)
+        with zipfile.ZipFile(io.BytesIO(zipped)) as archive:
+            for name in archive.namelist():
+                with pymupdf.open(stream=archive.read(name), filetype='pdf') as doc:
+                    self.assertTrue(doc.needs_pass)
+                    self.assertTrue(doc.authenticate('parts'))
+                    self.assertEqual(len(doc), 2)
+
+    def test_owner_permission_and_invalid_edits_are_enforced(self):
+        with pymupdf.open(stream=self.source, filetype='pdf') as doc:
+            restricted = doc.tobytes(encryption=pymupdf.PDF_ENCRYPT_AES_256, owner_pw='owner', user_pw='reader', permissions=pymupdf.PDF_PERM_PRINT)
+        info, _ = tools_request(restricted, '제한', {'inspect': True}, 'reader', HELPER)
+        self.assertFalse(info['owner'])
+        with self.assertRaises(RuntimeError): tools_request(restricted, '제한', {'remove_password': True}, 'reader', HELPER)
+        for options in [{'page_plan': []}, {'page_plan': [{'index': 99}]}, {'page_plan': [{'index': 0}, {'index': 0}]}, {'split_every': 0}, {'bookmarks': [{'action':'add','title':'','page':1}]}]:
+            with self.assertRaises(RuntimeError): tools_request(self.source, '원본', options, helper=HELPER)
 
 if __name__ == '__main__': unittest.main()

@@ -39,11 +39,11 @@ void main() {
       );
       expect(entry, findsOneWidget);
       expect(tester.getRect(entry).bottom, lessThan(100));
-      expect(find.text(trNow('페이지 구성')), findsOneWidget);
+      expect(find.text(trNow('PDF 도구')), findsOneWidget);
       await tester.tap(find.byIcon(Icons.more_horiz));
       await tester.pump();
       await tester.pump(const Duration(milliseconds: 350));
-      final menuEntry = find.widgetWithText(ListTile, trNow('페이지 구성·병합'));
+      final menuEntry = find.widgetWithText(ListTile, trNow('PDF 도구'));
       expect(menuEntry, findsOneWidget);
       final rect = tester.getRect(menuEntry);
       expect(rect.top, greaterThanOrEqualTo(0));

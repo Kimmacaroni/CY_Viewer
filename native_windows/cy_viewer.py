@@ -20,6 +20,7 @@ import uuid
 import queue
 import threading
 from pdfcraft import compose_pdf, parse_pages, save_copy
+from pdf_tools_ui import PdfToolsDialog
 from urllib.parse import quote
 from pathlib import Path
 from tkinter import filedialog, messagebox, simpledialog, ttk
@@ -317,7 +318,7 @@ class CyViewer(TkinterDnD.Tk):
             justify="left", anchor="w", bg=COLORS["sidebar"], fg=COLORS["muted"],
             font=("Malgun Gothic", 9),
         ).pack(fill="x", pady=(0, 6))
-        self._button(editing, tr('페이지 구성·병합'), self.organize_pages).pack(fill='x', pady=(8, 0))
+        self._button(editing, tr('PDF 도구'), lambda: PdfToolsDialog(self, COLORS)).pack(fill='x', pady=(8, 0))
         self._button(editing, tr('문서 전체 OCR'), self.ocr_document).pack(fill='x', pady=(8, 0))
         save_actions = self._section(sidebar, tr('03  저장·내보내기'))
         self._button(save_actions, tr('PDF로 저장'), self.save_as).pack(fill="x", pady=(0, 8))
