@@ -35,7 +35,7 @@ PdfCraft 고정 커밋은 기존 `d9607ec3befcda3e78062ceb5e54b97563aedad1`이�
 - Windows GUI smoke: 실제 대화상자로 재정렬 PDF·회전 PDF·분할 ZIP 저장 후 재열기. 로컬 Linux Tk 검사와 Windows Actions 실행을 구분한다.
 - Mac 샌드박스: 실제 배포 모듈 실행 후 PDFKit으로 순서·회전·빈 페이지·문서 정보·책갈피·암호 재열기 검사. Mac 앱 빌드와 기본 창 진입점 검사도 실행한다.
 
-공개 설치 파일과 체크섬 검증 결과는 배포가 완료된 뒤 아래에 기록한다. 사용자 Mac에서 직접 설치·저장창을 클릭했다고 주장하지 않는다.
+공개 배포 검증 결과는 아래에 기록한다. 사용자 Mac에서 직접 설치·저장창을 클릭했다고 주장하지 않는다.
 
 최종 로컬 검증 결과: Flutter 분석 문제 없음, 실제 PDFium·리더 암호 경로를 포함한 전체 61개 통과·Mac 전용 2개 제외. Windows 단위 검사 20개·PDF 독립 엔진 검사 8개·다운로드 사이트 검사 4개 통과. Rust 테스트·Clippy 통과. Linux Tk에서 새 회전 PDF와 분할 ZIP의 저장·재열기 통과. Mac 업데이트 Swift 검사와 샌드박스 검사는 해당 OS의 Actions에서 수행한다.
 
@@ -44,3 +44,18 @@ PdfCraft 고정 커밋은 기존 `d9607ec3befcda3e78062ceb5e54b97563aedad1`이�
 암호가 걸린 PDF는 리더의 마스킹된 암호 입력창으로 연다. 잘못된 암호는 다시 입력할 수 있고, 성공한 암호는 현재 문서의 메모리에서 PDF 도구로 전달한다. 저장·최근 목록·로그에는 보관하지 않는다. 실제 PDFium 리더에서 잘못된 암호→재입력→열기 성공 경로도 확인했다.
 
 Windows도 문서 열기의 암호 입력·잘못된 암호 재입력·취소 시 기존 문서 유지와 PDF 도구로의 메모리 암호 전달을 지원한다. 실제 Tk 리더→PDF 도구→암호 해제 사본 저장·재열기를 검사했다.
+
+## 공개 배포 확인 (2026-10-15)
+
+[PR #32](https://github.com/Kimmacaroni/CY_Viewer/pull/32)를 `5aefe40cf372ad040d0ac01b5f64c218333bfc6c`에 병합했다. Windows 출시 빌드 `38675182363`과 Mac 출시 빌드 `38675178985`에서 설치 파일을 게시했다.
+
+- Mac: `CYViewer-macOS-v1.13.0.dmg`, 36,147,794바이트, SHA-256 `ac511459e3139948a330edeb0259d4a39e9d804aed45fa3ca19d57e171fedc07`. 공식 공개 파일을 직접 내려받아 릴리스 메타데이터·체크섬과 대조했다.
+- Windows: `CYViewer-Setup-v1.10.0.exe`, 37,455,988바이트, SHA-256 `2892cfcac1ed2fa228eb8b1557ebcfcd05e5fbb4721b9c8bc4180aee1389c2ec`. 공식 공개 파일을 직접 내려받아 릴리스 메타데이터·체크섬과 대조했다.
+
+Windows 출시 빌드에서 PDF 독립 엔진 8개·단위 검사 20개, 실제 GUI의 재정렬·회전·분할 ZIP·암호 재입력·해제 저장, 설치·재설치·설치 모듈 해시·실행 검사가 통과했다. Mac 출시 빌드에서 Flutter 분석·테스트, 앱 빌드·서명, 샌드박스 모듈의 순서·회전·빈 페이지·문서 정보·책갈피·암호 PDFKit 재열기 검사가 통과했다.
+
+공개 웹 `1.13.0+20`과 캐시 식별자 `pdfcraft-workbench-1.13.0-20`을 확인했다. 실제 공개 Chrome에서 PDF 열기·페이지 이동·두 쪽 보기·책갈피 목록 진입이 통과했다. 웹에 데스크톱 PDF 도구를 제공한다고 표시하지 않는다.
+
+Mac DMG 내부의 버전·빌드 번호, PDF 도구의 새 탭·암호 입력 연결과 `cy-pdfcraft 0.2.0`·제작자/의존성 고지를 확인했다. 사용자 Mac 설치 상태는 직접 확인하지 않았다. ⌘Q로 기존 앱을 종료하고 새 DMG의 CYViewer.app으로 Applications 앱을 교체한 뒤 다시 연다. PDF를 연 후 상단 **PDF 도구**를 사용한다.
+
+[Mac 1.13.0 릴리스](https://github.com/Kimmacaroni/CY_Viewer/releases/tag/macos-v1.13.0) · [Windows 1.10.0 릴리스](https://github.com/Kimmacaroni/CY_Viewer/releases/tag/windows-v1.10.0) · [다운로드](https://kimmacaroni.github.io/CY_Viewer/download/)
