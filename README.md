@@ -21,7 +21,7 @@ PdfCraft는 MIT 또는 Apache-2.0으로 제공되며, CY뷰어는 해당 코드�
 | 사용 환경 | 다운로드 및 실행 |
 | --- | --- |
 | Windows 10·11 64비트 | [Windows 설치 파일 v1.13.1](https://github.com/Kimmacaroni/CY_Viewer/releases/download/windows-v1.13.1/CYViewer-Setup-v1.13.1.exe) |
-| macOS | [macOS 설치 파일 v1.16.1](https://github.com/Kimmacaroni/CY_Viewer/releases/download/macos-v1.16.1/CYViewer-macOS-v1.16.1.dmg) |
+| macOS | [macOS 설치 파일 v1.16.2](https://github.com/Kimmacaroni/CY_Viewer/releases/download/macos-v1.16.2/CYViewer-macOS-v1.16.2.dmg) |
 | iPhone·iPad·웹 | [CY뷰어 웹앱 열기](https://kimmacaroni.github.io/CY_Viewer/) |
 
 아이폰에서는 Safari로 웹앱을 연 뒤 `공유` → `홈 화면에 추가`를 선택하면

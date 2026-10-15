@@ -19,8 +19,9 @@ abstract final class CyDesign {
     final composed = Color.alphaBlend(secondaryLabel, surface);
     final a = composed.computeLuminance(), b = surface.computeLuminance();
     final contrast = ((a > b ? a : b) + .05) / ((a > b ? b : a) + .05);
-    if (contrast < 4.5)
+    if (contrast < 4.5) {
       secondaryLabel = label.withValues(alpha: highContrast ? 1 : .72);
+    }
     final canvas = semantic(CupertinoColors.systemGroupedBackground);
     final secondary = semantic(
       CupertinoColors.secondarySystemGroupedBackground,
