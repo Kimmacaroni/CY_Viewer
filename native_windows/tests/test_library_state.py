@@ -19,9 +19,14 @@ class LibraryStateTests(unittest.TestCase):
             library_path().write_text('{"x":{"page":-3,"favorite":"yes"}}',encoding='utf-8')
             self.assertEqual(load_library(),{'x':{'page':1,'favorite':False}})
 
-    def test_dark_palette_matches_shared_mac_tokens(self):
-        dark=palette(True)
-        self.assertEqual(dark['canvas'],'#10141C')
-        self.assertEqual(dark['surface'],'#191F2A')
-        self.assertEqual(dark['blue'],'#A9C5FF')
-        self.assertEqual(palette()['canvas'],'#F4F6F9')
+    def test_palette_keeps_surfaces_distinct_and_text_readable(self):
+        def luminance(color):
+            rgb=[int(color[i:i+2],16)/255 for i in (1,3,5)]
+            linear=[v/12.92 if v<=.04045 else ((v+.055)/1.055)**2.4 for v in rgb]
+            return sum(v*w for v,w in zip(linear,[.2126,.7152,.0722]))
+        for dark in (False,True):
+            colors=palette(dark)
+            self.assertNotEqual(colors['canvas'],colors['surface'])
+            for ink,background in [('ink','surface'),('muted','canvas'),('on_blue','blue'),('on_blue','blue_hover'),('on_blue','blue_pressed')]:
+                a,b=sorted([luminance(colors[ink]),luminance(colors[background])])
+                self.assertGreaterEqual((b+.05)/(a+.05),4.5)

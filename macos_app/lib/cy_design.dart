@@ -523,7 +523,7 @@ class CyLibraryToolbar extends StatelessWidget {
             'favorites': '즐겨찾기',
           }.entries)
             ChoiceChip(
-              showCheckmark: false,
+              showCheckmark: true,
               side: BorderSide.none,
               shape: RoundedRectangleBorder(
                 borderRadius: BorderRadius.circular(7),
