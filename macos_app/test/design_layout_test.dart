@@ -6,6 +6,26 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 void main() {
+  test('밝음·어두움과 대비 강화에서 본문·보조 글자가 읽히는 대비를 유지한다', () {
+    for (final brightness in Brightness.values) {
+      for (final high in [false, true]) {
+        final scheme = CyDesign.theme(
+          brightness,
+          highContrast: high,
+        ).colorScheme;
+        for (final foreground in [scheme.onSurface, scheme.onSurfaceVariant]) {
+          final a = Color.alphaBlend(
+            foreground,
+            scheme.surface,
+          ).computeLuminance();
+          final b = scheme.surface.computeLuminance();
+          final ratio = ((a > b ? a : b) + .05) / ((a > b ? b : a) + .05);
+          expect(ratio, greaterThanOrEqualTo(4.5));
+        }
+      }
+    }
+  });
+
   testWidgets('데스크톱 탐색은 책갈피·보기·페이지를 직접 실행한다', (tester) async {
     tester.view.physicalSize = const Size(1200, 800);
     tester.view.devicePixelRatio = 1;
@@ -114,10 +134,7 @@ void main() {
         ),
       );
       expect(find.text('문서 영역'), findsOneWidget);
-      expect(
-        find.text('01  문서 탐색'),
-        scenario.$3 ? findsOneWidget : findsNothing,
-      );
+      expect(find.text('문서 탐색'), scenario.$3 ? findsOneWidget : findsNothing);
       if (scenario.$3) {
         final save = find.widgetWithText(TextButton, 'PDF로 저장');
         await tester.ensureVisible(save);

@@ -1,64 +1,101 @@
 import 'cy_localization.dart';
 
 import 'package:flutter/material.dart';
+import 'package:flutter/cupertino.dart';
+import 'package:flutter/foundation.dart';
 
 /// Apple 앱과 웹앱에서 함께 쓰는 문서 작업 공간의 색상·간격·타이포그래피.
 abstract final class CyDesign {
-  static ThemeData theme(Brightness brightness) {
+  static ThemeData theme(Brightness brightness, {bool highContrast = false}) {
     final dark = brightness == Brightness.dark;
+    Color semantic(CupertinoDynamicColor value) => dark
+        ? (highContrast ? value.darkHighContrastColor : value.darkColor)
+        : (highContrast ? value.highContrastColor : value.color);
+    final surface = dark
+        ? semantic(CupertinoColors.secondarySystemBackground)
+        : semantic(CupertinoColors.systemBackground);
+    final label = semantic(CupertinoColors.label);
+    var secondaryLabel = semantic(CupertinoColors.secondaryLabel);
+    final composed = Color.alphaBlend(secondaryLabel, surface);
+    final a = composed.computeLuminance(), b = surface.computeLuminance();
+    final contrast = ((a > b ? a : b) + .05) / ((a > b ? b : a) + .05);
+    if (contrast < 4.5)
+      secondaryLabel = label.withValues(alpha: highContrast ? 1 : .72);
+    final canvas = semantic(CupertinoColors.systemGroupedBackground);
+    final secondary = semantic(
+      CupertinoColors.secondarySystemGroupedBackground,
+    );
     final scheme =
         ColorScheme.fromSeed(
-          seedColor: Color(0xff245edb),
+          seedColor: const Color(0xff245edb),
           brightness: brightness,
+          contrastLevel: highContrast ? 1 : 0,
         ).copyWith(
-          primary: dark ? Color(0xffa9c5ff) : Color(0xff245edb),
-          onPrimary: dark ? Color(0xff132746) : Colors.white,
-          primaryContainer: dark ? Color(0xff223754) : Color(0xffeaf1ff),
-          onPrimaryContainer: dark ? Color(0xffcbdcff) : Color(0xff194da8),
-          surface: dark ? Color(0xff191f2a) : Colors.white,
-          onSurface: dark ? Color(0xffe8edf5) : Color(0xff182235),
-          onSurfaceVariant: dark ? Color(0xffacb8ca) : Color(0xff526174),
-          outlineVariant: dark ? Color(0xff354154) : Color(0xffdce2eb),
+          surface: surface,
+          surfaceContainerLowest: surface,
+          surfaceContainerLow: secondary,
+          surfaceContainer: canvas,
+          surfaceContainerHigh: secondary,
+          surfaceContainerHighest: canvas,
+          onSurface: label,
+          onSurfaceVariant: secondaryLabel,
+          outlineVariant: highContrast
+              ? semantic(CupertinoColors.separator)
+              : semantic(CupertinoColors.opaqueSeparator),
         );
-    final base = ThemeData(useMaterial3: true, colorScheme: scheme);
+    final apple =
+        defaultTargetPlatform == TargetPlatform.macOS ||
+        defaultTargetPlatform == TargetPlatform.iOS;
+    final desktop =
+        defaultTargetPlatform != TargetPlatform.iOS &&
+        defaultTargetPlatform != TargetPlatform.android;
+    final base = ThemeData(
+      useMaterial3: true,
+      colorScheme: scheme,
+      fontFamily: apple ? 'CupertinoSystemText' : null,
+      fontFamilyFallback: const ['Segoe UI', 'Noto Sans CJK KR', 'sans-serif'],
+      splashFactory: NoSplash.splashFactory,
+    );
     final shape = RoundedRectangleBorder(
-      borderRadius: BorderRadius.circular(10),
+      borderRadius: BorderRadius.circular(8),
     );
     return base.copyWith(
-      scaffoldBackgroundColor: dark ? Color(0xff10141c) : Color(0xfff4f6f9),
-      textTheme: base.textTheme.copyWith(
-        headlineMedium: TextStyle(
-          fontSize: 28,
-          height: 1.3,
-          fontWeight: FontWeight.w700,
-          color: scheme.onSurface,
-        ),
-        headlineSmall: TextStyle(
-          fontSize: 24,
-          height: 1.35,
-          fontWeight: FontWeight.w700,
-          color: scheme.onSurface,
-        ),
-        titleLarge: TextStyle(
-          fontSize: 20,
-          height: 1.4,
-          fontWeight: FontWeight.w600,
-          color: scheme.onSurface,
-        ),
-        bodyLarge: TextStyle(
-          fontSize: 16,
-          height: 1.5,
-          color: scheme.onSurface,
-        ),
-        bodyMedium: TextStyle(
-          fontSize: 14,
-          height: 1.5,
-          color: scheme.onSurfaceVariant,
-        ),
-        bodySmall: TextStyle(
-          fontSize: 12,
-          height: 1.5,
-          color: scheme.onSurfaceVariant,
+      scaffoldBackgroundColor: canvas,
+      textTheme: base.textTheme.merge(
+        TextTheme(
+          headlineMedium: TextStyle(
+            fontSize: 26,
+            height: 1.3,
+            fontWeight: FontWeight.w700,
+            color: scheme.onSurface,
+          ),
+          headlineSmall: TextStyle(
+            fontSize: 22,
+            height: 1.35,
+            fontWeight: FontWeight.w700,
+            color: scheme.onSurface,
+          ),
+          titleLarge: TextStyle(
+            fontSize: 20,
+            height: 1.4,
+            fontWeight: FontWeight.w600,
+            color: scheme.onSurface,
+          ),
+          bodyLarge: TextStyle(
+            fontSize: 16,
+            height: 1.5,
+            color: scheme.onSurface,
+          ),
+          bodyMedium: TextStyle(
+            fontSize: 14,
+            height: 1.5,
+            color: scheme.onSurface,
+          ),
+          bodySmall: TextStyle(
+            fontSize: 12,
+            height: 1.5,
+            color: scheme.onSurfaceVariant,
+          ),
         ),
       ),
       appBarTheme: AppBarTheme(
@@ -68,14 +105,37 @@ abstract final class CyDesign {
         elevation: 0,
         scrolledUnderElevation: 0,
         centerTitle: false,
-        toolbarHeight: 64,
-        titleSpacing: 20,
+        toolbarHeight: desktop ? 52 : 60,
+        titleSpacing: 16,
         titleTextStyle: TextStyle(
+          fontFamily: apple ? 'CupertinoSystemText' : null,
           fontSize: 18,
           fontWeight: FontWeight.w600,
           color: scheme.onSurface,
         ),
         shape: Border(bottom: BorderSide(color: scheme.outlineVariant)),
+      ),
+      dialogTheme: DialogThemeData(
+        backgroundColor: surface,
+        surfaceTintColor: Colors.transparent,
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+      ),
+      popupMenuTheme: PopupMenuThemeData(
+        color: surface,
+        surfaceTintColor: Colors.transparent,
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
+      ),
+      tabBarTheme: TabBarThemeData(
+        indicatorSize: TabBarIndicatorSize.tab,
+        indicator: BoxDecoration(
+          color: scheme.primaryContainer,
+          borderRadius: BorderRadius.circular(7),
+        ),
+        dividerHeight: 0,
+        labelColor: scheme.onPrimaryContainer,
+        unselectedLabelColor: scheme.onSurfaceVariant,
+        labelStyle: const TextStyle(fontSize: 13, fontWeight: FontWeight.w600),
+        labelPadding: const EdgeInsets.symmetric(horizontal: 14),
       ),
       cardTheme: CardThemeData(
         color: scheme.surface,
@@ -83,13 +143,13 @@ abstract final class CyDesign {
         elevation: 0,
         margin: EdgeInsets.zero,
         shape: RoundedRectangleBorder(
-          borderRadius: BorderRadius.circular(16),
+          borderRadius: BorderRadius.circular(12),
           side: BorderSide(color: scheme.outlineVariant),
         ),
       ),
       filledButtonTheme: FilledButtonThemeData(
         style: FilledButton.styleFrom(
-          minimumSize: Size(44, 48),
+          minimumSize: Size(44, 44),
           padding: EdgeInsets.symmetric(horizontal: 20, vertical: 12),
           shape: shape,
         ),
@@ -110,14 +170,15 @@ abstract final class CyDesign {
       ),
       inputDecorationTheme: InputDecorationTheme(
         filled: true,
-        fillColor: scheme.surface,
+        fillColor: secondary,
+        floatingLabelBehavior: FloatingLabelBehavior.always,
         contentPadding: EdgeInsets.symmetric(horizontal: 16, vertical: 14),
         border: OutlineInputBorder(
-          borderRadius: BorderRadius.circular(10),
+          borderRadius: BorderRadius.circular(8),
           borderSide: BorderSide(color: scheme.outlineVariant),
         ),
         enabledBorder: OutlineInputBorder(
-          borderRadius: BorderRadius.circular(10),
+          borderRadius: BorderRadius.circular(8),
           borderSide: BorderSide(color: scheme.outlineVariant),
         ),
       ),
@@ -318,7 +379,7 @@ class CyReaderWorkspace extends StatelessWidget {
         Container(
           width: 252,
           decoration: BoxDecoration(
-            color: theme.colorScheme.surface,
+            color: theme.scaffoldBackgroundColor,
             border: Border(
               right: BorderSide(color: theme.colorScheme.outlineVariant),
             ),
@@ -332,7 +393,7 @@ class CyReaderWorkspace extends StatelessWidget {
                 icon: const Icon(Icons.arrow_back),
                 label: Text(tr(context, "문서함")),
               ),
-              section(tr(context, "01  문서 탐색"), [
+              section(tr(context, "문서 탐색"), [
                 action(
                   tr(context, "이 페이지 책갈피"),
                   Icons.bookmark_border,
@@ -349,14 +410,14 @@ class CyReaderWorkspace extends StatelessWidget {
                   onView ?? onTools,
                 ),
               ]),
-              section(tr(context, "02  선택·편집"), [
+              section(tr(context, "선택·편집"), [
                 editing ??
                     Text(
                       tr(context, "문구를 드래그해 선택하고 복사하세요."),
                       style: theme.textTheme.bodySmall,
                     ),
               ]),
-              section(tr(context, "03  저장·내보내기"), [
+              section(tr(context, "저장·내보내기"), [
                 action(tr(context, "PDF로 저장"), Icons.save_alt, onSave),
                 ?exports,
                 printAction ??
@@ -462,6 +523,13 @@ class CyLibraryToolbar extends StatelessWidget {
             'favorites': '즐겨찾기',
           }.entries)
             ChoiceChip(
+              showCheckmark: false,
+              side: BorderSide.none,
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(7),
+              ),
+              selectedColor: Theme.of(context).colorScheme.primaryContainer,
+              backgroundColor: Theme.of(context).colorScheme.surfaceContainer,
               avatar: entry.key == 'favorites'
                   ? const Icon(Icons.star_outline, size: 18)
                   : null,

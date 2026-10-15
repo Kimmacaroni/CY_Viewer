@@ -729,4 +729,7 @@ const cyEnglish = <String, String>{
   "자르기 여백은 0~1000mm로 입력하세요.": "Enter crop margins from 0 to 1000 mm.",
   "워터마크 문구를 입력하세요.": "Enter watermark text.",
   "워터마크·머리말·꼬리말은 영문·숫자·기본 기호로 2000자 이내 입력하세요.": "Use up to 2000 English letters, numbers or basic symbols for watermark, header and footer text.",
+  "문서 탐색": "Browse document",
+  "선택·편집": "Select and edit",
+  "저장·내보내기": "Save and export",
 };

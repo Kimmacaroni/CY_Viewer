@@ -48,6 +48,11 @@ class CyViewerWebApp extends StatelessWidget {
         localizationsDelegates: GlobalMaterialLocalizations.delegates,
         theme: CyDesign.theme(Brightness.light),
         darkTheme: CyDesign.theme(Brightness.dark),
+        highContrastTheme: CyDesign.theme(Brightness.light, highContrast: true),
+        highContrastDarkTheme: CyDesign.theme(
+          Brightness.dark,
+          highContrast: true,
+        ),
         themeMode: ThemeMode.system,
         home: _WebLibraryPage(saveRecent: saveRecent),
       ),

@@ -488,7 +488,7 @@ class _PdfcraftDialogState extends State<PdfcraftDialog> {
             return ListTile(
               key: ValueKey(p.id),
               dense: true,
-              leading: Checkbox(
+              leading: Checkbox.adaptive(
                 value: _selected.contains(p.id),
                 onChanged: _editable
                     ? (value) => setState(() {
@@ -673,7 +673,7 @@ class _PdfcraftDialogState extends State<PdfcraftDialog> {
           ),
         ),
       const Divider(height: 32),
-      SwitchListTile(
+      SwitchListTile.adaptive(
         contentPadding: EdgeInsets.zero,
         title: Text(t('PDF 분할')),
         subtitle: Text(t('결과를 여러 PDF로 나누어 ZIP 파일 하나로 저장합니다.')),
@@ -826,7 +826,7 @@ class _PdfcraftDialogState extends State<PdfcraftDialog> {
     children: [
       Text(t('문서 마무리'), style: Theme.of(context).textTheme.titleMedium),
       Text(t('아래 설정은 합치기·페이지 편집을 마친 결과 전체에 적용됩니다.')),
-      SwitchListTile(
+      SwitchListTile.adaptive(
         title: Text(t('텍스트 워터마크')),
         subtitle: Text(t('옅은 대각선 문구를 각 페이지에 넣습니다.')),
         value: _useWatermark,
@@ -838,7 +838,7 @@ class _PdfcraftDialogState extends State<PdfcraftDialog> {
             : null,
       ),
       if (_useWatermark) _field(_watermark, '워터마크 문구 (영문·숫자)'),
-      SwitchListTile(
+      SwitchListTile.adaptive(
         title: Text(t('머리말·꼬리말')),
         value: _useHeaderFooter,
         onChanged: _editable
@@ -852,7 +852,7 @@ class _PdfcraftDialogState extends State<PdfcraftDialog> {
         _field(_header, '머리말 (영문·숫자)'),
         _field(_footer, '꼬리말 (영문·숫자)'),
       ],
-      SwitchListTile(
+      SwitchListTile.adaptive(
         title: Text(t('페이지 번호 넣기')),
         subtitle: Text(t('아래 중앙에 1/10 형식으로 넣습니다.')),
         value: _pageNumbers,
@@ -906,7 +906,7 @@ class _PdfcraftDialogState extends State<PdfcraftDialog> {
               })
             : null,
       ),
-      SwitchListTile(
+      SwitchListTile.adaptive(
         title: Text(t('기존 문서 마무리 표시 제거')),
         subtitle: Text(
           t('CY뷰어·PdfCraft가 넣은 워터마크·머리말·꼬리말·배경을 제거합니다. 새 설정은 이어서 적용됩니다.'),
@@ -919,7 +919,7 @@ class _PdfcraftDialogState extends State<PdfcraftDialog> {
               })
             : null,
       ),
-      SwitchListTile(
+      SwitchListTile.adaptive(
         title: Text(t('PDF 용량 최적화')),
         subtitle: Text(
           t('큰 이미지를 150ppi로 줄입니다. 화질이 달라질 수 있고 용량 감소는 문서에 따라 다릅니다.'),
@@ -934,154 +934,245 @@ class _PdfcraftDialogState extends State<PdfcraftDialog> {
       ),
     ],
   );
-  @override
-  Widget build(BuildContext context) => PopScope(
-    canPop: !_busy,
-    child: DefaultTabController(
-      length: 5,
-      child: AlertDialog(
-        title: Text(t('PDF 도구')),
-        content: SizedBox(
-          width: 760,
-          height: 560,
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.stretch,
-            children: [
-              Text(
-                widget.source.name,
-                maxLines: 2,
-                overflow: TextOverflow.ellipsis,
-              ),
-              Text(
-                t('변경은 새 파일에 저장합니다. 원본은 유지됩니다.'),
-                style: Theme.of(context).textTheme.bodySmall,
-              ),
-              if (widget.hasTemporaryMarks)
-                Text(
-                  t('화면의 임시 텍스트 표시는 이 도구의 결과에 포함되지 않습니다.'),
-                  style: Theme.of(context).textTheme.bodySmall,
-                ),
-              if (!_ready || (_encrypted && !_owner))
-                Row(
-                  children: [
-                    Expanded(
-                      child: TextField(
-                        controller: _inputPassword,
-                        enabled: !_busy,
-                        obscureText: true,
-                        decoration: InputDecoration(labelText: t('현재 PDF 암호')),
-                      ),
-                    ),
-                    const SizedBox(width: 8),
-                    TextButton(
-                      onPressed: _busy ? null : _inspect,
-                      child: Text(t('문서 확인')),
-                    ),
-                  ],
-                ),
-              const SizedBox(height: 8),
-              TabBar(
-                isScrollable: true,
-                tabAlignment: TabAlignment.start,
-                tabs: [
-                  Tab(text: t('페이지 편집')),
-                  Tab(text: t('합치기·분할')),
-                  Tab(text: t('정보·책갈피')),
-                  Tab(text: t('보안')),
-                  Tab(text: t('문서 마무리')),
-                ],
-              ),
-              const SizedBox(height: 12),
-              Expanded(
-                child: _ready
-                    ? TabBarView(
-                        children: [
-                          for (final child in [
-                            _pagesTab(),
-                            _filesTab(),
-                            _documentTab(),
-                            _securityTab(),
-                            _finishingTab(),
-                          ])
-                            SingleChildScrollView(child: child),
-                        ],
-                      )
-                    : Center(
-                        child: _busy
-                            ? const CircularProgressIndicator()
-                            : Text(t('문서를 확인한 뒤 도구를 사용할 수 있습니다.')),
-                      ),
-              ),
-              if (_signed)
-                Text(
-                  t('전자서명된 PDF는 편집할 수 없습니다.'),
-                  style: TextStyle(color: Theme.of(context).colorScheme.error),
-                ),
-              if (_ready && !_owner)
-                Text(
-                  t('편집하려면 PDF의 소유자 암호를 입력하세요.'),
-                  style: TextStyle(color: Theme.of(context).colorScheme.error),
-                ),
-              if (_busy && _ready) const LinearProgressIndicator(),
-              if (_error != null)
-                Padding(
-                  padding: const EdgeInsets.only(top: 8),
-                  child: Semantics(
-                    liveRegion: true,
-                    child: Text(
-                      t(_error!),
-                      maxLines: 3,
-                      overflow: TextOverflow.ellipsis,
-                      style: TextStyle(
-                        color: Theme.of(context).colorScheme.error,
-                      ),
-                    ),
-                  ),
-                ),
-              if (_savedPath != null && kIsWeb && _savedResult != null)
-                Padding(
-                  padding: const EdgeInsets.only(top: 8),
-                  child: PdfcraftBrowserDownload(
-                    key: ObjectKey(_savedResult),
-                    result: _savedResult!,
-                    name: _savedPath!,
-                  ),
-                ),
-              if (_savedPath != null)
-                Padding(
-                  padding: const EdgeInsets.only(top: 8),
-                  child: Semantics(
-                    liveRegion: true,
-                    child: Text(
-                      '$_summary\n$_savedPath',
-                      maxLines: 3,
-                      overflow: TextOverflow.ellipsis,
-                    ),
-                  ),
-                ),
-            ],
-          ),
+  Widget _workspaceContent() => Column(
+    crossAxisAlignment: CrossAxisAlignment.stretch,
+    children: [
+      Text(
+        t('변경은 새 파일에 저장합니다. 원본은 유지됩니다.'),
+        style: Theme.of(context).textTheme.bodySmall,
+      ),
+      if (widget.hasTemporaryMarks)
+        Text(
+          t('화면의 임시 텍스트 표시는 이 도구의 결과에 포함되지 않습니다.'),
+          style: Theme.of(context).textTheme.bodySmall,
         ),
-        actions: [
-          TextButton(
-            onPressed: _busy ? null : () => Navigator.pop(context),
-            child: Text(t('닫기')),
-          ),
-          if (_savedPath != null && _savedExtension == 'pdf')
-            TextButton.icon(
-              onPressed: () =>
-                  Navigator.pop(context, kIsWeb ? _savedResult : _savedPath),
-              icon: const Icon(Icons.open_in_new),
-              label: Text(t('결과 열기')),
+      if (!_ready || (_encrypted && !_owner))
+        Row(
+          children: [
+            Expanded(
+              child: TextField(
+                controller: _inputPassword,
+                enabled: !_busy,
+                obscureText: true,
+                decoration: InputDecoration(labelText: t('현재 PDF 암호')),
+              ),
             ),
-          FilledButton(
-            onPressed: _editable ? _save : null,
-            child: Text(
-              t(kIsWeb ? '파일 준비' : (_split ? '분할 ZIP으로 저장' : '새 PDF로 저장')),
+            const SizedBox(width: 8),
+            TextButton(
+              onPressed: _busy ? null : _inspect,
+              child: Text(t('문서 확인')),
             ),
-          ),
+          ],
+        ),
+      const SizedBox(height: 8),
+      TabBar(
+        isScrollable: true,
+        tabAlignment: TabAlignment.start,
+        tabs: [
+          Tab(text: t('페이지 편집')),
+          Tab(text: t('합치기·분할')),
+          Tab(text: t('정보·책갈피')),
+          Tab(text: t('보안')),
+          Tab(text: t('문서 마무리')),
         ],
       ),
-    ),
+      const SizedBox(height: 12),
+      Expanded(
+        child: _ready
+            ? TabBarView(
+                children: [
+                  for (final child in [
+                    _pagesTab(),
+                    _filesTab(),
+                    _documentTab(),
+                    _securityTab(),
+                    _finishingTab(),
+                  ])
+                    SingleChildScrollView(child: child),
+                ],
+              )
+            : Center(
+                child: _busy
+                    ? const CircularProgressIndicator()
+                    : Text(t('문서를 확인한 뒤 도구를 사용할 수 있습니다.')),
+              ),
+      ),
+      if (_signed)
+        Text(
+          t('전자서명된 PDF는 편집할 수 없습니다.'),
+          style: TextStyle(color: Theme.of(context).colorScheme.error),
+        ),
+      if (_ready && !_owner)
+        Text(
+          t('편집하려면 PDF의 소유자 암호를 입력하세요.'),
+          style: TextStyle(color: Theme.of(context).colorScheme.error),
+        ),
+      if (_busy && _ready) const LinearProgressIndicator(),
+      if (_error != null)
+        Padding(
+          padding: const EdgeInsets.only(top: 8),
+          child: Semantics(
+            liveRegion: true,
+            child: Text(
+              t(_error!),
+              maxLines: 3,
+              overflow: TextOverflow.ellipsis,
+              style: TextStyle(color: Theme.of(context).colorScheme.error),
+            ),
+          ),
+        ),
+      if (_savedPath != null && kIsWeb && _savedResult != null)
+        Padding(
+          padding: const EdgeInsets.only(top: 8),
+          child: PdfcraftBrowserDownload(
+            key: ObjectKey(_savedResult),
+            result: _savedResult!,
+            name: _savedPath!,
+          ),
+        ),
+      if (_savedPath != null)
+        Padding(
+          padding: const EdgeInsets.only(top: 8),
+          child: Semantics(
+            liveRegion: true,
+            child: Text(
+              '$_summary\n$_savedPath',
+              maxLines: 3,
+              overflow: TextOverflow.ellipsis,
+            ),
+          ),
+        ),
+    ],
   );
+
+  @override
+  Widget build(BuildContext context) {
+    final size = MediaQuery.sizeOf(context);
+    final compact = size.width < 600;
+    final scheme = Theme.of(context).colorScheme;
+    return PopScope(
+      canPop: !_busy,
+      child: CallbackShortcuts(
+        bindings: {
+          const SingleActivator(LogicalKeyboardKey.keyS, meta: true): () {
+            if (_editable) _save();
+          },
+          const SingleActivator(LogicalKeyboardKey.keyS, control: true): () {
+            if (_editable) _save();
+          },
+        },
+        child: DefaultTabController(
+          length: 5,
+          animationDuration: MediaQuery.disableAnimationsOf(context)
+              ? Duration.zero
+              : const Duration(milliseconds: 160),
+          child: Dialog(
+            insetPadding: compact ? EdgeInsets.zero : const EdgeInsets.all(20),
+            shape: RoundedRectangleBorder(
+              borderRadius: BorderRadius.circular(compact ? 0 : 12),
+            ),
+            clipBehavior: Clip.antiAlias,
+            insetAnimationDuration: MediaQuery.disableAnimationsOf(context)
+                ? Duration.zero
+                : const Duration(milliseconds: 120),
+            child: SizedBox(
+              width: compact ? size.width : (size.width - 40).clamp(0, 960),
+              height: compact ? size.height : (size.height - 40).clamp(0, 760),
+              child: SafeArea(
+                child: Focus(
+                  autofocus: true,
+                  child: FocusTraversalGroup(
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.stretch,
+                      children: [
+                        Container(
+                          padding: const EdgeInsets.fromLTRB(20, 16, 20, 12),
+                          decoration: BoxDecoration(
+                            border: Border(
+                              bottom: BorderSide(color: scheme.outlineVariant),
+                            ),
+                          ),
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              Semantics(
+                                namesRoute: true,
+                                child: Text(
+                                  t('PDF 도구'),
+                                  style: Theme.of(context).textTheme.titleLarge,
+                                ),
+                              ),
+                              const SizedBox(height: 4),
+                              Tooltip(
+                                message: widget.source.name,
+                                child: Text(
+                                  widget.source.name,
+                                  maxLines: 1,
+                                  overflow: TextOverflow.ellipsis,
+                                  style: Theme.of(context).textTheme.bodySmall,
+                                ),
+                              ),
+                            ],
+                          ),
+                        ),
+                        Expanded(
+                          child: Padding(
+                            padding: const EdgeInsets.fromLTRB(20, 12, 20, 12),
+                            child: _workspaceContent(),
+                          ),
+                        ),
+                        Container(
+                          padding: const EdgeInsets.fromLTRB(16, 12, 16, 12),
+                          decoration: BoxDecoration(
+                            border: Border(
+                              top: BorderSide(color: scheme.outlineVariant),
+                            ),
+                          ),
+                          child: Wrap(
+                            alignment: WrapAlignment.end,
+                            spacing: 8,
+                            runSpacing: 8,
+                            children: [
+                              TextButton(
+                                onPressed: _busy
+                                    ? null
+                                    : () => Navigator.pop(context),
+                                child: Text(t('닫기')),
+                              ),
+                              if (_savedPath != null &&
+                                  _savedExtension == 'pdf')
+                                TextButton.icon(
+                                  onPressed: () => Navigator.pop(
+                                    context,
+                                    kIsWeb ? _savedResult : _savedPath,
+                                  ),
+                                  icon: const Icon(Icons.open_in_new),
+                                  label: Text(t('결과 열기')),
+                                ),
+                              FilledButton(
+                                onPressed: _editable ? _save : null,
+                                child: Text(
+                                  t(
+                                    kIsWeb
+                                        ? '파일 준비'
+                                        : (_split
+                                              ? '분할 ZIP으로 저장'
+                                              : '새 PDF로 저장'),
+                                  ),
+                                ),
+                              ),
+                            ],
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                ),
+              ),
+            ),
+          ),
+        ),
+      ),
+    );
+  }
 }

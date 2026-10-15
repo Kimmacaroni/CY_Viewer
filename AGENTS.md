@@ -26,3 +26,5 @@
 - 배포 작업 성공과 실제 웹 버전·다운로드 파일·SHA-256을 구분해 확인하고, 미완료 항목을 완료했다고 보고하지 않는다.
 
 - 데스크톱 앱 변경 배포에서는 버전을 반드시 올린다. Mac은 `macos_app/pubspec.yaml`, Windows는 `native_windows/version.py`와 `installer/CYViewer.iss`를 함께 갱신한다. 그래야 기존 앱이 새 릴리스를 감지한다.
+
+- UI 작업은 사용자가 지정한 Apple HIG 기준을 `docs/CY_DESIGN_SYSTEM.md`의 최신 Apple 항목에서 확인한다. 플랫폼별 관례와 접근성·한국어·밝은/어두운 외형을 함께 검증한다.

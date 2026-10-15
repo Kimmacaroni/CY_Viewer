@@ -47,7 +47,7 @@ class RoundedButton(tk.Canvas):
     def __init__(self, parent: tk.Widget, text: str, command, variant: str = "secondary") -> None:
         compact = text in {"+", "−", "☆"}
         self.height = 48 if variant == "primary" else 44
-        self.radius = 10
+        self.radius = 8
         self.command = command
         self.text = text
         self.variant = variant
@@ -76,7 +76,7 @@ class RoundedButton(tk.Canvas):
 
     def _palette(self) -> tuple[str, str]:
         if self.variant == "primary":
-            return (COLORS["blue"], COLORS["on_blue"])
+            return (COLORS["blue_pressed"] if self.pressed else COLORS["blue_hover"] if self.hovered else COLORS["blue"], COLORS["on_blue"])
         return (COLORS["blue_soft"] if self.hovered or self.pressed or self.variant == "selected" else COLORS["surface"], COLORS["ink"])
 
     def _draw(self) -> None:
@@ -94,7 +94,7 @@ class RoundedButton(tk.Canvas):
         )
         if focused and self.variant == "primary":
             ImageDraw.Draw(surface).rounded_rectangle(
-                (3, 3, width - 4, height - 4), radius=max(1, radius - 2), outline="white", width=2
+                (3, 3, width - 4, height - 4), radius=max(1, radius - 2), outline=COLORS["on_blue"], width=2
             )
         self.surface_image = ImageTk.PhotoImage(surface)
         self.create_image(0, 0, anchor="nw", image=self.surface_image)
@@ -239,11 +239,15 @@ class CyViewer(TkinterDnD.Tk):
         style = ttk.Style(self)
         style.theme_use("clam")
         style.configure('.', background=COLORS['surface'], foreground=COLORS['ink'], font=('Malgun Gothic',10))
+        style.configure('TButton', padding=(12, 7))
+        style.configure('TCheckbutton', padding=(4, 6))
+        style.configure('Primary.TButton', background=COLORS['blue'], foreground=COLORS['on_blue'])
+        style.map('Primary.TButton', background=[('disabled', COLORS['line']), ('active', COLORS['blue'])], foreground=[('disabled', COLORS['muted']), ('!disabled', COLORS['on_blue'])])
         style.configure('TEntry', fieldbackground=COLORS['surface'], foreground=COLORS['ink'])
         style.configure('TCombobox', fieldbackground=COLORS['surface'], foreground=COLORS['ink'])
         style.map('TButton', background=[('active',COLORS['blue_soft'])])
 
-        header = tk.Frame(self, bg=COLORS["surface"], padx=24, pady=16)
+        header = tk.Frame(self, bg=COLORS["surface"], padx=20, pady=10)
         header.pack(fill="x")
         brand = tk.Frame(header,bg=COLORS['surface'])
         brand.grid(row=0,column=0,sticky='w')
@@ -308,10 +312,10 @@ class CyViewer(TkinterDnD.Tk):
                 rail_canvas.yview_moveto(max(0, y - 12) / max(sidebar.winfo_height(), 1))
         self.bind("<FocusIn>", reveal_focused, add="+")
         self._button(sidebar, tr('＋  PDF 열기'), self.open_pdf, "Primary.TButton").pack(fill="x", pady=(0, 20))
-        navigation = self._section(sidebar, tr('01  문서 탐색'))
+        navigation = self._section(sidebar, tr('문서 탐색'))
         self._button(navigation, tr('이 페이지 책갈피'), self.toggle_bookmark).pack(fill='x', pady=(0, 4))
         self._button(navigation, tr('책갈피 목록'), self.show_bookmarks).pack(fill='x')
-        editing = self._section(sidebar, tr('02  선택·편집'))
+        editing = self._section(sidebar, tr('선택·편집'))
         tk.Label(
             editing,
             text=tr('문구를 드래그해 선택한 뒤\n마우스 오른쪽 버튼을 누르세요.\n\n형광펜 · 밑줄 · 취소선 · 굵게\n문구 수정 · 텍스트 복사를 제공합니다.'),
@@ -320,7 +324,7 @@ class CyViewer(TkinterDnD.Tk):
         ).pack(fill="x", pady=(0, 6))
         self._button(editing, tr('PDF 도구'), lambda: PdfToolsDialog(self, COLORS)).pack(fill='x', pady=(8, 0))
         self._button(editing, tr('문서 전체 OCR'), self.ocr_document).pack(fill='x', pady=(8, 0))
-        save_actions = self._section(sidebar, tr('03  저장·내보내기'))
+        save_actions = self._section(sidebar, tr('저장·내보내기'))
         self._button(save_actions, tr('PDF로 저장'), self.save_as).pack(fill="x", pady=(0, 8))
         image_saves = tk.Frame(save_actions, bg=COLORS["sidebar"])
         image_saves.pack(fill="x", pady=(0, 8))
