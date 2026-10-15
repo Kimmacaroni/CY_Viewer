@@ -11,16 +11,20 @@ sys.stderr.reconfigure(encoding="utf-8")
 
 ROOT = Path(__file__).resolve().parent.parent
 MANIFEST = ROOT / 'pdfcraft_bridge' / 'Cargo.toml'
-OUT = ROOT / 'build' / 'pdfcraft'
+WEB = '--web' in sys.argv
+OUT = ROOT / 'macos_app' / 'web' / 'pdfcraft' if WEB else ROOT / 'build' / 'pdfcraft'
 OUT.mkdir(parents=True, exist_ok=True)
 
 def cargo(command, *args):
     subprocess.run(['cargo', command, '--manifest-path', str(MANIFEST), *args], check=True)
 
 host = next(line.split(': ', 1)[1] for line in subprocess.check_output(['rustc', '-vV'], text=True).splitlines() if line.startswith('host: '))
-notice_targets = ['aarch64-apple-darwin', 'x86_64-apple-darwin'] if sys.platform == 'darwin' else [host]
+notice_targets = ['wasm32-unknown-unknown'] if WEB else (['aarch64-apple-darwin', 'x86_64-apple-darwin'] if sys.platform == 'darwin' else [host])
 cargo('test', '--locked')
-if sys.platform == 'darwin':
+if WEB:
+    cargo('build', '--locked', '--release', '--lib', '--target', 'wasm32-unknown-unknown')
+    subprocess.run([os.environ.get('CY_WASM_BINDGEN', 'wasm-bindgen'), str(ROOT / 'pdfcraft_bridge' / 'target' / 'wasm32-unknown-unknown' / 'release' / 'cy_pdfcraft.wasm'), '--target', 'no-modules', '--no-typescript', '--out-dir', str(OUT)], check=True)
+elif sys.platform == 'darwin':
     targets = ['aarch64-apple-darwin', 'x86_64-apple-darwin']
     subprocess.run(['rustup', 'target', 'add', *targets], check=True)
     for target in targets:

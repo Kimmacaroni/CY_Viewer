@@ -21,6 +21,9 @@ import 'cy_recent_files.dart';
 import 'web_inline_print.dart';
 import 'web_native_control.dart';
 import 'web_print_platform.dart';
+import 'pdfcraft_dialog.dart';
+import 'pdfcraft_service.dart';
+import 'pdf_password_dialog.dart';
 
 Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -395,6 +398,55 @@ class _WebReaderPageState extends State<_WebReaderPage> {
   final _searchInput = TextEditingController();
   PdfTextSearcher? _searcher;
   bool _remembered = false;
+  String? _openedPassword;
+  int _passwordAttempts = 0;
+  bool _passwordConfirmed = false;
+  Future<String?> _providePassword() async {
+    if (!mounted) return null;
+    if (_passwordConfirmed && _openedPassword != null) {
+      _passwordConfirmed = false;
+      return _openedPassword;
+    }
+    final password = await showDialog<String>(
+      context: context,
+      barrierDismissible: false,
+      builder: (_) =>
+          PdfPasswordDialog(name: widget.name, retry: _passwordAttempts > 0),
+    );
+    if (!mounted) return null;
+    _passwordAttempts++;
+    _openedPassword = password;
+    return password;
+  }
+
+  Future<void> _organizePages() async {
+    if (_pageCount < 1) return;
+    final result = await showDialog<PdfcraftResult>(
+      context: context,
+      barrierDismissible: false,
+      builder: (_) => PdfcraftDialog(
+        source: PdfcraftSource(
+          widget.name,
+          widget.bytes,
+          password: _openedPassword,
+        ),
+        pageCount: _pageCount,
+      ),
+    );
+    if (result != null && mounted) {
+      await Navigator.of(context).push<void>(
+        MaterialPageRoute<void>(
+          builder: (_) => _WebReaderPage(
+            name:
+                '${widget.name.replaceFirst(RegExp(r'\.pdf$', caseSensitive: false), '')}-edited.pdf',
+            bytes: result.bytes,
+            onOpened: () {},
+          ),
+        ),
+      );
+    }
+  }
+
   int _pageCount = 0;
   int _currentPage = 1;
   bool _searching = false;
@@ -622,6 +674,11 @@ class _WebReaderPageState extends State<_WebReaderPage> {
                 subtitle: Text(tr(context, "읽기와 저장 기능")),
               ),
               ListTile(
+                leading: const Icon(Icons.library_books_outlined),
+                title: Text(tr(context, 'PDF 도구')),
+                onTap: _pageCount == 0 ? null : () => run(_organizePages),
+              ),
+              ListTile(
                 leading: Icon(Icons.bookmarks_outlined),
                 title: Text(tr(context, "책갈피 목록")),
                 onTap: () => run(_showBookmarks),
@@ -761,6 +818,12 @@ class _WebReaderPageState extends State<_WebReaderPage> {
             : [
                 const DriveStatus(),
                 if (!CyReaderWorkspace.isWide(context))
+                  TextButton.icon(
+                    onPressed: _pageCount == 0 ? null : _organizePages,
+                    icon: const Icon(Icons.library_books_outlined),
+                    label: Text(tr(context, 'PDF 도구')),
+                  ),
+                if (!CyReaderWorkspace.isWide(context))
                   IconButton(
                     tooltip: tr(context, "검색"),
                     onPressed: _searcher == null ? null : _showSearch,
@@ -806,6 +869,11 @@ class _WebReaderPageState extends State<_WebReaderPage> {
             : null,
         onZoomIn: _controller.zoomUp,
         onZoomOut: _controller.zoomDown,
+        editing: TextButton.icon(
+          onPressed: _pageCount == 0 ? null : _organizePages,
+          icon: const Icon(Icons.library_books_outlined),
+          label: Text(tr(context, 'PDF 도구')),
+        ),
         onSave: _saveCopy,
         onPrint: _print,
         printAction: Padding(
@@ -823,6 +891,11 @@ class _WebReaderPageState extends State<_WebReaderPage> {
                 sourceName: '${widget.name}:${widget.bytes.length}',
                 key: ValueKey(_viewMode),
                 controller: _controller,
+                passwordProvider: () {
+                  // 사용자 암호 입력은 문서 준비 시간 제한에 포함하지 않는다.
+                  onReady();
+                  return _providePassword();
+                },
                 params: PdfViewerParams(
                   loadingBannerBuilder: (context, _, _) => Center(
                     child: Column(
@@ -869,6 +942,7 @@ class _WebReaderPageState extends State<_WebReaderPage> {
                     ),
                   ),
                   onViewerReady: (document, _) {
+                    _passwordConfirmed = _openedPassword != null;
                     if (!_remembered) {
                       _remembered = true;
                       widget.onOpened();

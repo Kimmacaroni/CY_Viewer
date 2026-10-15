@@ -11,22 +11,41 @@ from pdfcraft import tools_request, parse_pages, save_copy
 
 
 class PdfToolsDialog(tk.Toplevel):
-    TASKS = ['페이지 회전', '페이지 삭제', '빈 페이지 삽입', 'PDF 분할', '문서 정보', '문서 책갈피', '암호 설정·해제']
+    TASKS = ['페이지 회전', '페이지 삭제', '빈 페이지 삽입', 'PDF 분할', '문서 정보', '문서 책갈피', '암호 설정·해제', '페이지 순서·추출']
 
     def __init__(self, parent, colors):
         super().__init__(parent)
         self.parent, self.colors = parent, colors
         self.busy = False
         self.info = None
+        self.plan = None
+        self.undo_stack, self.redo_stack = [], []
+        self.page_form_applied = False
+        self.applied_tasks = set()
+        self.result_path = None
         self.snapshot = parent.document.tobytes(encryption=pymupdf.PDF_ENCRYPT_KEEP)
         self.original = parent.document_path
         self.title(tr('PDF 도구'))
-        self.geometry('650x730')
+        self.geometry(f'650x{min(810, max(500, self.winfo_screenheight() - 100))}')
         self.transient(parent)
         self.grab_set()
         self.protocol('WM_DELETE_WINDOW', self.close)
-        body = ttk.Frame(self, padding=20)
-        body.pack(fill='both', expand=True)
+        actions = ttk.Frame(self, padding=16)
+        actions.pack(side='bottom', fill='x')
+        scroller = ttk.Frame(self)
+        scroller.pack(fill='both', expand=True)
+        canvas = tk.Canvas(scroller, highlightthickness=0, takefocus=True, bg=colors.get('surface', '#FFFFFF'))
+        scrollbar = ttk.Scrollbar(scroller, orient='vertical', command=canvas.yview)
+        scrollbar.pack(side='right', fill='y')
+        canvas.configure(yscrollcommand=scrollbar.set)
+        canvas.pack(side='left', fill='both', expand=True)
+        body = ttk.Frame(canvas, padding=20)
+        window = canvas.create_window((0, 0), window=body, anchor='nw')
+        body.bind('<Configure>', lambda _: canvas.configure(scrollregion=canvas.bbox('all')))
+        canvas.bind('<Configure>', lambda event: canvas.itemconfigure(window, width=event.width))
+        self.bind('<MouseWheel>', lambda event: canvas.yview_scroll(-1 if event.delta > 0 else 1, 'units'))
+        self.bind('<Button-4>', lambda _: canvas.yview_scroll(-1, 'units'))
+        self.bind('<Button-5>', lambda _: canvas.yview_scroll(1, 'units'))
         ttk.Label(body, text=self.original.name if self.original else 'PDF', font=('Malgun Gothic', 13, 'bold')).pack(anchor='w')
         ttk.Label(body, text=tr('변경은 새 파일에 저장합니다. 원본은 유지됩니다.')).pack(anchor='w', pady=(4, 12))
         row = ttk.Frame(body)
@@ -41,6 +60,20 @@ class PdfToolsDialog(tk.Toplevel):
         self.task.current(0)
         self.task.pack(fill='x', pady=16)
         self.task.bind('<<ComboboxSelected>>', lambda _: self.render())
+        history = ttk.Frame(body)
+        history.pack(fill='x', pady=(0, 8))
+        self.apply_button = ttk.Button(history, text=tr('페이지 변경 적용'), command=self.apply_pages)
+        self.apply_button.pack(side='left')
+        self.undo_button = ttk.Button(history, text=tr('되돌리기'), command=lambda: self.history(True), state='disabled')
+        self.undo_button.pack(side='left', padx=4)
+        self.redo_button = ttk.Button(history, text=tr('다시 실행'), command=lambda: self.history(False), state='disabled')
+        self.redo_button.pack(side='left')
+        ttk.Label(body, text=tr('페이지 목록을 드래그해 순서를 바꿀 수 있습니다.')).pack(anchor='w')
+        self.page_list = tk.Listbox(body, height=4, exportselection=False, bg=colors.get('surface', '#FFFFFF'), fg=colors.get('ink', '#182235'), selectbackground=colors.get('blue', '#245EDB'), selectforeground=colors.get('on_blue', '#FFFFFF'))
+        self.page_list.pack(fill='x', pady=(4, 8))
+        self.drag_start = None
+        self.page_list.bind('<ButtonPress-1>', lambda event: setattr(self, 'drag_start', self.page_list.nearest(event.y)))
+        self.page_list.bind('<ButtonRelease-1>', self.drag_page)
         self.form = ttk.Frame(body)
         self.form.pack(fill='both', expand=True)
         self.security = ttk.Combobox(body, state='readonly', values=[tr('암호 변경 안 함'), tr('새 암호 설정'), tr('암호 해제')])
@@ -53,11 +86,11 @@ class PdfToolsDialog(tk.Toplevel):
         ttk.Label(body, text=tr('새 암호 설정 시 위 두 칸에 같은 암호를 입력하세요.'), wraplength=600).pack(anchor='w')
         self.status = ttk.Label(body, text=tr('문서를 확인하고 있습니다…'), wraplength=600)
         self.status.pack(fill='x', pady=12)
-        actions = ttk.Frame(body)
-        actions.pack(fill='x')
         ttk.Button(actions, text=tr('페이지 추출·병합'), command=self.compose).pack(side='left')
         self.save_button = ttk.Button(actions, text=tr('새 파일로 저장'), command=self.save, state='disabled')
         self.save_button.pack(side='right')
+        self.open_button = ttk.Button(actions, text=tr('결과 열기'), command=self.open_result, state='disabled')
+        self.open_button.pack(side='right', padx=8)
         self.fields = {}
         self.inspect()
 
@@ -109,6 +142,8 @@ class PdfToolsDialog(tk.Toplevel):
     def inspect(self):
         def loaded(result):
             self.info = result[0]
+            if self.plan is None:
+                self.plan = [{'index': i, 'rotation': 0} for i in range(self.info['pages'])]
             self.render()
             if self.info['signed']:
                 self.status.config(text=tr('전자서명된 PDF는 편집할 수 없습니다.'))
@@ -121,8 +156,10 @@ class PdfToolsDialog(tk.Toplevel):
 
     def field(self, label, value=''):
         ttk.Label(self.form, text=tr(label)).pack(anchor='w', pady=(8, 4))
-        entry = ttk.Entry(self.form)
-        entry.insert(0, str(value))
+        variable = tk.StringVar(value=str(value))
+        variable.trace_add('write', lambda *_: self.input_changed())
+        entry = ttk.Entry(self.form, textvariable=variable)
+        entry._variable = variable
         entry.pack(fill='x')
         self.fields[label] = entry
         return entry
@@ -133,7 +170,15 @@ class PdfToolsDialog(tk.Toplevel):
         self.fields = {}
         if not self.info:
             return
-        task, count = self.task.current(), self.info['pages']
+        task, count = self.task.current(), len(self.plan)
+        self.page_form_applied = task in self.applied_tasks
+        self.page_list.delete(0, 'end')
+        for position, page in enumerate(self.plan):
+            label = tr('빈 페이지') if page['index'] is None else tr('원본 {0}쪽', str(page['index'] + 1))
+            self.page_list.insert('end', f"{position + 1}. {label} · {page['rotation']}°")
+        self.undo_button.state(['!disabled'] if self.undo_stack else ['disabled'])
+        self.redo_button.state(['!disabled'] if self.redo_stack else ['disabled'])
+        self.apply_button.state(['!disabled'] if task in (0, 1, 2, 7) else ['disabled'])
         if task in (0, 1):
             self.field('대상 페이지', f'1-{count}')
             ttk.Label(self.form, text=tr('예: 1-3, 5')).pack(anchor='w', pady=8)
@@ -148,6 +193,9 @@ class PdfToolsDialog(tk.Toplevel):
         elif task == 4:
             for key, label in [('Title', '제목'), ('Author', '작성자'), ('Subject', '주제'), ('Keywords', '키워드')]:
                 self.field(label, self.info['metadata'].get(key, ''))
+        elif task == 7:
+            self.field('페이지 순서·추출', ','.join(str(i + 1) for i in range(count)))
+            ttk.Label(self.form, text=tr('예: 3, 1, 2 또는 1-3, 5')).pack(anchor='w', pady=8)
         elif task == 5:
             self.bookmark_action = ttk.Combobox(self.form, state='readonly', values=[tr('책갈피 추가'), tr('책갈피 수정'), tr('책갈피 삭제')])
             self.bookmark_action.current(0)
@@ -166,26 +214,29 @@ class PdfToolsDialog(tk.Toplevel):
             ttk.Label(self.form, text=tr('아래에서 새 암호 설정 또는 암호 해제를 선택하세요.\n새 암호는 문서 열기와 소유자 암호로 함께 사용합니다.'), wraplength=600).pack(anchor='w', pady=16)
 
     def options(self):
-        task, count = self.task.current(), self.info['pages']
+        task, count = self.task.current(), len(self.plan)
         get = lambda name: self.fields[name].get()
         options = {}
-        plan = [{'index': i, 'rotation': 0} for i in range(count)]
-        if task in (0, 1):
+        plan = [dict(page) for page in self.plan]
+        if task in (0, 1) and not self.page_form_applied:
             chosen = {p - 1 for p in parse_pages(get('대상 페이지'), count)}
             if task == 0:
                 angle = int(get('시계 방향 회전 각도'))
                 if angle not in (90, 180, 270):
                     raise ValueError('회전 각도는 90, 180, 270 중에서 선택하세요.')
-                for p in plan:
-                    if p['index'] in chosen: p['rotation'] = angle
+                for index, p in enumerate(plan):
+                    if index in chosen: p['rotation'] = (p['rotation'] + angle) % 360
             else:
-                plan = [p for p in plan if p['index'] not in chosen]
+                plan = [p for index, p in enumerate(plan) if index not in chosen]
                 if not plan: raise ValueError('문서는 최소 한 페이지를 유지해야 합니다.')
             options['page_plan'] = plan
-        elif task == 2:
+        elif task == 2 and not self.page_form_applied:
             at = int(get('삽입할 위치 (1부터 마지막 다음까지)'))
             if not 1 <= at <= count + 1: raise ValueError('삽입할 페이지 위치가 올바르지 않습니다.')
             plan.insert(at - 1, {'index': None, 'rotation': 0})
+            options['page_plan'] = plan
+        elif task == 7 and not self.page_form_applied:
+            plan = [plan[i - 1] for i in parse_pages(get('페이지 순서·추출'), count)]
             options['page_plan'] = plan
         elif task == 3:
             options['split_every'] = int(get('몇 쪽마다 나눌까요?'))
@@ -202,6 +253,8 @@ class PdfToolsDialog(tk.Toplevel):
             if action != 2:
                 edit.update({'title': get('책갈피 이름'), 'page': int(get('원본 쪽'))})
             options['bookmarks'] = [edit]
+        if 'page_plan' not in options and self.plan != [{'index': i, 'rotation': 0} for i in range(self.info['pages'])]:
+            options['page_plan'] = plan
         security = self.security.current()
         if security == 1:
             password = self.new_password.get()
@@ -211,6 +264,66 @@ class PdfToolsDialog(tk.Toplevel):
             options['remove_password'] = True
         if task == 6 and security == 0: raise ValueError('새 암호 설정 또는 암호 해제를 선택하세요.')
         return options
+
+    def input_changed(self):
+        self.page_form_applied = False
+        self.result_path = None
+        if hasattr(self, 'open_button'):
+            self.open_button.state(['disabled'])
+
+    def commit_plan(self, plan):
+        self.undo_stack.append([dict(page) for page in self.plan])
+        self.undo_stack = self.undo_stack[-30:]
+        self.redo_stack.clear()
+        self.plan = plan
+        self.applied_tasks.add(self.task.current())
+        self.render()
+        self.page_form_applied = True
+        self.result_path = None
+        self.open_button.state(['disabled'])
+
+    def apply_pages(self):
+        if self.busy or not self.info or self.task.current() not in (0, 1, 2, 7):
+            return
+        previous = self.page_form_applied
+        try:
+            # 적용 버튼을 다시 누른 경우에만 같은 입력을 새 작업으로 실행한다.
+            self.page_form_applied = False
+            self.commit_plan(self.options().get('page_plan', self.plan))
+            self.status.config(text=tr('페이지 변경을 적용했습니다. 새 파일로 저장하세요.'))
+        except Exception as error:
+            self.page_form_applied = previous
+            self.status.config(text=tr(str(error)))
+
+    def history(self, undo):
+        if self.busy:
+            return
+        source, target = (self.undo_stack, self.redo_stack) if undo else (self.redo_stack, self.undo_stack)
+        if not source:
+            return
+        target.append([dict(page) for page in self.plan])
+        self.plan = source.pop()
+        self.applied_tasks.add(self.task.current())
+        self.render()
+        self.page_form_applied = True
+        self.result_path = None
+        self.open_button.state(['disabled'])
+
+    def drag_page(self, event):
+        if self.busy or self.plan is None or self.drag_start is None:
+            return
+        end = self.page_list.nearest(event.y)
+        if self.drag_start != end:
+            plan = [dict(page) for page in self.plan]
+            plan.insert(end, plan.pop(self.drag_start))
+            self.commit_plan(plan)
+        self.drag_start = None
+
+    def open_result(self):
+        if self.result_path and not self.busy:
+            path = self.result_path
+            self.close()
+            self.parent.load_pdf(path)
 
     def save(self):
         if self.busy or not self.info:
@@ -227,6 +340,8 @@ class PdfToolsDialog(tk.Toplevel):
             def saved(result):
                 report, data = result
                 save_copy(data, destination, [self.original] if self.original else [])
+                self.result_path = destination if extension == 'pdf' else None
+                self.open_button.state(['!disabled'] if self.result_path else ['disabled'])
                 self.status.config(text=tr('새 파일을 저장했습니다. 원본은 변경하지 않았습니다.') + '\n' + str(destination))
             self.run(options, saved)
         except Exception as error:

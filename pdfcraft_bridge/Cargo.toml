@@ -1,16 +1,26 @@
 [package]
 name = "cy-pdfcraft"
-version = "0.2.0"
+version = "0.3.0"
 edition = "2024"
 rust-version = "1.95"
 license = "MIT"
+
+[lib]
+crate-type = ["cdylib", "rlib"]
 
 [dependencies]
 pdfcraft-cos = { git = "https://github.com/storytold/pdfcraft", rev = "d9607ec3befcda3e78062ceb5e54b97563aedad1" }
 pdfcraft-organize = { git = "https://github.com/storytold/pdfcraft", rev = "d9607ec3befcda3e78062ceb5e54b97563aedad1" }
 serde = { version = "1", features = ["derive"] }
 serde_json = "1"
+[target.'cfg(not(target_arch = "wasm32"))'.dependencies]
 getrandom = "0.4"
+
+[target.'cfg(target_arch = "wasm32")'.dependencies]
+getrandom = { version = "0.4", features = ["wasm_js"] }
+wasm-bindgen = "=0.2.126"
+js-sys = "0.3"
+
 
 [profile.release]
 lto = "thin"
