@@ -94,7 +94,7 @@ class RoundedButton(tk.Canvas):
         )
         if focused and self.variant == "primary":
             ImageDraw.Draw(surface).rounded_rectangle(
-                (3, 3, width - 4, height - 4), radius=max(1, radius - 2), outline="white", width=2
+                (3, 3, width - 4, height - 4), radius=max(1, radius - 2), outline=COLORS["on_blue"], width=2
             )
         self.surface_image = ImageTk.PhotoImage(surface)
         self.create_image(0, 0, anchor="nw", image=self.surface_image)
