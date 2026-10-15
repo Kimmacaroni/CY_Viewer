@@ -664,9 +664,20 @@ class CyViewer(TkinterDnD.Tk):
                 try: save_library(self.library_state)
                 except OSError: pass
             opened_document = pymupdf.open(str(selected))
+            password = ''
+            if opened_document.needs_pass:
+                while True:
+                    password = simpledialog.askstring(tr('PDF 암호 입력'), selected.name + '\n' + tr('현재 PDF 암호'), show='•', parent=self)
+                    if password is None:
+                        opened_document.close()
+                        return
+                    if opened_document.authenticate(password):
+                        break
+                    messagebox.showwarning(tr('PDF 암호 입력'), tr('현재 암호가 올바르지 않습니다.'), parent=self)
             if self.document:
                 self.document.close()
             self.document = opened_document
+            self._document_password = password
             self.document_path = selected
             self.page_number = min(max(0,self.library_state.get(str(selected.resolve()),{}).get('page',1)-1),max(0,len(opened_document)-1))
             self.zoom = 1.2

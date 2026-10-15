@@ -33,6 +33,7 @@ class PdfToolsDialog(tk.Toplevel):
         row.pack(fill='x')
         ttk.Label(row, text=tr('현재 PDF 암호')).pack(side='left')
         self.password = ttk.Entry(row, show='•')
+        self.password.insert(0, getattr(parent, '_document_password', ''))
         self.password.pack(side='left', fill='x', expand=True, padx=8)
         self.inspect_button = ttk.Button(row, text=tr('문서 확인'), command=self.inspect)
         self.inspect_button.pack(side='left')

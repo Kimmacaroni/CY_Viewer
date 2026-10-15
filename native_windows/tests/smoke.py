@@ -5,7 +5,7 @@ import tempfile
 import shutil
 import tkinter as tk
 from types import SimpleNamespace
-from tkinter import messagebox, filedialog, ttk
+from tkinter import messagebox, filedialog, ttk, simpledialog
 import time
 
 sys.stdout.reconfigure(encoding="utf-8")
@@ -105,6 +105,42 @@ try:
             dialog.destroy()
         finally:
             filedialog.asksaveasfilename = old_save
+        # 암호 문서를 실제 리더에서 재입력해 열고 PDF 도구로 암호를 해제한다.
+        encrypted = Path(directory) / 'encrypted.pdf'
+        with pymupdf.open(path) as source:
+            source.save(encrypted, encryption=pymupdf.PDF_ENCRYPT_AES_256, owner_pw='smoke-secret', user_pw='smoke-secret')
+        old_ask, old_warning = simpledialog.askstring, messagebox.showwarning
+        old_save = filedialog.asksaveasfilename
+        warnings = []
+        attempts = iter(['wrong', 'smoke-secret'])
+        simpledialog.askstring = lambda *args, **kwargs: next(attempts)
+        messagebox.showwarning = lambda *args, **kwargs: warnings.append(True)
+        try:
+            app.load_pdf(encrypted)
+            app.update()
+            assert app.document_path == encrypted and len(warnings) == 1
+            assert app._document_password == 'smoke-secret'
+            dialog = PdfToolsDialog(app, {})
+            wait_tools()
+            assert dialog.info['encrypted'] and dialog.info['owner']
+            output = Path(directory) / 'unlocked.pdf'
+            filedialog.asksaveasfilename = lambda **kwargs: str(output)
+            dialog.task.current(6)
+            dialog.render()
+            dialog.security.current(2)
+            dialog.save_button.invoke()
+            wait_tools()
+            with pymupdf.open(output) as result:
+                assert not result.needs_pass and len(result) == 2
+            dialog.destroy()
+            app.load_pdf(path)
+            simpledialog.askstring = lambda *args, **kwargs: None
+            app.load_pdf(encrypted)
+            assert app.document_path == path
+            assert app._document_password == ''
+        finally:
+            simpledialog.askstring, messagebox.showwarning = old_ask, old_warning
+            filedialog.asksaveasfilename = old_save
         app.next_page()
         assert app.page_number == 1
         app.toggle_bookmark()
@@ -181,4 +217,4 @@ try:
         app.document = None
 finally:
     app.destroy()
-print("Windows 시작 화면, PDF 렌더링, 페이지 이동, 책갈피 검사 통과")
+print("Windows 시작 화면·PDF 렌더링·페이지 이동·책갈피·회전·분할 ZIP·암호 재입력·해제 저장 검사 통과")
