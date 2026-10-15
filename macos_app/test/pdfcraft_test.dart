@@ -3,6 +3,7 @@ import 'dart:typed_data';
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:cy_viewer/pdfcraft_dialog.dart';
+import 'package:cy_viewer/cy_design.dart';
 import 'package:cy_viewer/pdfcraft_service.dart';
 
 class TestBackend implements PdfcraftBackend {
@@ -75,6 +76,36 @@ void main() {
     await tester.pumpAndSettle();
     expect(find.byType(TextField), findsOneWidget);
     expect(find.byType(FilledButton), findsOneWidget);
+    expect(tester.takeException(), isNull);
+  });
+  testWidgets('Mac 기본 창에서 스크롤 없이 회전·삭제·빈 페이지 도구를 쓴다', (tester) async {
+    tester.view.physicalSize = const Size(800, 600);
+    tester.view.devicePixelRatio = 1;
+    addTearDown(tester.view.resetPhysicalSize);
+    addTearDown(tester.view.resetDevicePixelRatio);
+    final backend = TestBackend();
+    await tester.pumpWidget(
+      MaterialApp(
+        theme: CyDesign.theme(Brightness.light),
+        home: PdfcraftDialog(
+          source: PdfcraftSource('test.pdf', Uint8List(0)),
+          pageCount: 4,
+          backend: backend,
+          saveResult: (_) async => '/tmp/result.pdf',
+        ),
+      ),
+    );
+    await tester.pumpAndSettle();
+    await tester.tap(find.byType(Checkbox).first);
+    await tester.pump();
+    for (final label in ['오른쪽 회전', '선택 페이지 삭제', '빈 페이지 삽입']) {
+      expect(find.text(label).hitTestable(), findsOneWidget);
+    }
+    await tester.tap(find.text('오른쪽 회전'));
+    await tester.pump();
+    await tester.tap(find.byType(FilledButton));
+    await tester.pumpAndSettle();
+    expect((backend.options!['page_plan'] as List).first['rotation'], 90);
     expect(tester.takeException(), isNull);
   });
   testWidgets('회전·빈 페이지·되돌리기를 실제 저장 요청에 반영한다', (tester) async {

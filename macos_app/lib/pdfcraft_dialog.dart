@@ -399,7 +399,7 @@ class _PdfcraftDialogState extends State<PdfcraftDialog> {
         ],
       ),
       SizedBox(
-        height: 230,
+        height: MediaQuery.sizeOf(context).height < 700 ? 112 : 230,
         child: ReorderableListView.builder(
           itemCount: _plan.length,
           buildDefaultDragHandles: false,

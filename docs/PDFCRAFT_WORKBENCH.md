@@ -38,3 +38,5 @@ PdfCraft 고정 커밋은 기존 `d9607ec3befcda3e78062ceb5e54b97563aedad1`이�
 공개 설치 파일과 체크섬 검증 결과는 배포가 완료된 뒤 아래에 기록한다. 사용자 Mac에서 직접 설치·저장창을 클릭했다고 주장하지 않는다.
 
 로컬 검증 결과: Flutter 분석 문제 없음, 전체 56개 통과·PDFium 런타임 1개 및 Mac 전용 2개 제외. Windows 단위 검사 20개·PDF 독립 엔진 검사 8개·다운로드 사이트 검사 4개 통과. Rust 테스트·Clippy 통과. Linux Tk에서 새 회전 PDF와 분할 ZIP의 저장·재열기 통과. Mac 업데이트 Swift 검사와 샌드박스 검사는 해당 OS의 Actions에서 수행한다.
+
+추가로 실제 Flutter 서비스→PdfCraft→PDFium 경로에서 암호 PDF를 생성·검사하고, 암호 해제와 분할 ZIP 재열기를 확인했다. `macos_app/test/pdfcraft_runtime_test.dart`는 `CY_PDFIUM_TEST_LIBRARY`와 빌드된 모듈을 지정해 실행한다. 기본 800×600 창에서 회전·삭제·빈 페이지 도구가 스크롤 없이 보이는지 검사한다.
