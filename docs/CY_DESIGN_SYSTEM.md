@@ -178,3 +178,30 @@ Refero craft-details의 실제 포커스 유지 원칙에 따라 브라우저 �
 | 작업 본문 스크롤 및 고정 저장 | 기존 작은 창 기준 | 800×600과 좁은 웹에서도 주요 행동 유지 |
 
 새 이미지·장식·가짜 미리보기는 추가하지 않으며 기존 토큰·시스템 글꼴·파란 주요 행동을 유지한다.
+
+## Apple HIG 기준 (2026-10-15)
+
+사용자가 Drive의 Apple-Design-AI-Reference.txt를 지정했다. 해당 자료의 적용 원칙을 읽고 공식 macOS·Sidebars·Toolbars·Color·Typography·Sheets·Accessibility·Tab views 원문을 2026-10-15에 대조했다. 원본 Drive 파일은 공개 저장소에 복제하지 않는다. Refero 온라인 검색은 NO_SUBSCRIPTION이므로 사용자가 지정한 Apple 지침과 기존 CY 화면을 직접 구현 기준으로 고정한다.
+
+| 결정 | 공식 근거 | 적용 역할 |
+| --- | --- | --- |
+| 중립 콘텐츠 표면과 의미별 색상 | Color·Accessibility | 본문을 유색 Material tint에서 분리, 밝음·어두움·대비 강화 테마 |
+| 시스템 글꼴과 절제된 크기·굵기 | Typography·Designing for macOS | Apple 시스템 글꼴 호출, Windows 시스템 글꼴 대체, 글꼴 파일 재배포 없음 |
+| 작은 툴바와 이름이 있는 논리 그룹 | Toolbars·Sidebars | 반복 단계 번호 제거, 문서·명령 위계, 기존 기능 발견성 유지 |
+| PDF 도구를 독립된 편집 작업 공간으로 표현 | Sheets·Designing for macOS | AlertDialog 외형 제거, 넓은 본문·고정 저장 영역·작은 화면 전체 화면 |
+| 다섯 영역의 선택 상태를 명확히 표시 | Tab views | 문구가 있는 선택 컨트롤과 내용 영역, 키보드 포커스 유지 |
+| 기존 입력과 저장의 의미 유지 | Accessibility·사용자 문서 | 실제 HTML 입력·다운로드, 원본 보존·오류·완료 안내 |
+
+주 방향은 Apple의 콘텐츠 우선·플랫폼 관례·접근성이다. 기존 CY 파랑은 조작·선택에만 사용한다. 표면은 중립색, 컨트롤 8px·편집 창 12px 모서리, 4·8·12·16·24 간격을 사용한다. 본문에 유리·흐림 효과나 가짜 재질을 얹지 않는다. SF 글꼴·SF Symbols 파일을 배포하지 않으며 기존 아이콘의 의미·접근성 레이블을 유지한다.
+
+Flutter와 Tk 기반의 공통 UI에 HIG의 구조와 동작을 적용한다. AppKit/SwiftUI 시스템 창·Liquid Glass·사용자 지정 macOS accent 색상과 완전히 동일한 구현이라고 주장하지 않는다. Windows는 Windows의 파일 창과 글꼴·키보드를 유지한다. 사용자 지정 색상 및 동작의 차이는 실제 화면과 상태 검사로 확인한다.
+
+공식 출처:
+- https://developer.apple.com/design/human-interface-guidelines/designing-for-macos
+- https://developer.apple.com/design/human-interface-guidelines/toolbars
+- https://developer.apple.com/design/human-interface-guidelines/sidebars
+- https://developer.apple.com/design/human-interface-guidelines/color
+- https://developer.apple.com/design/human-interface-guidelines/typography
+- https://developer.apple.com/design/human-interface-guidelines/sheets
+- https://developer.apple.com/design/human-interface-guidelines/accessibility
+- https://developer.apple.com/design/human-interface-guidelines/tab-views

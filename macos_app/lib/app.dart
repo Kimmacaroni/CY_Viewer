@@ -38,6 +38,11 @@ class PersonalPdfApp extends StatelessWidget {
         supportedLocales: [Locale('ko'), Locale('en')],
         theme: CyDesign.theme(Brightness.light),
         darkTheme: CyDesign.theme(Brightness.dark),
+        highContrastTheme: CyDesign.theme(Brightness.light, highContrast: true),
+        highContrastDarkTheme: CyDesign.theme(
+          Brightness.dark,
+          highContrast: true,
+        ),
         themeMode: ThemeMode.system,
         home: LibraryPage(),
       ),

@@ -1,6 +1,7 @@
 import 'dart:typed_data';
 
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:cy_viewer/pdfcraft_dialog.dart';
 import 'package:cy_viewer/cy_design.dart';
@@ -230,6 +231,40 @@ void main() {
       'page_numbers': true,
     });
     expect(find.text('결과 열기'), findsOneWidget);
+    expect(tester.takeException(), isNull);
+  });
+  testWidgets('작은 화면·큰 글자·대비 강화에서 저장 단축키와 닫기를 유지한다', (tester) async {
+    tester.view.physicalSize = const Size(390, 844);
+    tester.view.devicePixelRatio = 1;
+    addTearDown(tester.view.resetPhysicalSize);
+    addTearDown(tester.view.resetDevicePixelRatio);
+    final backend = TestBackend();
+    await tester.pumpWidget(
+      MaterialApp(
+        theme: CyDesign.theme(Brightness.dark, highContrast: true),
+        home: MediaQuery(
+          data: const MediaQueryData(
+            size: Size(390, 844),
+            textScaler: TextScaler.linear(2),
+            disableAnimations: true,
+          ),
+          child: PdfcraftDialog(
+            source: PdfcraftSource('긴 한글 이름의 문서.pdf', Uint8List(0)),
+            pageCount: 4,
+            backend: backend,
+            saveResult: (_) async => '/tmp/result.pdf',
+          ),
+        ),
+      ),
+    );
+    await tester.pumpAndSettle();
+    expect(find.text('닫기').hitTestable(), findsOneWidget);
+    expect(find.byType(FilledButton).hitTestable(), findsOneWidget);
+    await tester.sendKeyDownEvent(LogicalKeyboardKey.metaLeft);
+    await tester.sendKeyEvent(LogicalKeyboardKey.keyS);
+    await tester.sendKeyUpEvent(LogicalKeyboardKey.metaLeft);
+    await tester.pumpAndSettle();
+    expect(backend.options, isNotNull);
     expect(tester.takeException(), isNull);
   });
 }
