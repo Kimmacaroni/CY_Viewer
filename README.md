@@ -4,11 +4,15 @@ PDF를 읽고, 찾고, 표시하고, 저장하고, 인쇄할 수 있는 개인�
 
 ## 오픈소스 사용 고지
 
-CY뷰어의 Mac·Windows **페이지 구성·병합 기능은 [PdfCraft](https://github.com/storytold/pdfcraft)의 오픈소스 코드(`pdfcraft-cos`, `pdfcraft-organize`)를 활용합니다.** 원본 제작자와 기여자는 **ArtCraft Team 및 PdfCraft contributors**입니다.
+CY뷰어의 Mac·Windows **PDF 도구(페이지 편집·병합·분할·문서 정보·책갈피·암호 기능)는 [PdfCraft](https://github.com/storytold/pdfcraft)의 오픈소스 코드(`pdfcraft-cos`, `pdfcraft-organize`)를 활용합니다.** 원본 제작자와 기여자는 **ArtCraft Team 및 PdfCraft contributors**입니다.
 
 Copyright (c) 2026 ArtCraft Team and the PdfCraft contributors.
 
 PdfCraft는 MIT 또는 Apache-2.0으로 제공되며, CY뷰어는 해당 코드를 **MIT 라이선스 조건으로 사용**합니다. [원본 저작권·MIT 라이선스 전문](pdfcraft_bridge/LICENSE-PDFCRAFT-MIT.txt)을 보존하고, 배포 설치본에 PdfCraft 및 의존성의 라이선스 고지(`THIRD_PARTY_NOTICES.txt`)를 포함합니다. 사용한 원본 커밋과 연결 범위는 [PdfCraft 연결 기록](docs/PDFCRAFT_INTEGRATION.md)에 적었습니다.
+
+## PDF 도구 확장
+
+Mac의 **PDF 도구**에서 회전·삭제·빈 페이지 삽입·드래그 재정렬·선택 추출·병합, 분할 ZIP 저장, 문서 정보·내장 책갈피 편집과 AES-256 암호 설정·변경·해제를 제공한다. 페이지 편집은 되돌리기·다시 실행을 지원한다. Windows도 작업 선택과 페이지 범위 입력으로 같은 PDF 처리 기능을 제공한다. 원본은 유지하며 새 파일로 저장한다. [기능·사용법·검증 범위](docs/PDFCRAFT_WORKBENCH.md)를 참고한다.
 
 ## 다운로드
 

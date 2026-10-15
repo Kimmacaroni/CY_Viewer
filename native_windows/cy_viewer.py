@@ -20,6 +20,7 @@ import uuid
 import queue
 import threading
 from pdfcraft import compose_pdf, parse_pages, save_copy
+from pdf_tools_ui import PdfToolsDialog
 from urllib.parse import quote
 from pathlib import Path
 from tkinter import filedialog, messagebox, simpledialog, ttk
@@ -317,7 +318,7 @@ class CyViewer(TkinterDnD.Tk):
             justify="left", anchor="w", bg=COLORS["sidebar"], fg=COLORS["muted"],
             font=("Malgun Gothic", 9),
         ).pack(fill="x", pady=(0, 6))
-        self._button(editing, tr('페이지 구성·병합'), self.organize_pages).pack(fill='x', pady=(8, 0))
+        self._button(editing, tr('PDF 도구'), lambda: PdfToolsDialog(self, COLORS)).pack(fill='x', pady=(8, 0))
         self._button(editing, tr('문서 전체 OCR'), self.ocr_document).pack(fill='x', pady=(8, 0))
         save_actions = self._section(sidebar, tr('03  저장·내보내기'))
         self._button(save_actions, tr('PDF로 저장'), self.save_as).pack(fill="x", pady=(0, 8))
@@ -663,9 +664,20 @@ class CyViewer(TkinterDnD.Tk):
                 try: save_library(self.library_state)
                 except OSError: pass
             opened_document = pymupdf.open(str(selected))
+            password = ''
+            if opened_document.needs_pass:
+                while True:
+                    password = simpledialog.askstring(tr('PDF 암호 입력'), selected.name + '\n' + tr('현재 PDF 암호'), show='•', parent=self)
+                    if password is None:
+                        opened_document.close()
+                        return
+                    if opened_document.authenticate(password):
+                        break
+                    messagebox.showwarning(tr('PDF 암호 입력'), tr('현재 암호가 올바르지 않습니다.'), parent=self)
             if self.document:
                 self.document.close()
             self.document = opened_document
+            self._document_password = password
             self.document_path = selected
             self.page_number = min(max(0,self.library_state.get(str(selected.resolve()),{}).get('page',1)-1),max(0,len(opened_document)-1))
             self.zoom = 1.2

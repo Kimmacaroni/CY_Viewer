@@ -19,6 +19,7 @@ import 'app_commands.dart';
 import 'cy_design.dart';
 import 'pdfcraft_dialog.dart';
 import 'pdfcraft_service.dart';
+import 'pdf_password_dialog.dart';
 
 enum _ReaderAction {
   bookmark,
@@ -67,6 +68,28 @@ class _AdvancedPdfReaderPageState extends State<AdvancedPdfReaderPage> {
   final _searchInput = TextEditingController();
   PdfTextSearcher? _searcher;
   bool _reportedOpened = false;
+  String? _openedPassword;
+  bool _passwordConfirmed = false;
+  int _passwordAttempts = 0;
+
+  Future<String?> _providePassword() async {
+    if (!mounted) return null;
+    if (_passwordConfirmed && _openedPassword != null) {
+      _passwordConfirmed = false;
+      return _openedPassword;
+    }
+    final password = await showDialog<String>(
+      context: context,
+      barrierDismissible: false,
+      builder: (_) =>
+          PdfPasswordDialog(name: widget.name, retry: _passwordAttempts > 0),
+    );
+    if (!mounted) return null;
+    _passwordAttempts++;
+    _openedPassword = password;
+    return password;
+  }
+
   int _pageCount = 0;
   int _currentPage = 1;
   List<int> _bookmarks = [];
@@ -408,7 +431,7 @@ class _AdvancedPdfReaderPageState extends State<AdvancedPdfReaderPage> {
     if (_busy || _pdfData == null || _pageCount < 1 || !Platform.isMacOS) {
       return;
     }
-    await showDialog<void>(
+    final resultPath = await showDialog<String>(
       context: context,
       barrierDismissible: false,
       builder: (_) => PdfcraftDialog(
@@ -416,11 +439,23 @@ class _AdvancedPdfReaderPageState extends State<AdvancedPdfReaderPage> {
           widget.name,
           _pdfData!,
           originalPath: widget.path,
+          password: _openedPassword,
         ),
         pageCount: _pageCount,
         hasTemporaryMarks: _marks.isNotEmpty,
       ),
     );
+    if (resultPath != null && mounted) {
+      await Navigator.of(context).push<int>(
+        MaterialPageRoute<int>(
+          builder: (_) => AdvancedPdfReaderPage(
+            path: resultPath,
+            name: File(resultPath).uri.pathSegments.last,
+            initialPage: 1,
+          ),
+        ),
+      );
+    }
   }
 
   Future<void> _export(_ExportFormat format) async {
@@ -653,7 +688,7 @@ class _AdvancedPdfReaderPageState extends State<AdvancedPdfReaderPage> {
               if (Platform.isMacOS)
                 ListTile(
                   leading: Icon(Icons.library_books_outlined),
-                  title: Text(tr(context, "페이지 구성·병합")),
+                  title: Text(tr(context, "PDF 도구")),
                   onTap: _busy ? null : () => run(_organizePages),
                 ),
               ListTile(
@@ -832,7 +867,7 @@ class _AdvancedPdfReaderPageState extends State<AdvancedPdfReaderPage> {
                           ? null
                           : _organizePages,
                       icon: const Icon(Icons.library_books_outlined),
-                      label: Text(tr(context, '페이지 구성')),
+                      label: Text(tr(context, 'PDF 도구')),
                     ),
                   if (!CyReaderWorkspace.isWide(context))
                     IconButton(
@@ -893,7 +928,7 @@ class _AdvancedPdfReaderPageState extends State<AdvancedPdfReaderPage> {
                 TextButton.icon(
                   onPressed: _busy || _pageCount == 0 ? null : _organizePages,
                   icon: Icon(Icons.library_books_outlined),
-                  label: Text(tr(context, "페이지 구성·병합")),
+                  label: Text(tr(context, "PDF 도구")),
                 ),
               OutlinedButton.icon(
                 onPressed: _busy ? null : _runOcr,
@@ -929,6 +964,7 @@ class _AdvancedPdfReaderPageState extends State<AdvancedPdfReaderPage> {
                   sourceName: '${widget.path}:${_pdfData!.length}',
                   key: ValueKey(_viewMode),
                   controller: _controller,
+                  passwordProvider: _providePassword,
                   params: PdfViewerParams(
                     errorBannerBuilder: (context, error, _, _) {
                       debugPrint(tr(context, "PDF 열기 실패: {0}", [error]));
@@ -987,6 +1023,7 @@ class _AdvancedPdfReaderPageState extends State<AdvancedPdfReaderPage> {
                       },
                     ),
                     onViewerReady: (document, _) async {
+                      _passwordConfirmed = _openedPassword != null;
                       if (!_reportedOpened) {
                         _reportedOpened = true;
                         widget.onOpened?.call();

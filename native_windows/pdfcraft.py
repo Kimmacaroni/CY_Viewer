@@ -79,3 +79,43 @@ def save_copy(data: bytes, destination: Path, originals: list[Path]) -> None:
     finally:
         if staging and Path(staging).exists():
             Path(staging).unlink()
+
+
+def tools_request(snapshot: bytes, title: str, options: dict, password: str = '', helper: Path | None = None) -> tuple[dict, bytes]:
+    """문서 검사 또는 편집을 실행한다. 분할 결과는 ZIP으로 묶는다."""
+    import zipfile
+    import io
+    executable = helper or helper_path()
+    if not executable.is_file():
+        raise RuntimeError('페이지 처리 모듈이 없습니다. 최신 CY뷰어 설치 파일로 다시 설치하세요.')
+    with tempfile.TemporaryDirectory(prefix='cy-tools-') as directory:
+        root = Path(directory)
+        source = root / 'source.pdf'
+        source.write_bytes(snapshot)
+        request = dict(options)
+        request.update({'sources': [{'path': str(source), 'title': title, 'password': password or None}], 'output': str(root / 'result.pdf')})
+        result = subprocess.run([str(executable)], input=json.dumps(request, ensure_ascii=False).encode('utf-8'), capture_output=True, timeout=180, creationflags=getattr(subprocess, 'CREATE_NO_WINDOW', 0))
+        if result.returncode:
+            raise RuntimeError(result.stderr.decode('utf-8', errors='replace').strip()[:2000])
+        report = json.loads(result.stdout)
+        if options.get('inspect'):
+            return report, b''
+        outputs = []
+        for info in report['files']:
+            path = Path(info['path'])
+            if path.parent.resolve() != root.resolve():
+                raise RuntimeError('결과 파일 경로가 올바르지 않습니다.')
+            data = path.read_bytes()
+            with pymupdf.open(stream=data, filetype='pdf') as doc:
+                if doc.needs_pass and not doc.authenticate(options.get('new_password', '')):
+                    raise RuntimeError('결과 PDF의 암호를 확인할 수 없습니다.')
+                if len(doc) != info['pages']:
+                    raise RuntimeError('결과 PDF의 페이지 수가 일치하지 않습니다.')
+            outputs.append(data)
+        if options.get('split_every') is not None:
+            archive = io.BytesIO()
+            with zipfile.ZipFile(archive, 'w', compression=zipfile.ZIP_DEFLATED) as output:
+                for index, data in enumerate(outputs):
+                    output.writestr(f'part-{index+1:03}.pdf', data)
+            return report, archive.getvalue()
+        return report, outputs[0]

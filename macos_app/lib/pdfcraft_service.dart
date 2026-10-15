@@ -4,6 +4,7 @@ import 'dart:io';
 import 'dart:typed_data';
 
 import 'package:pdfrx/pdfrx.dart';
+import 'package:archive/archive.dart';
 
 List<int> parsePdfcraftPages(String text, int count) {
   if (text.trim().isEmpty || text.length > 100000) {
@@ -39,27 +40,90 @@ List<int> parsePdfcraftPages(String text, int count) {
 }
 
 class PdfcraftSource {
-  const PdfcraftSource(this.name, this.bytes, {this.originalPath});
+  const PdfcraftSource(
+    this.name,
+    this.bytes, {
+    this.originalPath,
+    this.password,
+  });
   final String name;
   final Uint8List bytes;
-  final String? originalPath;
+  final String? originalPath, password;
 }
 
-/// PdfCraft는 앱에 포함된 모듈만 실행하고 입력은 임시 사본으로 전달한다.
-class PdfcraftService {
+class PdfcraftResult {
+  const PdfcraftResult(this.bytes, this.extension, this.pages, this.files);
+  final Uint8List bytes;
+  final String extension;
+  final int pages, files;
+}
+
+abstract class PdfcraftBackend {
+  Future<Map<String, dynamic>> inspect(PdfcraftSource source, String password);
+  Future<PdfcraftResult> edit(
+    List<PdfcraftSource> sources,
+    Map<String, Object?> options,
+    String password,
+  );
+}
+
+class PdfcraftService implements PdfcraftBackend {
+  const PdfcraftService({this.executable});
+  final String? executable;
   static Future<Uint8List> compose(
     List<PdfcraftSource> sources,
     String pages, {
     String? executable,
-  }) async {
+  }) async => (await PdfcraftService(
+    executable: executable,
+  ).edit(sources, {'pages': pages}, '')).bytes;
+  @override
+  Future<Map<String, dynamic>> inspect(
+    PdfcraftSource source,
+    String password,
+  ) async => (await _invoke([source], {'inspect': true}, password)).$1;
+  @override
+  Future<PdfcraftResult> edit(
+    List<PdfcraftSource> sources,
+    Map<String, Object?> options,
+    String password,
+  ) async {
+    final (report, outputs) = await _invoke(sources, options, password);
+    if (outputs.isEmpty) throw const FormatException('결과 PDF가 없습니다.');
+    if (options['split_every'] != null) {
+      final archive = Archive();
+      for (var i = 0; i < outputs.length; i++) {
+        final bytes = outputs[i];
+        archive.addFile(
+          ArchiveFile(
+            'part-${(i + 1).toString().padLeft(3, '0')}.pdf',
+            bytes.length,
+            bytes,
+          ),
+        );
+      }
+      return PdfcraftResult(
+        Uint8List.fromList(ZipEncoder().encode(archive)),
+        'zip',
+        report['pages'] as int,
+        outputs.length,
+      );
+    }
+    return PdfcraftResult(outputs.single, 'pdf', report['pages'] as int, 1);
+  }
+
+  Future<(Map<String, dynamic>, List<Uint8List>)> _invoke(
+    List<PdfcraftSource> sources,
+    Map<String, Object?> options,
+    String password,
+  ) async {
     if (sources.isEmpty || sources.length > 20) {
       throw const FormatException('PDF는 1개부터 20개까지 선택하세요.');
     }
     var total = 0;
     for (final source in sources) {
       total += source.bytes.length;
-      if (source.bytes.length > 256 * 1024 * 1024 ||
-          total > 512 * 1024 * 1024) {
+      if (source.bytes.length > 256 * 1024 * 1024 || total > 512 * 1024 * 1024) {
         throw const FormatException('한 파일은 256MB, 전체는 512MB까지 처리할 수 있습니다.');
       }
     }
@@ -69,8 +133,10 @@ class PdfcraftService {
     if (!await File(helper).exists()) {
       throw const FormatException('페이지 처리 모듈이 없습니다. 최신 CY뷰어 설치 파일로 다시 설치하세요.');
     }
-    final directory = await Directory.systemTemp.createTemp('cy-pages-');
+    final directory = await Directory.systemTemp.createTemp('cy-tools-');
     try {
+      final request = Map<String, Object?>.from(options);
+      final pages = request.remove('pages');
       final inputs = <Map<String, Object?>>[];
       for (var i = 0; i < sources.length; i++) {
         final path = '${directory.path}/source-$i.pdf';
@@ -79,15 +145,19 @@ class PdfcraftService {
           'path': path,
           'title': sources[i].name,
           'pages': i == 0 ? pages : null,
+          'password': i == 0 && password.isNotEmpty
+              ? password
+              : sources[i].password,
         });
       }
-      final output = File('${directory.path}/result.pdf');
+      request.addAll({
+        'sources': inputs,
+        'output': '${directory.path}/result.pdf',
+      });
       final process = await Process.start(helper, const []);
-      final stdout = process.stdout.transform(utf8.decoder).join();
-      final stderr = process.stderr.transform(utf8.decoder).join();
-      process.stdin.write(
-        jsonEncode({'sources': inputs, 'output': output.path}),
-      );
+      final stdout = process.stdout.transform(utf8.decoder).join(),
+          stderr = process.stderr.transform(utf8.decoder).join();
+      process.stdin.write(jsonEncode(request));
       await process.stdin.close();
       int code;
       try {
@@ -97,20 +167,36 @@ class PdfcraftService {
         await process.exitCode;
         throw const FormatException('PDF 처리 시간이 초과됐습니다. 원본은 변경하지 않았습니다.');
       }
-      final error = await stderr, report = await stdout;
+      final error = await stderr, reportText = await stdout;
       if (code != 0) throw FormatException(error.trim());
-      final expected =
-          (jsonDecode(report) as Map<String, dynamic>)['pages'] as int;
-      final bytes = await output.readAsBytes();
-      final document = await PdfDocument.openData(bytes);
-      try {
-        if (document.pages.length != expected || expected < 1) {
-          throw const FormatException('결과 PDF의 페이지 수가 일치하지 않습니다.');
+      final report = jsonDecode(reportText) as Map<String, dynamic>;
+      final outputs = <Uint8List>[];
+      for (final info in (report['files'] as List? ?? const [])) {
+        final file = File(info['path'] as String);
+        if (await file.parent.resolveSymbolicLinks() !=
+            await directory.resolveSymbolicLinks()) {
+          throw const FormatException('결과 파일 경로가 올바르지 않습니다.');
         }
-      } finally {
-        await document.dispose();
+        final bytes = await file.readAsBytes();
+        var supplied = false;
+        final document = await PdfDocument.openData(
+          bytes,
+          passwordProvider: () {
+            if (supplied) return null;
+            supplied = true;
+            return options['new_password'] as String?;
+          },
+        );
+        try {
+          if (document.pages.length != info['pages'] || document.pages.isEmpty) {
+            throw const FormatException('결과 PDF의 페이지 수가 일치하지 않습니다.');
+          }
+        } finally {
+          await document.dispose();
+        }
+        outputs.add(bytes);
       }
-      return bytes;
+      return (report, outputs);
     } finally {
       await directory.delete(recursive: true);
     }
