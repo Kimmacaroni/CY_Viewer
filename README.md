@@ -8,7 +8,7 @@ CY뷰어의 웹·Mac·Windows **PDF 도구(페이지 편집·병합·분할·문
 
 Copyright (c) 2026 ArtCraft Team and the PdfCraft contributors.
 
-PdfCraft는 MIT 또는 Apache-2.0으로 제공되며, CY뷰어는 해당 코드를 **MIT 라이선스 조건으로 사용**합니다. [원본 저작권·MIT 라이선스 전문](pdfcraft_bridge/LICENSE-PDFCRAFT-MIT.txt)을 보존하고, 배포 설치본과 [웹 모듈](https://kimmacaroni.github.io/CY_Viewer/pdfcraft/THIRD_PARTY_NOTICES.txt)에 PdfCraft 및 의존성의 라이선스 고지(`THIRD_PARTY_NOTICES.txt`)를 포함합니다. 사용한 원본 커밋과 연결 범위는 [PdfCraft 연결 기록](docs/PDFCRAFT_INTEGRATION.md)에 적었습니다.
+PdfCraft는 MIT 또는 Apache-2.0으로 제공되며, CY뷰어는 해당 코드를 **MIT 라이선스 조건으로 사용**합니다. [원본 저작권·MIT 라이선스 전문](pdfcraft_bridge/LICENSE-PDFCRAFT-MIT.txt)을 보존하고, 배포 설치본과 [웹 모듈](https://kimmacaroni.github.io/CY_Viewer/pdfcraft/THIRD_PARTY_NOTICES.txt)에 PdfCraft 및 의존성의 라이선스 고지(`THIRD_PARTY_NOTICES.txt`)를 포함합니다. 사용한 원본 커밋과 연결 범위는 [PdfCraft 연결 기록](docs/PDFCRAFT_ALL_PLATFORMS.md)에 적었습니다.
 
 ## PDF 도구 확장
 
@@ -20,14 +20,14 @@ PdfCraft는 MIT 또는 Apache-2.0으로 제공되며, CY뷰어는 해당 코드�
 
 | 사용 환경 | 다운로드 및 실행 |
 | --- | --- |
-| Windows 10·11 64비트 | [Windows 설치 파일 v1.10.0](https://github.com/Kimmacaroni/CY_Viewer/releases/download/windows-v1.10.0/CYViewer-Setup-v1.10.0.exe) |
-| macOS | [macOS 설치 파일 v1.13.0](https://github.com/Kimmacaroni/CY_Viewer/releases/download/macos-v1.13.0/CYViewer-macOS-v1.13.0.dmg) |
+| Windows 10·11 64비트 | [Windows 설치 파일 v1.11.1](https://github.com/Kimmacaroni/CY_Viewer/releases/download/windows-v1.11.1/CYViewer-Setup-v1.11.1.exe) |
+| macOS | [macOS 설치 파일 v1.14.0](https://github.com/Kimmacaroni/CY_Viewer/releases/download/macos-v1.14.0/CYViewer-macOS-v1.14.0.dmg) |
 | iPhone·iPad·웹 | [CY뷰어 웹앱 열기](https://kimmacaroni.github.io/CY_Viewer/) |
 
 아이폰에서는 Safari로 웹앱을 연 뒤 `공유` → `홈 화면에 추가`를 선택하면
 CY뷰어 아이콘으로 실행할 수 있습니다. 개발자 모드나 유선 연결은 필요하지 않습니다.
 
-Windows 10·11 64비트 환경을 지원합니다. Release에서 `CYViewer-Setup-v1.10.0.exe`를 내려받아 설치하세요. 설치 마법사에서 설치 위치와 바탕화면 바로가기 생성 여부를 선택할 수 있습니다.
+Windows 10·11 64비트 환경을 지원합니다. Release에서 `CYViewer-Setup-v1.11.1.exe`를 내려받아 설치하세요. 설치 마법사에서 설치 위치와 바탕화면 바로가기 생성 여부를 선택할 수 있습니다.
 
 ## 업데이트
 
