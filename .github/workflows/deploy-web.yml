@@ -61,7 +61,7 @@ jobs:
           CY_TEST_BROWSER=webkit node tests/pdfcraft_browser.cjs
       - name: Test download site
         working-directory: .
-        run: node --test tests/downloads.test.cjs
+        run: node --test tests/downloads.test.cjs tests/pdfcraft_bootstrap.test.cjs
       - name: Resolve packages
         run: flutter pub get
       - name: Analyze
@@ -77,6 +77,8 @@ jobs:
         run: |
           node tests/pdfcraft_ui.cjs
           CY_TEST_BROWSER=webkit node tests/pdfcraft_ui.cjs
+          node tests/pdfcraft_touch.cjs
+          CY_TEST_BROWSER=webkit node tests/pdfcraft_touch.cjs
       - name: Include download site
         run: cp -R ../site/download build/web/download
       - uses: actions/upload-pages-artifact@v3

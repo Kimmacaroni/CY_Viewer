@@ -146,3 +146,8 @@ CY뷰어 작업 인수 기록
 - Windows의 고정 색상 검사 누락을 대비 기준으로 보완하고 필터 체크 표시를 유지했다. 검사 20개 통과. 기존 PdfCraft 기능·제작자·MIT 고지 유지, 엔진은 0.4.0을 유지한다.
 - Flutter 분석·65개, 필터 보완 후 배치 20개·Windows 단위 20개·GUI, 공개 웹 Chrome/어두운 WebKit PDF·ZIP·암호·결과 재열기, OS별 출시·샌드박스·설치와 공개 파일 체크섬을 확인했다. 상세한 범위·한계·SHA는 docs/APPLE_HIG_REFINEMENT.md.
 - UI 참조 기준은 docs/CY_DESIGN_SYSTEM.md 최신 Apple 항목 및 AGENTS.md에 추가했다. Flutter/Tk를 AppKit으로 전면 교체하거나 Apple 인증·모든 HIG 완전 준수를 의미하지 않는다. 사용자 Mac 실제 설치·VoiceOver 전체 조작은 미확인.
+
+2026-10-15 아이폰 홈 화면 터치 신고 조사
+- 사용자가 아이폰 홈 화면 바로가기에서 터치 먹통을 신고했다. 발생 단계·iOS 버전과 실기기 재현은 미확인.
+- 조사 중 bootstrap의 main.dart.js 캐시 쿼리가 1.14.0에 고정된 결함을 발견해 HTML 배포 식별자를 본체에도 전달하도록 수정했다. 웹 배포 식별자는 iphone-pwa-20261015-1. 이 결함이 터치 신고의 직접 원인이라고 확정하지 않는다.
+- Node 캐시 회귀 3개, 웹 빌드 및 Chrome·WebKit의 390px 실제 터치 파일 선택·PDF 도구·탭·닫기·재열기를 일반/standalone 플래그 환경에서 확인했다. 실기기 홈 화면과 다르며 실제 아이폰 해소 확인은 남아 있다. 상세 기록 docs/IPHONE_PWA_INPUT.md.
