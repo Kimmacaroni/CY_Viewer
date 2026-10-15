@@ -19,6 +19,7 @@ import 'app_commands.dart';
 import 'cy_design.dart';
 import 'pdfcraft_dialog.dart';
 import 'pdfcraft_service.dart';
+import 'pdf_password_dialog.dart';
 
 enum _ReaderAction {
   bookmark,
@@ -67,6 +68,28 @@ class _AdvancedPdfReaderPageState extends State<AdvancedPdfReaderPage> {
   final _searchInput = TextEditingController();
   PdfTextSearcher? _searcher;
   bool _reportedOpened = false;
+  String? _openedPassword;
+  bool _passwordConfirmed = false;
+  int _passwordAttempts = 0;
+
+  Future<String?> _providePassword() async {
+    if (!mounted) return null;
+    if (_passwordConfirmed && _openedPassword != null) {
+      _passwordConfirmed = false;
+      return _openedPassword;
+    }
+    final password = await showDialog<String>(
+      context: context,
+      barrierDismissible: false,
+      builder: (_) =>
+          PdfPasswordDialog(name: widget.name, retry: _passwordAttempts > 0),
+    );
+    if (!mounted) return null;
+    _passwordAttempts++;
+    _openedPassword = password;
+    return password;
+  }
+
   int _pageCount = 0;
   int _currentPage = 1;
   List<int> _bookmarks = [];
@@ -416,6 +439,7 @@ class _AdvancedPdfReaderPageState extends State<AdvancedPdfReaderPage> {
           widget.name,
           _pdfData!,
           originalPath: widget.path,
+          password: _openedPassword,
         ),
         pageCount: _pageCount,
         hasTemporaryMarks: _marks.isNotEmpty,
@@ -940,6 +964,7 @@ class _AdvancedPdfReaderPageState extends State<AdvancedPdfReaderPage> {
                   sourceName: '${widget.path}:${_pdfData!.length}',
                   key: ValueKey(_viewMode),
                   controller: _controller,
+                  passwordProvider: _providePassword,
                   params: PdfViewerParams(
                     errorBannerBuilder: (context, error, _, _) {
                       debugPrint(tr(context, "PDF 열기 실패: {0}", [error]));
@@ -998,6 +1023,7 @@ class _AdvancedPdfReaderPageState extends State<AdvancedPdfReaderPage> {
                       },
                     ),
                     onViewerReady: (document, _) async {
+                      _passwordConfirmed = _openedPassword != null;
                       if (!_reportedOpened) {
                         _reportedOpened = true;
                         widget.onOpened?.call();
