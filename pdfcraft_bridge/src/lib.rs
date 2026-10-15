@@ -63,10 +63,172 @@ struct Request {
     #[serde(default)]
     bookmarks: Vec<BookmarkEdit>,
     split_every: Option<usize>,
+    finishing: Option<Finishing>,
     new_password: Option<String>,
     #[serde(default)]
     remove_password: bool,
 }
+/// 새 파일 전체에 적용할 문서 마무리 설정. 기본은 변경 없음이다.
+#[derive(Deserialize, Default)]
+#[serde(deny_unknown_fields)]
+struct Finishing {
+    watermark: Option<String>,
+    header: Option<String>,
+    footer: Option<String>,
+    #[serde(default)]
+    page_numbers: bool,
+    crop_mm: Option<[f64; 4]>,
+    #[serde(default)]
+    reset_crop: bool,
+    background: Option<[f64; 3]>,
+    #[serde(default)]
+    remove_marks: bool,
+    #[serde(default)]
+    optimize: bool,
+}
+fn finish_document(doc: &mut Document, f: &Finishing) -> Result<(), String> {
+    use pdfcraft_edit as edit;
+    let count = org::page_count(doc).map_err(|e| e.to_string())?;
+    let pages: Vec<_> = (0..count).collect();
+    // 이 upstream 표준 글꼴은 한글을 그리지 못한다. 물음표로 조용히 바꾸지 않는다.
+    for text in [&f.watermark, &f.header, &f.footer].into_iter().flatten() {
+        if text.contains("<<")
+            || text.len() > 2000
+            || !text.chars().all(|c| c == '\n' || (' '..='~').contains(&c))
+        {
+            return Err(
+                "워터마크·머리말·꼬리말은 영문·숫자·기본 기호로 2000자 이내 입력하세요.".into(),
+            );
+        }
+    }
+    if f.reset_crop && f.crop_mm.is_some() {
+        return Err("여백 자르기와 자르기 해제를 동시에 선택할 수 없습니다.".into());
+    }
+    if f.reset_crop {
+        org::set_page_box(doc, &pages, org::PageBox::Crop, org::BoxSpec::Remove)
+            .map_err(|e| e.to_string())?;
+    }
+    if let Some(mm) = f.crop_mm {
+        if !mm
+            .iter()
+            .all(|v| v.is_finite() && *v >= 0.0 && *v <= 1000.0)
+        {
+            return Err("자르기 여백은 0~1000mm로 입력하세요.".into());
+        }
+        // 화면 입력 순서: 왼쪽·위·오른쪽·아래. PDF는 왼쪽·아래·오른쪽·위.
+        let refs = org::pages(doc).map_err(|e| e.to_string())?;
+        let boxes = org::page_boxes(doc).map_err(|e| e.to_string())?;
+        let mut plan = Vec::with_capacity(refs.len());
+        for (page, boxes) in refs.iter().zip(&boxes) {
+            // UserUnit는 상속하지 않는다. PdfCraft model과 같은 유효 범위로 해석한다.
+            let object = doc.get(page.obj);
+            let unit = object
+                .as_dict()
+                .and_then(|d| d.get(b"UserUnit"))
+                .and_then(|v| doc.resolve(v).as_f64())
+                .filter(|v| v.is_finite() && *v >= 1.0)
+                .unwrap_or(1.0)
+                .min(75000.0);
+            let pt = [mm[0], mm[3], mm[2], mm[1]].map(|v| v * 72.0 / 25.4 / unit);
+            let media = boxes[0];
+            let rect = [
+                media[0] + pt[0],
+                media[1] + pt[1],
+                media[2] - pt[2],
+                media[3] - pt[3],
+            ];
+            if rect[2] - rect[0] < 1.0 || rect[3] - rect[1] < 1.0 {
+                return Err("자르기 여백을 줄이세요. 페이지 영역을 남겨야 합니다.".into());
+            }
+            plan.push((page.obj, rect));
+        }
+        // 페이지마다 전체 트리를 다시 읽지 않고 한 번의 순회로 적용한다.
+        for (page, rect) in plan {
+            doc.update_dict(page, |d| {
+                d.set(
+                    b"CropBox".to_vec(),
+                    pdfcraft_cos::Object::Array(
+                        rect.into_iter().map(pdfcraft_cos::Object::Real).collect(),
+                    ),
+                )
+            })
+            .map_err(|e| e.to_string())?;
+        }
+    }
+    if f.remove_marks {
+        for kind in [
+            edit::MarkKind::Watermark,
+            edit::MarkKind::HeaderFooter,
+            edit::MarkKind::Background,
+        ] {
+            edit::remove_marks(doc, &pages, kind).map_err(|e| e.to_string())?;
+        }
+    }
+    if let Some(color) = f.background {
+        if !color
+            .iter()
+            .all(|v| v.is_finite() && (0.0..=1.0).contains(v))
+        {
+            return Err("배경색 값은 0부터 1까지 지정하세요.".into());
+        }
+        edit::add_background(
+            doc,
+            &pages,
+            &edit::Background {
+                color,
+                ..Default::default()
+            },
+            true,
+        )
+        .map_err(|e| e.to_string())?;
+    }
+    if let Some(text) = &f.watermark {
+        if text.trim().is_empty() {
+            return Err("워터마크 문구를 입력하세요.".into());
+        }
+        edit::add_watermark(
+            doc,
+            &pages,
+            &edit::Watermark {
+                text: text.clone(),
+                opacity: 0.25,
+                ..Default::default()
+            },
+            true,
+        )
+        .map_err(|e| e.to_string())?;
+    }
+    if f.header.is_some() || f.footer.is_some() || f.page_numbers {
+        let mut footer = f.footer.clone().unwrap_or_default();
+        if f.page_numbers {
+            if !footer.is_empty() {
+                footer.push_str(" · ");
+            }
+            footer.push_str("<<1/n>>");
+        }
+        let mut text: [String; 6] = Default::default();
+        text[1] = f.header.clone().unwrap_or_default();
+        text[4] = footer;
+        edit::add_header_footer(
+            doc,
+            &pages,
+            &edit::HeaderFooter {
+                text,
+                font_size: 10.0,
+                ..Default::default()
+            },
+            true,
+            &edit::Context::default(),
+        )
+        .map_err(|e| e.to_string())?;
+    }
+    if f.optimize {
+        pdfcraft_optimize::optimize(doc, &Default::default())
+            .map_err(|e| format!("용량 최적화에 실패했습니다: {e}"))?;
+    }
+    Ok(())
+}
+
 fn selection(text: &str, count: usize) -> Result<Vec<usize>, String> {
     if text.trim().is_empty() || text.len() > 100_000 {
         return Err("페이지 범위를 입력하세요.".into());
@@ -350,6 +512,9 @@ fn execute(request: Request, storage: &mut impl Storage) -> Result<Value, String
     let count = org::page_count(&out).map_err(|e| e.to_string())?;
     if count == 0 || count > 100000 {
         return Err("문서는 1~100000쪽을 유지해야 합니다.".into());
+    }
+    if let Some(f) = &request.finishing {
+        finish_document(&mut out, f)?;
     }
     let mut written = 0;
     let mut files = Vec::new();

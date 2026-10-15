@@ -21,6 +21,17 @@ const {execFileSync}=require('node:child_process');
   async function prepare(name){await page.getByRole('button',{name:'파일 준비',exact:true}).click();const link=page.getByRole('link',{name:'다운로드',exact:true});try{await page.waitForFunction(previous=>{const link=document.querySelector('a[download]');return link&&link.href!==previous;},lastDownloadUrl);await link.waitFor();lastDownloadUrl=await link.getAttribute('href');}catch(error){console.log('준비 오류 상태:',(await page.locator('body').innerText()).replaceAll('ui-secret','[시험 암호]'));await page.screenshot({path:'/tmp/cy-pdfcraft-ui-error.png'});throw error;}const pending=page.waitForEvent('download');await link.click();const download=await pending;await download.saveAs(path.join(temp,name));console.log(name+' 다운로드 확인');}
   async function field(label,value){const node=page.getByRole('textbox',{name:label,exact:true});await node.click();await page.evaluate(()=>new Promise(resolve=>requestAnimationFrame(()=>requestAnimationFrame(resolve))));await node.fill(value);await page.evaluate(()=>new Promise(requestAnimationFrame));}
   await page.getByRole('checkbox').first().click();await page.getByRole('button',{name:'오른쪽 회전',exact:true}).click();await prepare('rotated.pdf');
+  await page.getByRole('tab',{name:'문서 마무리',exact:true}).click();
+  await page.getByRole('switch',{name:/텍스트 워터마크/}).click();
+  await field('워터마크 문구 (영문·숫자)','DRAFT');
+  await page.getByRole('switch',{name:/페이지 번호 넣기/}).scrollIntoViewIfNeeded();
+  await page.getByRole('switch',{name:/페이지 번호 넣기/}).click();
+  await prepare('finished.pdf');
+  await page.screenshot({path:'/tmp/cy-pdfcraft-finishing.png'});
+  await page.getByRole('switch',{name:/텍스트 워터마크/}).scrollIntoViewIfNeeded();
+  await page.getByRole('switch',{name:/텍스트 워터마크/}).click();
+  await page.getByRole('switch',{name:/페이지 번호 넣기/}).scrollIntoViewIfNeeded();
+  await page.getByRole('switch',{name:/페이지 번호 넣기/}).click();
   await page.getByRole('tab',{name:'정보·책갈피',exact:true}).click();await field('제목','browser-title');
   await page.getByRole('button',{name:'책갈피 추가',exact:true}).scrollIntoViewIfNeeded();await page.getByRole('button',{name:'책갈피 추가',exact:true}).click();
   await field('책갈피 이름','browser-bookmark');await field('원본 쪽','2');await prepare('metadata.pdf');
@@ -35,6 +46,9 @@ import pymupdf,sys,zipfile
 from pathlib import Path
 p=Path(sys.argv[1])
 with pymupdf.open(p/'rotated.pdf') as d: assert len(d)==4 and d[0].rotation==90
+with pymupdf.open(p/'finished.pdf') as d:
+ assert len(d)==4
+ for i,page in enumerate(d): assert 'DRAFT' in page.get_text() and f'{i+1}/4' in page.get_text()
 with pymupdf.open(p/'metadata.pdf') as d: assert d.metadata['title']=='browser-title' and any(row[1]=='browser-bookmark' and row[2]==2 for row in d.get_toc())
 with pymupdf.open(p/'merged.pdf') as d:
  assert len(d)==8 and d[0].rotation==90 and d[4].rotation==0, (len(d), [page.rotation for page in d])

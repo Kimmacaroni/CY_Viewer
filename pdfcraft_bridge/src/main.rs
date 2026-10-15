@@ -36,7 +36,7 @@ impl Storage for DiskStorage {
 }
 fn main() {
     if std::env::args().nth(1).as_deref() == Some("--version") {
-        println!("cy-pdfcraft 0.3.0 (PdfCraft d9607ec3)");
+        println!("cy-pdfcraft 0.4.0 (PdfCraft d9607ec3)");
         return;
     }
     let result = std::panic::catch_unwind(|| -> Result<Value, String> {

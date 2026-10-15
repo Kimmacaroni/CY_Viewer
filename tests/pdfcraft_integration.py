@@ -163,6 +163,56 @@ class PdfcraftWorkbenchTests(unittest.TestCase):
                     self.assertTrue(doc.authenticate('parts'))
                     self.assertEqual(len(doc), 2)
 
+    def test_finishing_marks_crop_numbering_reset_and_original(self):
+        before = hashlib.sha256(self.source).hexdigest()
+        _, data = tools_request(self.source, '마무리', {'finishing': {'watermark': 'DRAFT', 'header': 'CY VIEWER', 'footer': 'CONFIDENTIAL', 'page_numbers': True, 'crop_mm': [2, 3, 4, 5], 'background': [1, 1, 0.85]}}, helper=HELPER)
+        with pymupdf.open(stream=data, filetype='pdf') as out:
+            for i, page in enumerate(out):
+                self.assertIn('DRAFT', page.get_text())
+                self.assertIn('CY VIEWER', page.get_text())
+                self.assertIn(f'{i+1}/4', page.get_text())
+                self.assertAlmostEqual(page.rect.width, 300 - 6 * 72 / 25.4, places=3)
+                self.assertAlmostEqual(page.rect.height, 400 - 8 * 72 / 25.4, places=3)
+            self.assertTrue(out[0].get_links())
+            self.assertEqual(len(list(out[0].widgets())), 1)
+        _, restored = tools_request(data, '해제', {'finishing': {'remove_marks': True, 'reset_crop': True}}, helper=HELPER)
+        with pymupdf.open(stream=restored, filetype='pdf') as out, pymupdf.open(stream=self.source, filetype='pdf') as source:
+            for i, page in enumerate(out):
+                self.assertNotIn('DRAFT', page.get_text())
+                self.assertEqual(page.rect, source[i].rect)
+                self.assertEqual(page.get_pixmap().samples, source[i].get_pixmap().samples)
+        self.assertEqual(hashlib.sha256(self.source).hexdigest(), before)
+        for finishing in [{'crop_mm': [100,100,100,100]}, {'crop_mm': [-1,0,0,0]}, {'watermark': '한글'}, {'watermark': ''}, {'header': '<<yyyy-mm-dd>>'}, {'background': [2,0,0]}]:
+            with self.assertRaises(RuntimeError): tools_request(self.source, '거부', {'finishing': finishing}, helper=HELPER)
+
+    def test_crop_mm_honors_mixed_userunit_and_rotation(self):
+        with pymupdf.open(stream=self.source, filetype='pdf') as doc:
+            doc.xref_set_key(doc[0].xref, 'UserUnit', '2')
+            doc.xref_set_key(doc[1].xref, 'UserUnit', '3')
+            doc[1].set_rotation(90)
+            original = doc.tobytes()
+        _, data = tools_request(original, '도면', {'finishing': {'crop_mm': [2,3,4,5]}}, helper=HELPER)
+        with pymupdf.open(stream=data, filetype='pdf') as out:
+            for index, dimensions in enumerate([(600-6*72/25.4,800-8*72/25.4),(1200-8*72/25.4,900-6*72/25.4),(300-6*72/25.4,400-8*72/25.4)]):
+                self.assertAlmostEqual(out[index].rect.width, dimensions[0], places=3)
+                self.assertAlmostEqual(out[index].rect.height, dimensions[1], places=3)
+
+    def test_image_optimization_retains_text_and_reduces_large_image(self):
+        import random
+        with pymupdf.open(stream=self.source, filetype='pdf') as doc:
+            pix = pymupdf.Pixmap(pymupdf.csRGB, 1200, 1200, random.Random(7).randbytes(1200*1200*3), False)
+            doc[1].insert_image(pymupdf.Rect(0, 100, 300, 400), pixmap=pix)
+            original = doc.tobytes()
+        _, data = tools_request(original, '최적화', {'finishing': {'optimize': True}}, helper=HELPER)
+        self.assertLess(len(data), len(original))
+        with pymupdf.open(stream=data, filetype='pdf') as out:
+            self.assertEqual(len(out), 4)
+            self.assertIn('TWO', out[1].get_text())
+            image = out.extract_image(out[1].get_images()[0][0])
+            self.assertLess(image['width'], 1200)
+            self.assertTrue(out[0].get_links())
+            self.assertEqual(len(list(out[0].widgets())), 1)
+
     def test_owner_permission_and_invalid_edits_are_enforced(self):
         with pymupdf.open(stream=self.source, filetype='pdf') as doc:
             restricted = doc.tobytes(encryption=pymupdf.PDF_ENCRYPT_AES_256, owner_pw='owner', user_pw='reader', permissions=pymupdf.PDF_PERM_PRINT)

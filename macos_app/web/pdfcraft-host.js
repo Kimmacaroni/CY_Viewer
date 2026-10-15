@@ -1,6 +1,6 @@
 // PdfCraft를 별도 작업자에서 실행한다. 문서 바이트는 서버로 전송하지 않는다.
 globalThis.cyPdfcraftRun = (request, sources) => new Promise((resolve, reject) => {
-  const worker = new Worker(new URL('pdfcraft-worker.js?engine=0.3.0', document.baseURI));
+  const worker = new Worker(new URL('pdfcraft-worker.js?engine=0.4.0', document.baseURI));
   let finished = false;
   const finish = (error, value) => {
     if (finished) return;

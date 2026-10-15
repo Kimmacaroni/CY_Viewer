@@ -101,6 +101,18 @@ try:
                     with pymupdf.open(stream=archive.read(name), filetype='pdf') as part:
                         assert len(part) == 1
                         assert f'page {index + 1}' in part[0].get_text()
+            for task in range(8, 14):
+                output = Path(directory) / f'finishing-{task}.pdf'
+                dialog.task.current(task)
+                dialog.render()
+                dialog.save_button.invoke()
+                wait_tools()
+                assert output.is_file(), dialog.status.cget('text')
+                with pymupdf.open(output) as result:
+                    assert len(result) == 2
+                    if task == 8: assert 'CONFIDENTIAL' in result[0].get_text()
+                    if task == 9: assert '1/2' in result[0].get_text()
+                    if task == 10: assert result[0].rect.width < app.document[0].rect.width
             assert app.document[0].rotation == 0
             dialog.destroy()
         finally:

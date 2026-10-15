@@ -11,7 +11,7 @@ from pdfcraft import tools_request, parse_pages, save_copy
 
 
 class PdfToolsDialog(tk.Toplevel):
-    TASKS = ['페이지 회전', '페이지 삭제', '빈 페이지 삽입', 'PDF 분할', '문서 정보', '문서 책갈피', '암호 설정·해제', '페이지 순서·추출']
+    TASKS = ['페이지 회전', '페이지 삭제', '빈 페이지 삽입', 'PDF 분할', '문서 정보', '문서 책갈피', '암호 설정·해제', '페이지 순서·추출', '텍스트 워터마크', '머리말·꼬리말·쪽 번호', '여백 자르기', '페이지 배경색', 'PDF 용량 최적화', '문서 마무리 표시 제거']
 
     def __init__(self, parent, colors):
         super().__init__(parent)
@@ -196,6 +196,31 @@ class PdfToolsDialog(tk.Toplevel):
         elif task == 7:
             self.field('페이지 순서·추출', ','.join(str(i + 1) for i in range(count)))
             ttk.Label(self.form, text=tr('예: 3, 1, 2 또는 1-3, 5')).pack(anchor='w', pady=8)
+        elif task == 8:
+            self.field('워터마크 문구 (영문·숫자)', 'CONFIDENTIAL')
+            ttk.Label(self.form, text=tr('옅은 대각선 문구를 각 페이지에 넣습니다.')).pack(anchor='w', pady=8)
+            ttk.Label(self.form, text=tr('문구는 현재 영문·숫자·기본 기호를 지원합니다. 한글 문구는 지원하지 않습니다.'), wraplength=570).pack(anchor='w')
+        elif task == 9:
+            self.field('머리말 (영문·숫자)')
+            self.field('꼬리말 (영문·숫자)')
+            self.page_numbers = tk.BooleanVar(value=True)
+            ttk.Checkbutton(self.form, text=tr('페이지 번호 넣기'), variable=self.page_numbers, command=self.input_changed).pack(anchor='w', pady=8)
+            ttk.Label(self.form, text=tr('문구는 현재 영문·숫자·기본 기호를 지원합니다. 한글 문구는 지원하지 않습니다.'), wraplength=570).pack(anchor='w')
+        elif task == 10:
+            self.reset_crop = tk.BooleanVar(value=False)
+            ttk.Checkbutton(self.form, text=tr('자르기 해제'), variable=self.reset_crop, command=self.input_changed).pack(anchor='w', pady=8)
+            for label in ['왼쪽 여백 (mm)', '위 여백 (mm)', '오른쪽 여백 (mm)', '아래 여백 (mm)']:
+                self.field(label, 5)
+            ttk.Label(self.form, text=tr('원본 용지 가장자리 기준입니다. 잘린 내용은 숨겨지며 삭제되지 않습니다.'), wraplength=570).pack(anchor='w', pady=8)
+        elif task == 11:
+            self.background = ttk.Combobox(self.form, state='readonly', values=[tr('연한 노랑'), tr('연한 파랑')])
+            self.background.current(0)
+            self.background.bind('<<ComboboxSelected>>', lambda _: self.input_changed())
+            self.background.pack(fill='x', pady=8)
+        elif task == 12:
+            ttk.Label(self.form, text=tr('큰 이미지를 150ppi로 줄입니다. 화질이 달라질 수 있고 용량 감소는 문서에 따라 다릅니다.'), wraplength=570).pack(anchor='w', pady=16)
+        elif task == 13:
+            ttk.Label(self.form, text=tr('CY뷰어·PdfCraft가 넣은 워터마크·머리말·꼬리말·배경을 제거합니다. 새 설정은 이어서 적용됩니다.'), wraplength=570).pack(anchor='w', pady=16)
         elif task == 5:
             self.bookmark_action = ttk.Combobox(self.form, state='readonly', values=[tr('책갈피 추가'), tr('책갈피 수정'), tr('책갈피 삭제')])
             self.bookmark_action.current(0)
@@ -253,6 +278,18 @@ class PdfToolsDialog(tk.Toplevel):
             if action != 2:
                 edit.update({'title': get('책갈피 이름'), 'page': int(get('원본 쪽'))})
             options['bookmarks'] = [edit]
+        if task == 8:
+            options['finishing'] = {'watermark': get('워터마크 문구 (영문·숫자)')}
+        elif task == 9:
+            options['finishing'] = {'header': get('머리말 (영문·숫자)'), 'footer': get('꼬리말 (영문·숫자)'), 'page_numbers': self.page_numbers.get()}
+        elif task == 10:
+            options['finishing'] = {'reset_crop': True} if self.reset_crop.get() else {'crop_mm': [float(get(label)) for label in ['왼쪽 여백 (mm)', '위 여백 (mm)', '오른쪽 여백 (mm)', '아래 여백 (mm)']]}
+        elif task == 11:
+            options['finishing'] = {'background': [1.0, 1.0, 0.85] if self.background.current() == 0 else [0.9, 0.95, 1.0]}
+        elif task == 12:
+            options['finishing'] = {'optimize': True}
+        elif task == 13:
+            options['finishing'] = {'remove_marks': True}
         if 'page_plan' not in options and self.plan != [{'index': i, 'rotation': 0} for i in range(self.info['pages'])]:
             options['page_plan'] = plan
         security = self.security.current()
