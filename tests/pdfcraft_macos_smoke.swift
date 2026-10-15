@@ -60,6 +60,15 @@ func run() throws {
   try check(edited.page(at: 0)?.rotation == 90, "페이지 회전 오류")
   try check(edited.documentAttributes?[PDFDocumentAttribute.titleAttribute] as? String == "편집한 문서", "문서 정보 오류")
   try check((edited.outlineRoot?.numberOfChildren ?? 0) > 0, "문서 책갈피 오류")
+  let finished = directory.appendingPathComponent("finished.pdf")
+  try invoke(["sources": [["path": source.path, "title": "CY smoke"]], "output": finished.path,
+              "finishing": ["watermark": "DRAFT", "header": "CY VIEWER", "page_numbers": true,
+                            "crop_mm": [2.0, 3.0, 4.0, 5.0], "optimize": true]])
+  guard let marked = PDFDocument(url: finished) else { throw NSError(domain: "CYPageSmoke", code: 6) }
+  try check(marked.pageCount == 2, "문서 마무리 페이지 수 오류")
+  try check(marked.page(at: 0)?.string?.contains("DRAFT") == true, "워터마크 오류")
+  try check(marked.page(at: 1)?.string?.contains("2/2") == true, "페이지 번호 오류")
+  try check((marked.page(at: 0)?.bounds(for: .cropBox).width ?? 300) < 300, "여백 자르기 오류")
   try check(try Data(contentsOf: source) == original, "원본 변경")
   print("Mac 샌드박스 PdfCraft 실행·페이지 순서·회전·빈 페이지·문서 정보·책갈피·암호·저장 검사 통과")
 }

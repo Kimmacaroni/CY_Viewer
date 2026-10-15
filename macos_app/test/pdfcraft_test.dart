@@ -190,4 +190,46 @@ void main() {
     expect(find.text('결과 열기'), findsOneWidget);
     expect(tester.takeException(), isNull);
   });
+  testWidgets('문서 마무리에서 워터마크와 쪽 번호를 저장 요청에 넣는다', (tester) async {
+    tester.view.physicalSize = const Size(800, 600);
+    tester.view.devicePixelRatio = 1;
+    addTearDown(tester.view.resetPhysicalSize);
+    addTearDown(tester.view.resetDevicePixelRatio);
+    final backend = TestBackend();
+    await tester.pumpWidget(
+      MaterialApp(
+        home: PdfcraftDialog(
+          source: PdfcraftSource('test.pdf', Uint8List(0)),
+          pageCount: 4,
+          backend: backend,
+          saveResult: (_) async => '/tmp/result.pdf',
+        ),
+      ),
+    );
+    await tester.pumpAndSettle();
+    await tester.ensureVisible(find.text('문서 마무리'));
+    await tester.tap(find.text('문서 마무리'));
+    await tester.pumpAndSettle();
+    final watermark = find.widgetWithText(SwitchListTile, '텍스트 워터마크');
+    await tester.ensureVisible(watermark);
+    await tester.tap(watermark);
+    await tester.pumpAndSettle();
+    await tester.ensureVisible(find.byKey(const ValueKey('워터마크 문구 (영문·숫자)')));
+    await tester.enterText(
+      find.byKey(const ValueKey('워터마크 문구 (영문·숫자)')),
+      'DRAFT',
+    );
+    final numbers = find.widgetWithText(SwitchListTile, '페이지 번호 넣기');
+    await tester.ensureVisible(numbers);
+    await tester.tap(numbers);
+    await tester.pumpAndSettle();
+    await tester.tap(find.byType(FilledButton));
+    await tester.pumpAndSettle();
+    expect(backend.options!['finishing'], {
+      'watermark': 'DRAFT',
+      'page_numbers': true,
+    });
+    expect(find.text('결과 열기'), findsOneWidget);
+    expect(tester.takeException(), isNull);
+  });
 }

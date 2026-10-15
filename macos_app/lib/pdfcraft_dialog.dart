@@ -69,6 +69,16 @@ class _PdfcraftDialogState extends State<PdfcraftDialog> {
       _newPassword = TextEditingController(),
       _confirm = TextEditingController(),
       _every = TextEditingController(text: '1');
+  final _watermark = TextEditingController(text: 'CONFIDENTIAL'),
+      _header = TextEditingController(),
+      _footer = TextEditingController();
+  final _crop = List.generate(4, (_) => TextEditingController(text: '5'));
+  bool _useWatermark = false,
+      _useHeaderFooter = false,
+      _pageNumbers = false,
+      _optimize = false,
+      _removeMarks = false;
+  int _cropMode = 0, _background = 0;
   final _metadata = {
     for (final key in ['Title', 'Author', 'Subject', 'Keywords'])
       key: TextEditingController(),
@@ -104,6 +114,10 @@ class _PdfcraftDialogState extends State<PdfcraftDialog> {
       _newPassword,
       _confirm,
       _every,
+      _watermark,
+      _header,
+      _footer,
+      ..._crop,
       ..._metadata.values,
     ]) {
       c.dispose();
@@ -309,6 +323,29 @@ class _PdfcraftDialogState extends State<PdfcraftDialog> {
     if (!unchanged) {
       options['page_plan'] = _plan.map((p) => p.toJson()).toList();
     }
+    final finishing = <String, Object?>{};
+    if (_useWatermark) finishing['watermark'] = _watermark.text;
+    if (_useHeaderFooter) {
+      finishing['header'] = _header.text;
+      finishing['footer'] = _footer.text;
+    }
+    if (_pageNumbers) finishing['page_numbers'] = true;
+    if (_cropMode == 1) {
+      final margins = _crop.map((c) => double.tryParse(c.text)).toList();
+      if (margins.any((v) => v == null || !v.isFinite || v < 0 || v > 1000)) {
+        throw const FormatException('자르기 여백은 0~1000mm로 입력하세요.');
+      }
+      finishing['crop_mm'] = margins.cast<double>();
+    }
+    if (_cropMode == 2) finishing['reset_crop'] = true;
+    if (_background != 0) {
+      finishing['background'] = _background == 1
+          ? [1.0, 1.0, 0.85]
+          : [0.9, 0.95, 1.0];
+    }
+    if (_removeMarks) finishing['remove_marks'] = true;
+    if (_optimize) finishing['optimize'] = true;
+    if (finishing.isNotEmpty) options['finishing'] = finishing;
     if (_split) {
       final n = int.tryParse(_every.text);
       if (n == null || n < 1) {
@@ -784,11 +821,124 @@ class _PdfcraftDialogState extends State<PdfcraftDialog> {
       if (_security == 2) Text(t('저장한 사본에서는 암호가 제거됩니다. 원본은 그대로 유지됩니다.')),
     ],
   );
+  Widget _finishingTab() => Column(
+    crossAxisAlignment: CrossAxisAlignment.stretch,
+    children: [
+      Text(t('문서 마무리'), style: Theme.of(context).textTheme.titleMedium),
+      Text(t('아래 설정은 합치기·페이지 편집을 마친 결과 전체에 적용됩니다.')),
+      SwitchListTile(
+        title: Text(t('텍스트 워터마크')),
+        subtitle: Text(t('옅은 대각선 문구를 각 페이지에 넣습니다.')),
+        value: _useWatermark,
+        onChanged: _editable
+            ? (v) => setState(() {
+                _useWatermark = v;
+                _clearSaved();
+              })
+            : null,
+      ),
+      if (_useWatermark) _field(_watermark, '워터마크 문구 (영문·숫자)'),
+      SwitchListTile(
+        title: Text(t('머리말·꼬리말')),
+        value: _useHeaderFooter,
+        onChanged: _editable
+            ? (v) => setState(() {
+                _useHeaderFooter = v;
+                _clearSaved();
+              })
+            : null,
+      ),
+      if (_useHeaderFooter) ...[
+        _field(_header, '머리말 (영문·숫자)'),
+        _field(_footer, '꼬리말 (영문·숫자)'),
+      ],
+      SwitchListTile(
+        title: Text(t('페이지 번호 넣기')),
+        subtitle: Text(t('아래 중앙에 1/10 형식으로 넣습니다.')),
+        value: _pageNumbers,
+        onChanged: _editable
+            ? (v) => setState(() {
+                _pageNumbers = v;
+                _clearSaved();
+              })
+            : null,
+      ),
+      Text(t('문구는 현재 영문·숫자·기본 기호를 지원합니다. 한글 문구는 지원하지 않습니다.')),
+      const SizedBox(height: 16),
+      DropdownButtonFormField<int>(
+        initialValue: _cropMode,
+        isExpanded: true,
+        decoration: InputDecoration(labelText: t('여백 자르기')),
+        items: [
+          for (final (i, label) in ['변경 안 함', '여백 지정', '자르기 해제'].indexed)
+            DropdownMenuItem(value: i, child: Text(t(label))),
+        ],
+        onChanged: _editable
+            ? (v) => setState(() {
+                _cropMode = v!;
+                _clearSaved();
+              })
+            : null,
+      ),
+      if (_cropMode == 1) ...[
+        for (final (i, label) in [
+          '왼쪽 여백 (mm)',
+          '위 여백 (mm)',
+          '오른쪽 여백 (mm)',
+          '아래 여백 (mm)',
+        ].indexed)
+          _field(_crop[i], label),
+        Text(t('원본 용지 가장자리 기준입니다. 잘린 내용은 숨겨지며 삭제되지 않습니다.')),
+      ],
+      const SizedBox(height: 16),
+      DropdownButtonFormField<int>(
+        initialValue: _background,
+        isExpanded: true,
+        decoration: InputDecoration(labelText: t('페이지 배경색')),
+        items: [
+          for (final (i, label) in ['변경 안 함', '연한 노랑', '연한 파랑'].indexed)
+            DropdownMenuItem(value: i, child: Text(t(label))),
+        ],
+        onChanged: _editable
+            ? (v) => setState(() {
+                _background = v!;
+                _clearSaved();
+              })
+            : null,
+      ),
+      SwitchListTile(
+        title: Text(t('기존 문서 마무리 표시 제거')),
+        subtitle: Text(
+          t('CY뷰어·PdfCraft가 넣은 워터마크·머리말·꼬리말·배경을 제거합니다. 새 설정은 이어서 적용됩니다.'),
+        ),
+        value: _removeMarks,
+        onChanged: _editable
+            ? (v) => setState(() {
+                _removeMarks = v;
+                _clearSaved();
+              })
+            : null,
+      ),
+      SwitchListTile(
+        title: Text(t('PDF 용량 최적화')),
+        subtitle: Text(
+          t('큰 이미지를 150ppi로 줄입니다. 화질이 달라질 수 있고 용량 감소는 문서에 따라 다릅니다.'),
+        ),
+        value: _optimize,
+        onChanged: _editable
+            ? (v) => setState(() {
+                _optimize = v;
+                _clearSaved();
+              })
+            : null,
+      ),
+    ],
+  );
   @override
   Widget build(BuildContext context) => PopScope(
     canPop: !_busy,
     child: DefaultTabController(
-      length: 4,
+      length: 5,
       child: AlertDialog(
         title: Text(t('PDF 도구')),
         content: SizedBox(
@@ -838,6 +988,7 @@ class _PdfcraftDialogState extends State<PdfcraftDialog> {
                   Tab(text: t('합치기·분할')),
                   Tab(text: t('정보·책갈피')),
                   Tab(text: t('보안')),
+                  Tab(text: t('문서 마무리')),
                 ],
               ),
               const SizedBox(height: 12),
@@ -850,6 +1001,7 @@ class _PdfcraftDialogState extends State<PdfcraftDialog> {
                             _filesTab(),
                             _documentTab(),
                             _securityTab(),
+                            _finishingTab(),
                           ])
                             SingleChildScrollView(child: child),
                         ],

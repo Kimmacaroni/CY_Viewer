@@ -15,6 +15,14 @@ if sys.argv[1] == 'prepare':
         (root/'signed.pdf').write_bytes(doc.tobytes(garbage=0))
 else:
     data=json.loads((root/'results.json').read_text())
+    with pymupdf.open(stream=bytes(data['finished']),filetype='pdf') as doc:
+        for i,page in enumerate(doc):
+            assert 'DRAFT' in page.get_text() and 'CY VIEWER' in page.get_text() and f'{i+1}/4' in page.get_text()
+            assert abs(page.rect.width-(300-6*72/25.4)) < .001
+    with pymupdf.open(stream=bytes(data['restored']),filetype='pdf') as doc, pymupdf.open(root/'source.pdf') as source:
+        for i,page in enumerate(doc):
+            assert page.rect==source[i].rect and 'DRAFT' not in page.get_text()
+            assert page.get_pixmap().samples==source[i].get_pixmap().samples
     with pymupdf.open(stream=bytes(data['edited']),filetype='pdf') as doc:
         assert len(doc)==3 and doc[0].rotation==90 and not doc[1].get_text()
         assert 'FOUR' in doc[0].get_text() and 'ONE' in doc[2].get_text()
