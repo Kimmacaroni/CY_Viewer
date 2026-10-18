@@ -86,6 +86,8 @@ jobs:
           CY_TEST_BROWSER=webkit node tests/pdfcraft_ui.cjs
           node tests/pdfcraft_touch.cjs
           CY_TEST_BROWSER=webkit node tests/pdfcraft_touch.cjs
+          node tests/pdfcraft_workbench.cjs
+          CY_TEST_BROWSER=webkit node tests/pdfcraft_workbench.cjs
       - name: Include download site
         run: cp -R ../site/download build/web/download
       - uses: actions/upload-pages-artifact@v3

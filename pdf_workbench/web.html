@@ -3,7 +3,7 @@
 <style>html,body{margin:0;height:100%;overflow:hidden;background:#f4f6f9}canvas{width:100%;height:100%;display:block;touch-action:none}#status{position:absolute;inset:20px;font:16px -apple-system,sans-serif;color:#182235}button{font:inherit;min-height:44px}@media(prefers-color-scheme:dark){html,body{background:#10141c}#status{color:#e8edf5}}</style></head>
 <body><canvas id="pdfcraft" aria-label="CY뷰어 PDF 작업실"></canvas><div id="status" role="status">PDF 작업실을 준비하고 있습니다…</div>
 <script type="module">
-import init from './workbench.js';
-try { await init(); document.getElementById('status').remove(); }
+import init from './workbench.js?release=__CY_WORKBENCH_BUILD__';
+try { await init({module_or_path:new URL('./workbench_bg.wasm?release=__CY_WORKBENCH_BUILD__',import.meta.url)}); document.getElementById('status').remove(); }
 catch(error){const s=document.getElementById('status');s.textContent='PDF 작업실을 시작하지 못했습니다. 창을 닫고 다시 시도해 주세요.';if(window.parent!==window)window.parent.postMessage({type:'pdfcraft:failed',error:String(error)},location.origin);console.error(error);}
 </script></body></html>

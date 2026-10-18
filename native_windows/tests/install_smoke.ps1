@@ -23,3 +23,18 @@ foreach ($file in @('cy-pdfcraft.exe', 'THIRD_PARTY_NOTICES.txt')) {
 }
 & (Join-Path $target '_internal/pdfcraft/cy-pdfcraft.exe') --version
 if ($LASTEXITCODE -ne 0) { throw '설치된 페이지 모듈이 실행되지 않습니다.' }
+# 전체 편집 작업실도 실제 설치본에서 해시와 실행을 확인한다.
+foreach ($pair in @(
+    @('cy-pdf-workbench.exe', 'cy-pdf-workbench.exe'),
+    @('workbench/THIRD_PARTY_NOTICES.txt', 'THIRD_PARTY_NOTICES.txt'),
+    @('models/text-detection.rten', 'models/text-detection.rten'),
+    @('models/text-recognition.rten', 'models/text-recognition.rten'),
+    @('models/CC-BY-SA-4.0.txt', 'models/CC-BY-SA-4.0.txt')
+)) {
+    $installed = Join-Path $target ("_internal/pdfcraft/" + $pair[0])
+    $built = Join-Path 'build/pdf-workbench/bin' $pair[1]
+    if (-not (Test-Path $installed)) { throw "PDF 작업실 설치 파일 누락: $($pair[0])" }
+    if ((Get-FileHash $installed -Algorithm SHA256).Hash -ne (Get-FileHash $built -Algorithm SHA256).Hash) { throw "PDF 작업실 설치 파일 불일치: $($pair[0])" }
+}
+& (Join-Path $target '_internal/pdfcraft/cy-pdf-workbench.exe') --version
+if ($LASTEXITCODE -ne 0) { throw '설치된 전체 PDF 작업실이 실행되지 않습니다.' }

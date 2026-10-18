@@ -1,8 +1,10 @@
 """PdfCraft 전체 엔진·UI를 고정 소스에서 빌드한다. 원본 로고는 바이너리에 넣지 않는다."""
 from pathlib import Path
-import argparse, hashlib, json, os, shutil, subprocess, sys, tarfile, tomllib, urllib.request
+import argparse, hashlib, inspect, json, os, shutil, subprocess, sys, tarfile, tomllib, urllib.request
+sys.stdout.reconfigure(encoding='utf-8')
+sys.stderr.reconfigure(encoding='utf-8')
 ROOT = Path(__file__).resolve().parent.parent
-CONFIG = json.loads((ROOT / 'pdf_workbench/source.json').read_text())
+CONFIG = json.loads((ROOT / 'pdf_workbench/source.json').read_text(encoding='utf-8'))
 BASE = ROOT / 'build/pdf-workbench'
 SOURCE = BASE / 'source'
 
@@ -14,16 +16,17 @@ def download(url, path, digest):
         raise RuntimeError(f'다운로드 체크섬 불일치: {path.name}')
 
 def replace(path, old, new):
-    text = path.read_text()
+    text = path.read_text(encoding='utf-8')
     if old not in text: raise RuntimeError(f'고정 소스 변경 감지: {path}')
     path.write_text(text.replace(old, new), encoding='utf-8')
 
 def prepare():
     archive = BASE / 'upstream.tar.gz'
     download(f"https://codeload.github.com/storytold/pdfcraft/tar.gz/{CONFIG['revision']}", archive, CONFIG['archive_sha256'])
-    stamp = hashlib.sha256(b''.join(p.read_bytes() for p in [Path(__file__), *(ROOT/'pdf_workbench').rglob('*')] if p.is_file())).hexdigest()
+    inputs = [ROOT/'pdf_workbench/source.json', ROOT/'pdf_workbench/src/main.rs', ROOT/'pdf_workbench/patches/ko.tsv']
+    stamp = hashlib.sha256(inspect.getsource(prepare).encode('utf-8') + b''.join(p.read_bytes() for p in inputs)).hexdigest()
     marker = SOURCE / '.cy-source-stamp'
-    if marker.exists() and marker.read_text() == stamp:
+    if marker.exists() and marker.read_text(encoding='utf-8') == stamp:
         return SOURCE
     # 소스나 패치가 바뀌면 원본에서 다시 적용한다.
     if SOURCE.exists(): shutil.rmtree(SOURCE)
@@ -39,9 +42,9 @@ def prepare():
     download(base+'NanumGothic-Regular.ttf', font, CONFIG['font_sha256'])
     download(base+'OFL.txt', font.with_suffix('.OFL.txt'), CONFIG['font_license_sha256'])
     shutil.copy2(ROOT/'pdf_workbench/src/main.rs', SOURCE/'apps/pdfcraft/src/main.rs')
-    (SOURCE/'apps/pdfcraft/build.rs').write_text('fn main() {}\n')
+    (SOURCE/'apps/pdfcraft/build.rs').write_text('fn main() {}\n',encoding='utf-8')
     widgets = SOURCE/'crates/ui-egui/src/widgets.rs'
-    text = widgets.read_text(); start = text.index('/// The ArtCraft wordmark'); end = text.index('/// Buttons for every community link', start)
+    text = widgets.read_text(encoding='utf-8'); start = text.index('/// The ArtCraft wordmark'); end = text.index('/// Buttons for every community link', start)
     text = text[:start]+'''// 파생 작업실은 원본 상표 이미지를 포함하지 않는다.
 pub fn artcraft_logo(ui: &mut egui::Ui, height: f32) -> Response {
     ui.label(egui::RichText::new("CY뷰어").size(height))
@@ -50,7 +53,7 @@ pub fn artcraft_mark(ui: &mut egui::Ui, size: f32) -> Response {
     ui.label(egui::RichText::new("CY").size(size * 0.6).strong())
 }
 
-'''+text[end:];widgets.write_text(text)
+'''+text[end:];widgets.write_text(text,encoding='utf-8')
     theme = SOURCE/'crates/ui-egui/src/theme.rs'
     replace(theme, '    let fallback: Vec<String> = fonts.families', '''    add(&mut fonts, "CY-Korean", include_bytes!("../../../assets/fonts/CY-NanumGothic.ttf"));
     for stack in fonts.families.values_mut() { stack.push("CY-Korean".to_owned()); }
@@ -61,10 +64,40 @@ pub fn artcraft_mark(ui: &mut egui::Ui, size: f32) -> Response {
     web = SOURCE/'apps/pdfcraft-web/src/main.rs'
     replace(web, 'let mut app = PdfCraftApp::new();', 'let mut app = PdfCraftApp::new();\n                    app.language = "ko".into();\n                    app.set_theme_preference(pdfcraft_ui_egui::theme::ThemePreference::System);')
     replace(SOURCE/'apps/pdfcraft-web/index.html', '<title>PdfCraft</title>', '<title>CY뷰어 PDF 작업실 · PdfCraft</title>')
+    home=SOURCE/'crates/ui-egui/src/home.rs'
+    text=home.read_text(encoding='utf-8');a=text.index('            egui::Frame::NONE');b=text.index('            ui.add_space(22.0);',a)
+    text=text[:a]+'''            ui.label("PdfCraft · ArtCraft Team 및 PdfCraft contributors · MIT");
+            ui.hyperlink_to("원본 소스·라이선스", "https://github.com/storytold/pdfcraft");
+'''+text[b:];home.write_text(text,encoding='utf-8')
+    chrome=SOURCE/'crates/ui-egui/src/chrome.rs'
+    text=chrome.read_text(encoding='utf-8');a=text.index('                    // One click to the community');b=text.index('                });',a)
+    text=text[:a]+text[b:];chrome.write_text(text,encoding='utf-8')
+    replace(SOURCE/'crates/ui-egui/src/updates.rs', 'https://github.com/storytold/pdfcraft/releases', 'https://github.com/Kimmacaroni/CY_Viewer/releases')
+    text=chrome.read_text(encoding='utf-8');start=text.index('pub fn mode_bar(');needle='            ui.horizontal_centered(|ui| {';at=text.index(needle,start)
+    text=text[:at]+'''            if ui.available_width() < 700.0 {
+                ui.horizontal_centered(|ui| {
+                    main_menu(app, ui);
+                    if ui.add(egui::Button::new("도구 찾기").min_size(vec2(80.0, 44.0))).clicked() { app.palette_open = true; }
+                    if ui.add(egui::Button::new("패널").min_size(vec2(44.0, 44.0))).clicked() {
+                        if app.left_open || app.right.is_some() { app.left_open = false; app.choose_right_panel(None); }
+                        else { app.left_open = true; }
+                    }
+                    if ui.add_enabled(app.active.is_some(), egui::Button::new(tl!("Save")).min_size(vec2(44.0, 44.0))).clicked() { app.run_command("file.save"); }
+                });
+                return;
+            }
+'''+text[at:];chrome.write_text(text,encoding='utf-8')
+    replace(SOURCE/'crates/ui-egui/src/palette.rs', 'ui.set_width(560.0);', 'ui.set_width((screen.width() - 40.0).clamp(200.0, 560.0));')
+    replace(SOURCE/'crates/ui-egui/src/palette.rs', 'vec2(ui.available_width(), 36.0)', 'vec2(ui.available_width(), if screen.width() < 700.0 { 44.0 } else { 36.0 })')
+    replace(web, 'warn_before_unload(app.unsaved_flag.clone());', '''warn_before_unload(app.unsaved_flag.clone());
+                    if web_sys::window().and_then(|w| w.inner_width().ok()).and_then(|w| w.as_f64()).is_some_and(|w| w < 700.0) {
+                        app.left_open = false;
+                        app.choose_right_panel(None);
+                    }''')
     # 패키지에는 원본의 상표 이미지가 남지 않는다.
     shutil.rmtree(SOURCE/'docs/brand')
     replace(SOURCE/'crates/ui-egui/src/lib.rs', 'format!("{name} — PdfCraft")', 'format!("{name} — CY뷰어 PDF 작업실")')
-    marker.write_text(stamp)
+    marker.write_text(stamp,encoding='utf-8')
     return SOURCE
 
 def wasm_tool():
@@ -77,7 +110,7 @@ def wasm_tool():
     return str(folder/name/'wasm-bindgen')
 
 def models(src, out):
-    entries=tomllib.loads((src/'ATTRIBUTION.toml').read_text())['fetched']
+    entries=tomllib.loads((src/'ATTRIBUTION.toml').read_text(encoding='utf-8'))['fetched']
     dest=out/'models';dest.mkdir(parents=True,exist_ok=True)
     for item in entries:
         if item.get('file') not in ['text-detection.rten','text-recognition.rten']: continue
@@ -97,7 +130,9 @@ def main():
         subprocess.run(['cargo','build','--release','--locked','-p','pdfcraft-web','--target','wasm32-unknown-unknown'],cwd=src,env=env,check=True)
         out=ROOT/'macos_app/web/pdf-workbench';out.mkdir(parents=True,exist_ok=True)
         subprocess.run([wasm_tool(),str(BASE/'target/wasm32-unknown-unknown/release/pdfcraft-web.wasm'),'--target','web','--out-dir',str(out),'--out-name','workbench','--no-typescript'],check=True)
-        shutil.copy2(ROOT/'pdf_workbench/web.html',out/'index.html')
+        html=(ROOT/'pdf_workbench/web.html').read_text(encoding='utf-8').replace('__CY_WORKBENCH_BUILD__',(src/'.cy-source-stamp').read_text(encoding='utf-8'))
+        (out/'index.html').write_text(html,encoding='utf-8')
+        shutil.copy2(src/'assets/fonts/CY-NanumGothic.ttf',out/'CY-NanumGothic.ttf')
     else:
         out=BASE/'bin';out.mkdir(parents=True,exist_ok=True)
         name='cy-pdf-workbench'+('.exe' if os.name=='nt' else '')
@@ -113,10 +148,10 @@ def main():
     if not a.web: models(src,out)
     notices=[CONFIG['copyright'], 'PdfCraft 전체 소스: '+CONFIG['repository']+'\nrevision: '+CONFIG['revision']]
     for f in ['LICENSE-MIT','LICENSE-APACHE','NOTICE','ATTRIBUTION.md']:
-        notices.append((src/f).read_text())
-    notices.append((src/'assets/fonts/CY-NanumGothic.OFL.txt').read_text())
+        notices.append((src/f).read_text(encoding='utf-8'))
+    notices.append((src/'assets/fonts/CY-NanumGothic.OFL.txt').read_text(encoding='utf-8'))
     # 연결되는 Cargo 패키지와 내장 자산의 라이선스 원문도 함께 묶는다.
-    meta=json.loads(subprocess.check_output(['cargo','metadata','--locked','--format-version','1','--manifest-path',str(src/'Cargo.toml')],env=env,text=True))
+    meta=json.loads(subprocess.check_output(['cargo','metadata','--locked','--format-version','1','--manifest-path',str(src/'Cargo.toml')],env=env,text=True,encoding='utf-8'))
     seen=set()
     for package in meta['packages']:
         directory=Path(package['manifest_path']).parent
@@ -129,7 +164,7 @@ def main():
                 except UnicodeDecodeError: continue
                 notices.append(package['name']+' '+package['version']+' / '+str(f.relative_to(directory))+'\n'+text)
     for f in (src/'assets').rglob('*.txt'):
-        if any(w in f.name.upper() for w in ['LICENSE','OFL','COPYING']): notices.append(f.read_text())
+        if any(w in f.name.upper() for w in ['LICENSE','OFL','COPYING']): notices.append(f.read_text(encoding='utf-8'))
     (out/'THIRD_PARTY_NOTICES.txt').write_text('\n\n'.join(notices),encoding='utf-8')
     print(out)
 if __name__=='__main__':main()

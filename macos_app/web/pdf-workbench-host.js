@@ -17,7 +17,10 @@
     const actions=document.createElement('div');actions.className='cy-workbench-actions';
     const download=document.createElement('a');download.textContent='다운로드';download.hidden=true;
     const result=document.createElement('button');result.type='button';result.textContent='CY뷰어에서 열기';result.hidden=true;actions.append(download,result);
-    const frame=document.createElement('iframe');frame.title='PDF 전체 편집 작업실';frame.src=new URL('pdf-workbench/index.html?host=parent',document.baseURI).href;
+    const frame=document.createElement('iframe');frame.title='PDF 전체 편집 작업실';const address=new URL('pdf-workbench/index.html?host=parent',document.baseURI);
+    const bootstrap=document.querySelector('script[src*="flutter_bootstrap.js"]');
+    if(bootstrap)address.searchParams.set('release',new URL(bootstrap.src).searchParams.get('release')||'0.9.0');
+    frame.src=address.href;
     panel.append(toolbar,note,actions,frame);
     const hidden=[...document.body.children].filter(e=>!['SCRIPT','STYLE'].includes(e.tagName)).map(e=>[e,e.inert]);
     for(const [element] of hidden)element.inert=true;
