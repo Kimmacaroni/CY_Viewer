@@ -2,6 +2,9 @@
 #![cfg_attr(target_os = "windows", windows_subsystem = "windows")]
 use pdfcraft_ui_egui::PdfCraftApp;
 use std::path::PathBuf;
+#[cfg(target_os = "windows")]
+mod motion;
+mod text_scale;
 
 fn main() -> eframe::Result {
     let args: Vec<_> = std::env::args().skip(1).collect();
@@ -30,10 +33,37 @@ fn launch(renderer: eframe::Renderer, initial: Option<PathBuf>) -> eframe::Resul
         options,
         Box::new(move |cc| {
             let mut app = PdfCraftApp::new();
+            app.units = pdfcraft_ui_egui::units::Unit::system();
             app.language = "ko".into();
             app.set_theme_preference(pdfcraft_ui_egui::theme::ThemePreference::System);
             if let Some(saved) = cc.storage.and_then(|s| s.get_string("pdfcraft")) {
                 app.restore(&saved);
+            }
+            app.system_text_scale = text_scale::system();
+            app.printer_source = Some(pdfcraft_ui_egui::system_printers());
+            app.os_key_store_ids = cfg!(any(target_os = "macos", target_os = "windows"));
+            #[cfg(target_os = "windows")]
+            {
+                app.motion.source = Some(motion::source());
+            }
+            // 사본을 연 부모 앱의 임시 영역에 CY 전용 자동복구 저장소를 둔다.
+            let recovery = initial
+                .as_ref()
+                .and_then(|path| path.parent())
+                .filter(|folder| {
+                    folder
+                        .file_name()
+                        .and_then(|v| v.to_str())
+                        .is_some_and(|v| v.starts_with("cy-workbench-"))
+                })
+                .and_then(|folder| folder.parent())
+                .map(|folder| folder.join("cy-pdf-workbench-recovery"))
+                .or_else(|| {
+                    pdfcraft_ui_egui::RecoveryStore::default_dir()
+                        .map(|dir| dir.with_file_name("cy-pdf-workbench-recovery"))
+                });
+            if let Some(folder) = recovery {
+                app.enable_recovery(pdfcraft_ui_egui::RecoveryStore::new(folder));
             }
             if let Some(path) = initial {
                 match std::fs::read(&path) {
