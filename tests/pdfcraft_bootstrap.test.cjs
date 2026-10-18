@@ -24,3 +24,10 @@ test('다음 배포는 이전 앱 코드 캐시 주소를 재사용하지 않는
 test('배포 쿼리 없이 실행해도 앱을 시작한다',()=>{
  assert.equal(bootstrap('')[0].mainJsPath,'main.dart.js?existing=1');
 });
+
+test('전체 작업실 host도 현재 HTML 배포 버전을 요청한다',()=>{
+ const html=fs.readFileSync(path.join(web,'index.html'),'utf8');
+ const boot=new URL(html.match(/src="([^"]*flutter_bootstrap[^" ]+)"/)[1],'https://example.test/CY_Viewer/');
+ const host=new URL(html.match(/src="([^"]*pdf-workbench-host[^" ]+)"/)[1],'https://example.test/CY_Viewer/');
+ assert.equal(host.searchParams.get('release'),boot.searchParams.get('release'));
+});

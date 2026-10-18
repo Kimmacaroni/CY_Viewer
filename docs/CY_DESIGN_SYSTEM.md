@@ -205,3 +205,20 @@ Flutter와 Tk 기반의 공통 UI에 HIG의 구조와 동작을 적용한다. Ap
 - https://developer.apple.com/design/human-interface-guidelines/sheets
 - https://developer.apple.com/design/human-interface-guidelines/accessibility
 - https://developer.apple.com/design/human-interface-guidelines/tab-views
+
+## 전체 PdfCraft 작업실 (2026-10-18)
+
+사용자가 원본 전체 코드의 이식을 요청했다. 주 방향은 기존 Apple HIG 기반 CY뷰어이며,
+원본 0.9.0의 중립 표면·단일 파란 강조색·문서 중심 편집 작업 공간을 기능 참조로 사용한다.
+Refero 스타일 조회는 NO_SUBSCRIPTION으로 불가했으며 내장 craft-details의 포커스·상태 원칙을 적용한다.
+
+| 결정 | 근거 | 이유 |
+| --- | --- | --- |
+| 기존 PDF 도구의 ‘전체 PDF 작업실’ 한 진입점 | 사용자 전체 소스 이식 요청·기존 탐색/편집/저장 흐름 | 도구를 리더 툴바에 각각 나열하지 않음 |
+| 원본 전체 UI와 엔진을 사본 작업실로 연결 | PdfCraft engine·ui-egui·web host 브리지 | 기능 일부만 재구현하면서 빠지는 입력 흐름을 피함 |
+| Mac/Windows 독립 편집 창, 웹은 동일 출처 전체 화면 | 기존 OS 파일 선택·Apple 편집 작업 공간 원칙 | 원본 경로를 자동 덮어쓰지 않고 작업할 공간 확보 |
+| 웹 결과 준비·다운로드·리더에서 열기를 구분 | 기존 CY 저장 상태·craft-details | 메모리 결과를 실제 파일 저장 완료로 오인하지 않음 |
+| 원본 상표 로고 대신 CY 텍스트·별도 제작자 고지 | 원본 상표 라이선스·사용자의 고지 요청 | 코드 라이선스와 브랜드 사용 권한을 혼동하지 않음 |
+
+작업실의 고급 화면 전체를 AppKit으로 바꾸거나 Apple HIG 완전 준수로 주장하지 않는다.
+원본의 예정/외부 제공 상태와 일부 고급 메뉴의 영어 원문은 명확히 구분한다.

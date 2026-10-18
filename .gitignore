@@ -24,3 +24,8 @@ build/pdfcraft/
 # 웹 PdfCraft WASM은 고정 소스로 CI에서 생성
 macos_app/web/pdfcraft/
 build/tools/
+
+# 전체 PDF 작업실의 고정 소스·생성 바이너리
+build/pdf-workbench/
+build/pdf-workbench-upstream.tmp
+macos_app/web/pdf-workbench/

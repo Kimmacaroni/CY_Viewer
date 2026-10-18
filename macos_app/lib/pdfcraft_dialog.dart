@@ -6,6 +6,7 @@ import 'package:flutter/services.dart';
 import 'cy_localization.dart';
 import 'app_commands.dart';
 import 'pdfcraft_service.dart';
+import 'pdf_workbench.dart';
 import 'pdfcraft_browser_controls.dart';
 
 class _PageEntry {
@@ -100,6 +101,16 @@ class _PdfcraftDialogState extends State<PdfcraftDialog> {
   }
 
   late final Map<String, AppCommandCallback> _commandHandlers;
+
+  Future<void> _openFullWorkbench() async {
+    try {
+      final result = await openPdfWorkbench(widget.source);
+      if (!mounted) return;
+      if (result != null) Navigator.pop(context, result);
+    } catch (error) {
+      if (mounted) setState(() => _error = error.toString());
+    }
+  }
 
   bool get _editable => _ready && !_busy && !_signed && _owner;
   @override
@@ -1110,6 +1121,15 @@ class _PdfcraftDialogState extends State<PdfcraftDialog> {
                                   t('PDF 도구'),
                                   style: Theme.of(context).textTheme.titleLarge,
                                 ),
+                              ),
+                              TextButton.icon(
+                                onPressed: _busy ? null : _openFullWorkbench,
+                                icon: const Icon(Icons.open_in_new),
+                                label: Text(t('전체 PDF 작업실')),
+                              ),
+                              Text(
+                                t('주석·양식·텍스트·이미지 편집을 별도 문서 사본에서 시작합니다.'),
+                                style: Theme.of(context).textTheme.bodySmall,
                               ),
                               const SizedBox(height: 4),
                               Tooltip(

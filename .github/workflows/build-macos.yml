@@ -7,9 +7,12 @@ on:
       - "macos_app/**"
       - "tests/check_mac_updater.py"
       - "pdfcraft_bridge/**"
+      - "pdf_workbench/**"
+      - "scripts/build_pdf_workbench.py"
       - "scripts/build_pdfcraft.py"
       - "tests/pdfcraft_integration.py"
       - "tests/pdfcraft_macos_smoke.swift"
+      - "tests/pdf_workbench_macos_smoke.swift"
       - ".github/workflows/build-macos.yml"
   push:
     branches: [main]
@@ -18,9 +21,12 @@ on:
       - "macos_app/**"
       - "tests/check_mac_updater.py"
       - "pdfcraft_bridge/**"
+      - "pdf_workbench/**"
+      - "scripts/build_pdf_workbench.py"
       - "scripts/build_pdfcraft.py"
       - "tests/pdfcraft_integration.py"
       - "tests/pdfcraft_macos_smoke.swift"
+      - "tests/pdf_workbench_macos_smoke.swift"
       - ".github/workflows/build-macos.yml"
 
 permissions:
@@ -29,7 +35,7 @@ permissions:
 jobs:
   build:
     runs-on: macos-15
-    timeout-minutes: 40
+    timeout-minutes: 90
     outputs:
       version: ${{ steps.version.outputs.version }}
     defaults:
@@ -52,6 +58,9 @@ jobs:
         env:
           MACOSX_DEPLOYMENT_TARGET: '10.15'
         run: python3 scripts/build_pdfcraft.py
+      - name: Build complete PDF workbench
+        working-directory: .
+        run: python3 scripts/build_pdf_workbench.py
       - name: Test PdfCraft round trips
         working-directory: .
         run: |
@@ -97,6 +106,10 @@ jobs:
         run: |
           app="build/macos/Build/Products/Release/CYViewer.app"
           cp ../build/pdfcraft/cy-pdfcraft "$app/Contents/MacOS/"
+          cp ../build/pdf-workbench/bin/cy-pdf-workbench "$app/Contents/MacOS/"
+          cp -R ../build/pdf-workbench/bin/models "$app/Contents/Resources/"
+          cp ../build/pdf-workbench/bin/THIRD_PARTY_NOTICES.txt "$app/Contents/Resources/PDF-WORKBENCH-LICENSES.txt"
+          codesign --force --sign - --entitlements ../pdfcraft_bridge/macos-helper.entitlements "$app/Contents/MacOS/cy-pdf-workbench"
           cp ../build/pdfcraft/THIRD_PARTY_NOTICES.txt "$app/Contents/Resources/"
           codesign --force --sign - --entitlements ../pdfcraft_bridge/macos-helper.entitlements "$app/Contents/MacOS/cy-pdfcraft"
           codesign --force --sign - --entitlements macos/Runner/Release.entitlements "$app"
@@ -112,6 +125,19 @@ jobs:
           <?xml version="1.0" encoding="UTF-8"?><plist version="1.0"><dict><key>CFBundleIdentifier</key><string>com.kimmacaroni.cyviewer.pdfcraft-smoke</string><key>CFBundleExecutable</key><string>Run</string><key>CFBundlePackageType</key><string>APPL</string></dict></plist>
           EOF
           codesign --force --sign - --entitlements pdfcraft_bridge/macos-helper.entitlements "$test_app/Contents/MacOS/cy-pdfcraft"
+          codesign --force --sign - --entitlements macos_app/macos/Runner/Release.entitlements "$test_app"
+          "$PWD/$test_app/Contents/MacOS/Run"
+      - name: Test sandboxed full PDF workbench window
+        working-directory: .
+        run: |
+          test_app="build/PdfWorkbenchSmoke.app"
+          mkdir -p "$test_app/Contents/MacOS"
+          swiftc tests/pdf_workbench_macos_smoke.swift -o "$test_app/Contents/MacOS/Run"
+          cp build/pdf-workbench/bin/cy-pdf-workbench "$test_app/Contents/MacOS/"
+          cat > "$test_app/Contents/Info.plist" <<'EOF'
+          <?xml version="1.0" encoding="UTF-8"?><plist version="1.0"><dict><key>CFBundleIdentifier</key><string>com.kimmacaroni.cyviewer.workbench-smoke</string><key>CFBundleExecutable</key><string>Run</string><key>CFBundlePackageType</key><string>APPL</string></dict></plist>
+          EOF
+          codesign --force --sign - --entitlements pdfcraft_bridge/macos-helper.entitlements "$test_app/Contents/MacOS/cy-pdf-workbench"
           codesign --force --sign - --entitlements macos_app/macos/Runner/Release.entitlements "$test_app"
           "$PWD/$test_app/Contents/MacOS/Run"
       - name: Create DMG
@@ -157,7 +183,7 @@ jobs:
           cat > notes.md <<'EOF'
           Mac 업데이트는 앱의 안내에서 공식 릴리스 설치 파일을 브라우저로 받아 진행합니다. 앱 안에서 받은 이전 DMG는 사용하지 마세요. DMG를 연 뒤 Applications로 직접 옮겨 교체합니다.
 
-          Apple Human Interface Guidelines를 기준으로 문서함·툴바·PDF 편집 화면을 정돈했습니다. 중립 표면, 시스템 글꼴, 밝은·어두운 외형과 대비 강화, 명확한 선택 상태·키보드 저장을 반영했습니다. PDF 도구는 넓은 편집 작업 공간과 고정 저장 영역을 사용하며 작은 화면에서는 전체 화면으로 표시됩니다. 기존 PdfCraft 기능과 제작자·MIT 고지는 유지합니다.
+          PdfCraft 0.9.0의 전체 PDF 엔진과 편집 UI를 CY뷰어의 PDF 작업실에 연결했습니다. PDF 도구 → 전체 PDF 작업실에서 주석·양식·텍스트/이미지 편집·비교·내보내기 등 원본에 구현된 도구를 별도 사본으로 사용합니다. 원본의 예정/외부 서비스 기능과 일부 고급 영어 메뉴는 구분됩니다. ArtCraft Team 및 PdfCraft 기여자의 저작권·MIT와 의존성 고지를 동봉하며 원본 상표 로고는 포함하지 않습니다.
 
           macOS용 CY뷰어 설치 파일입니다. DMG를 열고 CYViewer.app을 Applications 폴더로 옮겨 주세요.
 

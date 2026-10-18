@@ -7,7 +7,9 @@ datas = [
     ('personal_pdf_viewer/assets/cy_viewer_icon.png', 'assets'),
 ]
 datas.append(('build/pdfcraft/THIRD_PARTY_NOTICES.txt', 'pdfcraft'))
-binaries = [('build/pdfcraft/cy-pdfcraft.exe', 'pdfcraft')]
+datas.append(('build/pdf-workbench/bin/THIRD_PARTY_NOTICES.txt', 'pdfcraft/workbench'))
+datas.append(('build/pdf-workbench/bin/models', 'pdfcraft/models'))
+binaries = [('build/pdfcraft/cy-pdfcraft.exe', 'pdfcraft'), ('build/pdf-workbench/bin/cy-pdf-workbench.exe', 'pdfcraft')]
 hiddenimports = ['win32ui']
 tmp_ret = collect_all('tkinterdnd2')
 datas += tmp_ret[0]; binaries += tmp_ret[1]; hiddenimports += tmp_ret[2]

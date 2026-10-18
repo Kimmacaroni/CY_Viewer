@@ -732,4 +732,8 @@ const cyEnglish = <String, String>{
   "문서 탐색": "Browse document",
   "선택·편집": "Select and edit",
   "저장·내보내기": "Save and export",
+  "전체 PDF 작업실": "Full PDF workbench",
+  "주석·양식·텍스트·이미지 편집을 별도 문서 사본에서 시작합니다.": "Start annotation, form, text, and image editing in a separate document copy.",
+  "PDF 작업실 모듈이 없습니다. 최신 CY뷰어를 설치해 주세요.":
+      "The PDF workbench module is missing. Install the latest CY Viewer.",
 };
