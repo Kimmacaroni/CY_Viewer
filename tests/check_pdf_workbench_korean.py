@@ -1,0 +1,152 @@
+"""전체 원본 카탈로그·화면 문구·진단과 한국어 자리표시자 계약을 검증한다."""
+from pathlib import Path
+import json, re, subprocess, tempfile, os, sys
+sys.stdout.reconfigure(encoding='utf-8')
+sys.stderr.reconfigure(encoding='utf-8')
+
+ROOT=Path(__file__).resolve().parent.parent
+SOURCE=ROOT/'build/pdf-workbench/source'
+I18N=SOURCE/'crates/ui-egui/src/i18n'
+def entries(path):
+    rows={}
+    for number,line in enumerate(path.read_text(encoding='utf-8').splitlines(),1):
+        if not line or line.startswith('#'):continue
+        fields=line.split('\t')
+        assert len(fields)==3,(str(path),number)
+        c,s,t=fields
+        assert (c,s) not in rows,(str(path),number,'중복')
+        rows[c,s]=t
+    return rows
+
+def encode(s):return s.replace('\\','\\\\').replace('\n','\\n').replace('\t','\\t')
+ko=entries(I18N/'ko.tsv')
+required=set()
+for p in I18N.glob('*.tsv'):
+    if p.name!='ko.tsv':required.update(entries(p))
+literal_count=0
+for p in (SOURCE/'crates/ui-egui/src').rglob('*.rs'):
+    if 'i18n' in p.parts:continue
+    source=p.read_text(encoding='utf-8').split('#[cfg(test)]')[0]
+    for m in re.finditer(r'(?:tl!\(|i18n::t\()\s*"((?:\\.|[^"\\])*)"',source):
+        required.add(('',encode(json.loads('"'+m[1]+'"'))));literal_count+=1
+    for m in re.finditer(r'tl_ctx!\(\s*"((?:\\.|[^"\\])*)"\s*,\s*"((?:\\.|[^"\\])*)"',source):
+        required.add(tuple(encode(json.loads('"'+s+'"')) for s in m.groups()))
+error_keys=set()
+for p in (SOURCE/'crates').glob('*/src/**/*.rs'):
+    source=p.read_text(encoding='utf-8')
+    for m in re.finditer(r'#\[error\(\s*"((?:\\.|[^"\\])*)"',source):
+        error_keys.add(('',encode(json.loads('"'+m[1]+'"'))))
+    if p.name!='tests.rs' and 'tests' not in p.parts and 'i18n' not in p.parts:
+        for m in re.finditer(r'\bErr\(\s*(?:format!\(\s*)?"((?:\\.|[^"\\])*)"',source.split('#[cfg(test)]')[0]):
+            error_keys.add(('',encode(json.loads('"'+m[1]+'"'))))
+for wording in json.loads((I18N/'cy_error_templates.rs').read_text(encoding='utf-8')[1:]):
+    error_keys.add(('',encode(wording)))
+required.update(error_keys)
+commands=(SOURCE/'crates/engine/src/commands.rs').read_text(encoding='utf-8')
+engine=(SOURCE/'crates/engine/src/lib.rs').read_text(encoding='utf-8')
+for m in re.finditer(r'EditError::NotPermitted\("([^"\n]+)"\)',engine):required.add(('',m[1]))
+for m in re.finditer(r'\bct?\("[^"\n]+",\s*"((?:\\.|[^"\\])*)"',commands):
+    required.add(('',encode(json.loads('"'+m[1]+'"'))))
+catalog=(SOURCE/'crates/engine/src/catalog.rs').read_text(encoding='utf-8')
+for m in re.finditer(r'(?:\b(?:label|title):\s*|\b(?:item|menu_item)\()"((?:\\.|[^"\\])*)"',catalog):
+    required.add(('',encode(json.loads('"'+m[1]+'"'))))
+missing=required-ko.keys()
+assert not missing,sorted(missing)
+assert len(ko)>2700 and literal_count>1000
+allowed={'PDF','PDF/A…','ZIP','URL','DN: ','+LOC','−LOC','ΔLOC','Ctrl','Shift','Delete','Esc','Home','End'}
+unchanged=[]
+for (c,s),t in ko.items():
+    literal=re.sub(r'\{[^{}]*\}','',s)
+    if s==t and re.search(r'[A-Za-z]{2}',literal) and s not in allowed:
+        unchanged.append((c,s))
+assert not unchanged,unchanged
+# 코드 예시는 번역으로 실행 의미가 달라지면 안 된다.
+example=ko['','JavaScript, e.g. getField("total").value']
+assert 'getField("total").value' in example
+
+# 실제 원본 파서로 복수형·줄임표·자리표시자와 진단 치환을 검사한다.
+def quoted(path):return json.dumps(str(path),ensure_ascii=False)
+registry_source=(I18N/'mod.rs').read_text(encoding='utf-8')
+registry=registry_source.split('pub struct LangInfo {',1)[1].split('impl LangInfo {',1)[0]
+registry='pub struct LangInfo {'+registry
+registry=re.sub(r'include_str!\("([^"\n]+)"\)',lambda m:'include_str!('+quoted(I18N/m[1])+')',registry)
+date_source=(SOURCE/'crates/engine/src/dates.rs').read_text(encoding='utf-8')
+date_parts=[re.search(r'pub const MAX_DATE_FORMAT_CHARS[^;]+;',date_source)[0]]
+for name in ['check_date_format','unescaped','runs']:
+    start=date_source.index(('pub fn ' if name=='check_date_format' else 'fn ')+name+'(')
+    end=date_source.index('\n}\n',start)+3
+    date_parts.append(date_source[start:end])
+date_probe='\n'.join(date_parts)
+probe=f'''mod i18n {{
+    #[path={quoted(I18N/'catalog.rs')}] pub mod catalog;
+    pub struct Lang;
+    impl Lang {{ pub fn code(&self) -> &str {{ "ko" }} }}
+    pub fn current() -> Lang {{ Lang }}
+    pub fn t(s: &str) -> &str {{
+        static C: std::sync::OnceLock<catalog::Catalog> = std::sync::OnceLock::new();
+        C.get_or_init(|| catalog::Catalog::parse(include_str!({quoted(I18N/'ko.tsv')}),1).0).plain(s).unwrap_or(s)
+    }}
+    #[path={quoted(I18N/'cy_korean.rs')}] pub mod cy_korean;
+}}
+mod registry {{
+    use std::sync::OnceLock;
+    use super::i18n::catalog::Catalog;
+    {registry}
+}}
+mod dates {{ {date_probe} }}
+#[test] fn source_language_and_korean_plural_rules_are_preserved() {{
+    assert_eq!(registry::LANGUAGES[0].code,"en");
+    let ko=registry::LANGUAGES.iter().find(|l| l.code=="ko").unwrap();
+    for n in [0,1,2,100] {{ assert_eq!((ko.plural)(n),0); }}
+    assert!(!ko.rtl);
+}}
+#[test] fn korean_catalog_is_valid() {{
+    let (_, errors)=i18n::catalog::parse_entries(include_str!({quoted(I18N/'ko.tsv')}),1);
+    assert!(errors.is_empty(),"{{errors:#?}}");
+}}
+#[test] fn korean_diagnostics_preserve_values() {{
+    let value="C:/보고서/{{n}}.pdf";
+    let translated=i18n::cy_korean::diagnostic(&format!("unsupported filter: {{value}}"));
+    assert!(translated.contains("지원되지"));
+    assert!(translated.contains(value));
+    assert!(i18n::cy_korean::diagnostic("the password is wrong").contains("비밀번호"));
+    assert!(i18n::cy_korean::diagnostic("unrecognised vendor error 9876").contains("기술 정보"));
+}}
+#[test] fn nested_diagnostics_are_translated_but_field_names_are_not() {{
+    let message="stream data could not be decoded: unsupported filter: X";
+    let translated=i18n::cy_korean::diagnostic(message);
+    assert!(translated.contains("지원되지"));
+    assert!(!translated.contains("unsupported"));
+    let field="there is no field named \\\"unsupported filter: X\\\"";
+    assert!(i18n::cy_korean::diagnostic(field).contains("unsupported filter: X"));
+}}
+#[test] fn anonymous_diagnostic_values_remain_distinct() {{
+    let message="its certificate holds RSA key but the store's private key is EC key";
+    let translated=i18n::cy_korean::diagnostic(message);
+    assert_ne!(translated,message);
+    assert!(translated.contains("RSA"));
+    assert!(translated.contains("EC"));
+}}
+#[test] fn actual_custom_date_validation_is_in_korean() {{
+    for pattern in ["", "HH:MM", "yyy", "Date"] {{
+        let raw=dates::check_date_format(pattern).unwrap_err();
+        let translated=i18n::cy_korean::diagnostic(&raw);
+        assert_ne!(raw,translated,"{{pattern}}: {{raw}}");
+        assert!(!translated.contains("the date format"));
+        assert!(!translated.contains("time letter"));
+    }}
+    let raw=dates::check_date_format("HH:MM").unwrap_err();
+    assert!(i18n::cy_korean::diagnostic(&raw).contains("`H`"));
+    let raw=dates::check_date_format("yyy").unwrap_err();
+    let translated=i18n::cy_korean::diagnostic(&raw);
+    assert!(translated.contains("`yyy`"));
+    assert!(translated.contains("yy 또는 yyyy"));
+    assert_eq!(dates::check_date_format("yyyy-mm-dd"),Ok("yyyy-mm-dd"));
+}}
+'''
+with tempfile.TemporaryDirectory(prefix='cy-ko-check-') as tmp:
+    rs=Path(tmp)/'catalog.rs';rs.write_text(probe,encoding='utf-8')
+    binary=Path(tmp)/('catalog.exe' if os.name=='nt' else 'catalog')
+    subprocess.run(['rustc','--edition=2024','--test',str(rs),'-o',str(binary)],check=True)
+    subprocess.run([str(binary)],check=True)
+print(f'한국어 {len(ko)}개 · 원본 전체 카탈로그/화면 키 {len(required)}개 · 진단 {len(error_keys)}개: 누락 0, 원본 파서·문서 값 보존 검사 통과')

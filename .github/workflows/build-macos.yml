@@ -11,6 +11,7 @@ on:
       - "scripts/build_pdf_workbench.py"
       - "scripts/build_pdfcraft.py"
       - "tests/pdfcraft_integration.py"
+      - "tests/check_pdf_workbench_korean.py"
       - "tests/pdfcraft_macos_smoke.swift"
       - "tests/pdf_workbench_macos_smoke.swift"
       - ".github/workflows/build-macos.yml"
@@ -25,6 +26,7 @@ on:
       - "scripts/build_pdf_workbench.py"
       - "scripts/build_pdfcraft.py"
       - "tests/pdfcraft_integration.py"
+      - "tests/check_pdf_workbench_korean.py"
       - "tests/pdfcraft_macos_smoke.swift"
       - "tests/pdf_workbench_macos_smoke.swift"
       - ".github/workflows/build-macos.yml"
@@ -61,6 +63,9 @@ jobs:
       - name: Build complete PDF workbench
         working-directory: .
         run: python3 scripts/build_pdf_workbench.py
+      - name: Verify complete Korean workbench catalog
+        working-directory: .
+        run: python3 tests/check_pdf_workbench_korean.py
       - name: Test PdfCraft round trips
         working-directory: .
         run: |
@@ -181,6 +186,8 @@ jobs:
           PACKAGE_VERSION: ${{ needs.build.outputs.version }}
         run: |
           cat > notes.md <<'EOF'
+          전체 PDF 작업실의 메뉴·설정·도움말·검사 안내를 한국어로 번역했습니다.
+
           Mac 업데이트는 앱의 안내에서 공식 릴리스 설치 파일을 브라우저로 받아 진행합니다. 앱 안에서 받은 이전 DMG는 사용하지 마세요. DMG를 연 뒤 Applications로 직접 옮겨 교체합니다.
 
           PdfCraft 0.9.0의 전체 PDF 엔진과 편집 UI를 CY뷰어의 PDF 작업실에 연결했습니다. PDF 도구 → 전체 PDF 작업실에서 주석·양식·텍스트/이미지 편집·비교·내보내기 등 원본에 구현된 도구를 별도 사본으로 사용합니다. 원본의 예정/외부 서비스 기능과 일부 고급 영어 메뉴는 구분됩니다. ArtCraft Team 및 PdfCraft 기여자의 저작권·MIT와 의존성 고지를 동봉하며 원본 상표 로고는 포함하지 않습니다.

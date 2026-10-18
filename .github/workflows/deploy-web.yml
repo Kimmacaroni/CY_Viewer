@@ -11,6 +11,7 @@ on:
       - "scripts/build_pdf_workbench.py"
       - "scripts/build_pdfcraft*.py"
       - "tests/pdfcraft*"
+      - "tests/check_pdf_workbench_korean.py"
       - "tests/package*.json"
       - "tests/downloads.test.cjs"
       - ".github/workflows/deploy-web.yml"
@@ -24,6 +25,7 @@ on:
       - "scripts/build_pdf_workbench.py"
       - "scripts/build_pdfcraft*.py"
       - "tests/pdfcraft*"
+      - "tests/check_pdf_workbench_korean.py"
       - "tests/package*.json"
       - "tests/downloads.test.cjs"
       - ".github/workflows/deploy-web.yml"
@@ -58,6 +60,9 @@ jobs:
       - name: Build complete PdfCraft workbench
         working-directory: .
         run: python3 scripts/build_pdf_workbench.py --web
+      - name: Verify complete Korean workbench catalog
+        working-directory: .
+        run: python3 tests/check_pdf_workbench_korean.py
       - name: Test browser PdfCraft engine
         working-directory: .
         run: |

@@ -2,11 +2,11 @@ name: Windows build
 on:
   workflow_dispatch:
   pull_request:
-    paths: ['native_windows/**', 'installer/**', 'CYViewer.spec', 'pdfcraft_bridge/**', 'pdf_workbench/**', 'scripts/build_pdf_workbench.py', 'scripts/build_pdfcraft.py', 'tests/pdfcraft_integration.py', '.github/workflows/build-windows.yml']
+    paths: ['native_windows/**', 'installer/**', 'CYViewer.spec', 'pdfcraft_bridge/**', 'pdf_workbench/**', 'scripts/build_pdf_workbench.py', 'scripts/build_pdfcraft.py', 'tests/pdfcraft_integration.py', 'tests/check_pdf_workbench_korean.py', '.github/workflows/build-windows.yml']
   push:
     branches: [main]
     tags: ['windows-v*']
-    paths: ['native_windows/**', 'installer/**', 'CYViewer.spec', 'pdfcraft_bridge/**', 'pdf_workbench/**', 'scripts/build_pdf_workbench.py', 'scripts/build_pdfcraft.py', 'tests/pdfcraft_integration.py', '.github/workflows/build-windows.yml']
+    paths: ['native_windows/**', 'installer/**', 'CYViewer.spec', 'pdfcraft_bridge/**', 'pdf_workbench/**', 'scripts/build_pdf_workbench.py', 'scripts/build_pdfcraft.py', 'tests/pdfcraft_integration.py', 'tests/check_pdf_workbench_korean.py', '.github/workflows/build-windows.yml']
 permissions:
   contents: read
 jobs:
@@ -27,6 +27,8 @@ jobs:
         run: python scripts/build_pdfcraft.py
       - name: Build complete PDF workbench
         run: python scripts/build_pdf_workbench.py
+      - name: Verify complete Korean workbench catalog
+        run: python tests/check_pdf_workbench_korean.py
       - name: Test PdfCraft round trips
         run: python tests/pdfcraft_integration.py
       - name: Test updater validation
@@ -94,6 +96,8 @@ jobs:
           PACKAGE_VERSION: ${{ needs.build.outputs.version }}
         run: |
           cat > notes.md <<'EOF'
+          전체 PDF 작업실의 메뉴·설정·도움말·검사 안내를 한국어로 번역했습니다.
+
           PdfCraft 0.9.0의 전체 PDF 엔진과 편집 UI를 CY뷰어의 PDF 작업실에 연결했습니다. PDF 도구 → 전체 PDF 작업실에서 주석·양식·텍스트/이미지 편집·비교·내보내기 등 원본에 구현된 도구를 별도 사본으로 사용합니다. 원본의 예정/외부 서비스 기능과 일부 고급 영어 메뉴는 구분됩니다. ArtCraft Team 및 PdfCraft 기여자의 저작권·MIT와 의존성 고지를 동봉하며 원본 상표 로고는 포함하지 않습니다.
           이전 버전 사용자는 이 설치 파일을 한 번 직접 설치해 주세요.
           Windows 10·11 64비트용 설치 파일입니다. SHA-256과 빌드 의존성 목록을 함께 제공합니다.

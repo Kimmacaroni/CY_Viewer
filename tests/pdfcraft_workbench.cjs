@@ -23,33 +23,46 @@ const {execFileSync}=require('node:child_process');
   const frame=page.frameLocator('.cy-workbench iframe'),canvas=frame.locator('canvas');
   await canvas.click({position:{x:600,y:350}});await page.waitForTimeout(1500);
   const modifier=await canvas.evaluate(()=>/(Mac|iPhone|iPad)/.test(navigator.userAgent)?'Meta':'Control');
-  async function command(id){await canvas.press(modifier+'+k');await canvas.evaluate(()=>new Promise(resolve=>requestAnimationFrame(()=>requestAnimationFrame(resolve))));await page.keyboard.type(id);await page.waitForTimeout(250);await page.keyboard.press('Enter');await page.waitForTimeout(300);}
-  await command('comment.note');await canvas.click({position:{x:650,y:330}});await page.keyboard.type('CY full source annotation');await page.keyboard.press(modifier+'+Enter');await page.waitForTimeout(300);
-  await command('form.add.text');
+  async function command(query){await canvas.press(modifier+'+k');await canvas.evaluate(()=>new Promise(resolve=>requestAnimationFrame(()=>requestAnimationFrame(resolve))));await page.keyboard.insertText(query);await page.waitForTimeout(250);await page.keyboard.press('Enter');await page.waitForTimeout(300);}
+  await command('스티커 메모 추가');await canvas.click({position:{x:650,y:330}});
+  // 새 주석 입력란이 렌더링되어 초점을 받은 뒤 한글을 입력한다.
+  await canvas.evaluate(()=>new Promise(resolve=>requestAnimationFrame(()=>requestAnimationFrame(resolve))));
+  await page.keyboard.insertText('한글 주석 저장 확인');
+  // WebKit의 입력 확정이 egui 프레임에 반영된 뒤 게시한다.
+  await canvas.evaluate(()=>new Promise(resolve=>requestAnimationFrame(()=>requestAnimationFrame(resolve))));
+  await page.keyboard.press(modifier+'+Enter');await page.waitForTimeout(300);
+  await command('텍스트 필드 추가');
   const box=await canvas.boundingBox();await page.mouse.move(box.x+450,box.y+480);await page.mouse.down();await page.waitForTimeout(150);await page.mouse.move(box.x+650,box.y+520,{steps:8});await page.waitForTimeout(150);await page.mouse.up();await page.waitForTimeout(500);
-  await command('edit.text');await canvas.click({position:{x:480,y:600}});await page.keyboard.type('CY ported body text');await canvas.evaluate(()=>new Promise(resolve=>requestAnimationFrame(()=>requestAnimationFrame(resolve))));
+  await command('텍스트 추가');await canvas.click({position:{x:480,y:600}});await page.keyboard.type('CY ported body text');await canvas.evaluate(()=>new Promise(resolve=>requestAnimationFrame(()=>requestAnimationFrame(resolve))));
   // 원본 UI의 텍스트 완료(✓)를 눌러 본문 편집을 확정한다.
   await canvas.click({position:{x:684,y:612}});await page.waitForTimeout(300);
   await canvas.press(modifier+'+s');
   const link=page.getByRole('link',{name:'다운로드',exact:true});await link.waitFor();
   const pending=page.waitForEvent('download');await link.click();await(await pending).saveAs(path.join(temp,'full-workbench.pdf'));
   execFileSync(process.env.CY_TEST_PYTHON||'python3',['-c',`
-import pymupdf,sys
+import pymupdf,sys,datetime
 with pymupdf.open(sys.argv[1]) as d:
  assert len(d)==4
+ stamp=d.metadata.get('modDate','')
+ assert stamp.startswith('D:') and stamp.endswith('Z'), stamp
+ modified=datetime.datetime.strptime(stamp[2:16],'%Y%m%d%H%M%S').replace(tzinfo=datetime.timezone.utc)
+ assert abs((datetime.datetime.now(datetime.timezone.utc)-modified).total_seconds())<300, stamp
  comments=[a.info.get('content') for p in d for a in p.annots() or []]
- assert 'CY full source annotation' in comments, comments
+ assert '한글 주석 저장 확인' in comments, comments
  widgets=[w for p in d for w in p.widgets() or []]
  assert any(w.field_type_string=='Text' for w in widgets), [(w.field_name,w.field_type_string) for w in widgets]
  assert any('CY ported body text' in p.get_text() for p in d), [p.get_text() for p in d]
 `,path.join(temp,'full-workbench.pdf')]);
   await page.screenshot({path:path.join(temp,'full-workbench.png')});
+  if(process.env.CY_KOREAN_SCREENSHOTS){
+   await command('환경설정');await page.screenshot({path:path.join(temp,'korean-preferences.png')});await canvas.press('Escape');
+  }
   await page.setViewportSize({width:390,height:844});await page.waitForTimeout(500);
   const small=await canvas.boundingBox();assert(small.width<=390&&small.width>250);
   await page.screenshot({path:path.join(temp,'full-workbench-390.png')});
   await page.getByRole('button',{name:'CY뷰어에서 열기',exact:true}).tap();
   await page.locator('.cy-workbench').waitFor({state:'detached'});
   await page.getByRole('button',{name:'PDF 도구',exact:true}).waitFor();
-  console.log(`${kind.name()} 전체 작업실: CY 진입·0.9.0 시작·주석·양식 필드·본문 추가·다운로드·독립 PDF 검사·390px·리더 복귀 통과`);
+  console.log(`${kind.name()} 전체 작업실: 한국어 도구 검색·한글 주석·양식 필드·본문 추가·다운로드·독립 PDF 검사·390px·리더 복귀 통과`);
  }catch(error){console.error(error);throw error;}finally{await browser?.close();server.close();if(process.env.CY_WORKBENCH_KEEP)console.log('검사 산출물:',temp);else fs.rmSync(temp,{recursive:true,force:true});}
 })().catch(()=>{process.exit(1)});
