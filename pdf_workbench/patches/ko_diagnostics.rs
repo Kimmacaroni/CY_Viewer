@@ -133,7 +133,7 @@ fn known(message: &str, depth: usize) -> Option<String> {
 
 pub fn diagnostic(message: &str) -> String {
     if super::current().code() != "ko" {
-        return message.to_owned();
+        return super::t(message).to_owned();
     }
     if let Some(translated) = known(message, 0) {
         return translated;
