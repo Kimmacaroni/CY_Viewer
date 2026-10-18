@@ -2,6 +2,8 @@
 #![cfg_attr(target_os = "windows", windows_subsystem = "windows")]
 use pdfcraft_ui_egui::PdfCraftApp;
 use std::path::PathBuf;
+#[cfg(target_os = "macos")]
+mod macos_menu;
 #[cfg(target_os = "windows")]
 mod motion;
 mod text_scale;
@@ -9,7 +11,7 @@ mod text_scale;
 fn main() -> eframe::Result {
     let args: Vec<_> = std::env::args().skip(1).collect();
     if args.first().map(String::as_str) == Some("--version") {
-        println!("CY뷰어 PDF 작업실 0.1.0 · PdfCraft 0.9.0 · ArtCraft Team");
+        println!("CY뷰어 PDF 작업실 0.1.1 · PdfCraft 0.9.0 · ArtCraft Team");
         return Ok(());
     }
     let initial = args.first().map(PathBuf::from);
@@ -39,6 +41,7 @@ fn launch(renderer: eframe::Renderer, initial: Option<PathBuf>) -> eframe::Resul
             if let Some(saved) = cc.storage.and_then(|s| s.get_string("pdfcraft")) {
                 app.restore(&saved);
             }
+            app.language = "ko".into();
             app.system_text_scale = text_scale::system();
             app.printer_source = Some(pdfcraft_ui_egui::system_printers());
             app.os_key_store_ids = cfg!(any(target_os = "macos", target_os = "windows"));
@@ -83,8 +86,7 @@ fn launch(renderer: eframe::Renderer, initial: Option<PathBuf>) -> eframe::Resul
             #[cfg(target_os = "linux")]
             app.enable_desktop_theme();
             #[cfg(target_os = "macos")]
-            if let Err(error) = craft_quit::install_app_menu(&cc.egui_ctx, "CY뷰어 PDF 작업실")
-            {
+            if let Err(error) = macos_menu::install(&cc.egui_ctx, "CY뷰어 PDF 작업실") {
                 app.notify_error(format!(
                     "종료 메뉴를 준비하지 못했습니다. 창의 닫기 버튼을 사용하세요: {error}"
                 ));

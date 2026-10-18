@@ -1,6 +1,6 @@
 """PdfCraft 전체 엔진·UI를 고정 소스에서 빌드한다. 원본 로고는 바이너리에 넣지 않는다."""
 from pathlib import Path
-import argparse, hashlib, inspect, json, os, shutil, subprocess, sys, tarfile, tomllib, urllib.request
+import argparse, hashlib, inspect, json, os, re, shutil, subprocess, sys, tarfile, tomllib, urllib.request
 sys.stdout.reconfigure(encoding='utf-8')
 sys.stderr.reconfigure(encoding='utf-8')
 ROOT = Path(__file__).resolve().parent.parent
@@ -23,7 +23,7 @@ def replace(path, old, new):
 def prepare():
     archive = BASE / 'upstream.tar.gz'
     download(f"https://codeload.github.com/storytold/pdfcraft/tar.gz/{CONFIG['revision']}", archive, CONFIG['archive_sha256'])
-    inputs = [ROOT/'pdf_workbench/source.json', ROOT/'pdf_workbench/src/main.rs', ROOT/'pdf_workbench/patches/ko.tsv']
+    inputs = [ROOT/'pdf_workbench/source.json', ROOT/'pdf_workbench/src/main.rs', ROOT/'pdf_workbench/src/macos_menu.rs', ROOT/'pdf_workbench/patches/ko.tsv', ROOT/'pdf_workbench/patches/ko_diagnostics.rs']
     stamp = hashlib.sha256(inspect.getsource(prepare).encode('utf-8') + b''.join(p.read_bytes() for p in inputs)).hexdigest()
     marker = SOURCE / '.cy-source-stamp'
     if marker.exists() and marker.read_text(encoding='utf-8') == stamp:
@@ -42,6 +42,13 @@ def prepare():
     download(base+'NanumGothic-Regular.ttf', font, CONFIG['font_sha256'])
     download(base+'OFL.txt', font.with_suffix('.OFL.txt'), CONFIG['font_license_sha256'])
     shutil.copy2(ROOT/'pdf_workbench/src/main.rs', SOURCE/'apps/pdfcraft/src/main.rs')
+    shutil.copy2(ROOT/'pdf_workbench/src/macos_menu.rs', SOURCE/'apps/pdfcraft/src/macos_menu.rs')
+    # 기존 잠금 파일에 있는 muda만 직접 참조해 한국어 메뉴도 안전 종료를 유지한다.
+    replace(SOURCE/'apps/pdfcraft/Cargo.toml', 'craft-quit = { workspace = true, features = ["menu"] }', 'craft-quit = { workspace = true, features = ["menu"] }\nmuda = { version = "0.21.2", default-features = false }')
+    lock=SOURCE/'Cargo.lock'
+    text=lock.read_text(encoding='utf-8');a=text.index('name = "pdfcraft"\n');b=text.index('\n[[package]]',a)
+    block=text[a:b].replace(' "log",', ' "log",\n "muda",')
+    lock.write_text(text[:a]+block+text[b:],encoding='utf-8')
     (SOURCE/'apps/pdfcraft/build.rs').write_text('fn main() {}\n',encoding='utf-8')
     widgets = SOURCE/'crates/ui-egui/src/widgets.rs'
     text = widgets.read_text(encoding='utf-8'); start = text.index('/// The ArtCraft wordmark'); end = text.index('/// Buttons for every community link', start)
@@ -61,12 +68,36 @@ pub fn artcraft_mark(ui: &mut egui::Ui, size: f32) -> Response {
     i18n = SOURCE/'crates/ui-egui/src/i18n/mod.rs'
     replace(i18n, 'pub static LANGUAGES: [LangInfo; 23] = [', 'pub static LANGUAGES: [LangInfo; 24] = [\n    LangInfo { code: "ko", name: "한국어", source: include_str!("ko.tsv"), plural: plural_none, rtl: false, catalog: OnceLock::new() },')
     shutil.copy2(ROOT/'pdf_workbench/patches/ko.tsv', i18n.parent/'ko.tsv')
+    replace(i18n, 'mod catalog;', 'mod catalog;\npub mod cy_korean;')
+    shutil.copy2(ROOT/'pdf_workbench/patches/ko_diagnostics.rs',i18n.parent/'cy_korean.rs')
+    wordings=set()
+    for path in (SOURCE/'crates').glob('*/src/**/*.rs'):
+        for match in re.finditer(r'#\[error\(\s*"((?:\\.|[^"\\])*)"',path.read_text(encoding='utf-8')):
+            wordings.add(json.loads('"'+match[1]+'"'))
+    (i18n.parent/'cy_error_templates.rs').write_text('&'+json.dumps(sorted(wordings),ensure_ascii=False),encoding='utf-8')
+    lib=SOURCE/'crates/ui-egui/src/lib.rs'
+    replace(lib, 'self.notify(error.to_string());', 'self.notify(i18n::cy_korean::diagnostic(&error.to_string()));')
+    replace(lib, 'self.notify(i18n::fmt(tl!(template), args));', '''let failure = ["Couldn't", "failed", "could not", "not applied", "Can't", "cannot"].iter().any(|part| template.contains(part));
+        let values: Vec<String> = args.iter().map(|(key, value)| {
+            if failure && matches!(*key, "e" | "error" | "reason" | "why") { i18n::cy_korean::diagnostic(value) }
+            else { (*value).to_owned() }
+        }).collect();
+        let localized: Vec<(&str, &str)> = args.iter().zip(values.iter()).map(|((key, _), value)| (*key, value.as_str())).collect();
+        self.notify(i18n::fmt(tl!(template), &localized));''')
+    for name,old,new in [
+        ('word_count_ui.rs','ui.label(error.to_string());','ui.label(crate::i18n::cy_korean::diagnostic(&error.to_string()));'),
+        ('word_count_ui.rs','ui.colored_label(ui.visuals().error_fg_color, error);','ui.colored_label(ui.visuals().error_fg_color, crate::i18n::cy_korean::diagnostic(&error.to_string()));'),
+        ('measure_ui.rs','ui.colored_label(Color32::from_rgb(190, 50, 50), error);','ui.colored_label(Color32::from_rgb(190, 50, 50), crate::i18n::cy_korean::diagnostic(&error.to_string()));'),
+        ('page_selection_ui.rs','ui.label(error);','ui.label(crate::i18n::cy_korean::diagnostic(&error.to_string()));'),
+    ]:
+        replace(SOURCE/'crates/ui-egui/src'/name,old,new)
     web = SOURCE/'apps/pdfcraft-web/src/main.rs'
     replace(web, 'let mut app = PdfCraftApp::new();', 'let mut app = PdfCraftApp::new();\n                    app.language = "ko".into();\n                    app.set_theme_preference(pdfcraft_ui_egui::theme::ThemePreference::System);')
+    replace(web, '                    // `?file=<url>`', '                    app.language = "ko".into();\n                    // `?file=<url>`')
     replace(SOURCE/'apps/pdfcraft-web/index.html', '<title>PdfCraft</title>', '<title>CY뷰어 PDF 작업실 · PdfCraft</title>')
     home=SOURCE/'crates/ui-egui/src/home.rs'
     text=home.read_text(encoding='utf-8');a=text.index('            egui::Frame::NONE');b=text.index('            ui.add_space(22.0);',a)
-    text=text[:a]+'''            ui.label("PdfCraft · ArtCraft Team 및 PdfCraft contributors · MIT");
+    text=text[:a]+'''            ui.label("PdfCraft · ArtCraft Team 및 PdfCraft 기여자 · MIT");
             ui.hyperlink_to("원본 소스·라이선스", "https://github.com/storytold/pdfcraft");
 '''+text[b:];home.write_text(text,encoding='utf-8')
     chrome=SOURCE/'crates/ui-egui/src/chrome.rs'

@@ -12,7 +12,7 @@ PdfCraft는 MIT 또는 Apache-2.0으로 제공되며, CY뷰어는 해당 코드�
 
 ## 전체 PDF 작업실
 
-PDF를 연 뒤 **PDF 도구 → 전체 PDF 작업실**을 선택하세요. 주석·도형·펜, 양식 작성과 필드 편집, 텍스트·이미지 편집, 문서 비교·내보내기·첨부파일·레이어·서명 등 원본에 구현된 편집 흐름을 별도 문서 사본으로 제공합니다. 웹은 같은 사이트의 WASM 작업실, Mac·Windows는 설치본에 포함된 편집 창을 사용합니다. 원본의 예정 기능·외부 서비스 기능은 별도로 구분하며 일부 고급 메뉴는 영어입니다. 원본 OCR 모델은 영어 전용이며 CY의 한국어 OCR 경로는 유지합니다. [원본 소스·이식 범위·제한](pdf_workbench/README.md)을 참고하세요.
+PDF를 연 뒤 **PDF 도구 → 전체 PDF 작업실**을 선택하세요. 주석·도형·펜, 양식 작성과 필드 편집, 텍스트·이미지 편집, 문서 비교·내보내기·첨부파일·레이어·서명 등 원본에 구현된 편집 흐름을 별도 문서 사본으로 제공합니다. 웹은 같은 사이트의 WASM 작업실, Mac·Windows는 설치본에 포함된 편집 창을 사용합니다. 메뉴·설정·도움말·검사 안내는 한국어로 제공하며, 원본의 예정 기능·외부 서비스 기능은 별도로 구분합니다. 원본 OCR 모델은 영어 전용이며 CY의 한국어 OCR 경로는 유지합니다. [원본 소스·이식 범위·제한](pdf_workbench/README.md)을 참고하세요.
 
 ArtCraft 로고와 상표 자산은 포함하지 않습니다. 작업실의 [전체 제3자 고지](https://kimmacaroni.github.io/CY_Viewer/pdf-workbench/THIRD_PARTY_NOTICES.txt)와 MIT 저작권을 보존합니다.
 
@@ -26,14 +26,14 @@ ArtCraft 로고와 상표 자산은 포함하지 않습니다. 작업실의 [전
 
 | 사용 환경 | 다운로드 및 실행 |
 | --- | --- |
-| Windows 10·11 64비트 | [Windows 설치 파일 v1.14.0](https://github.com/Kimmacaroni/CY_Viewer/releases/download/windows-v1.14.0/CYViewer-Setup-v1.14.0.exe) |
-| macOS | [macOS 설치 파일 v1.17.0](https://github.com/Kimmacaroni/CY_Viewer/releases/download/macos-v1.17.0/CYViewer-macOS-v1.17.0.dmg) |
+| Windows 10·11 64비트 | [Windows 설치 파일 v1.14.1](https://github.com/Kimmacaroni/CY_Viewer/releases/download/windows-v1.14.1/CYViewer-Setup-v1.14.1.exe) |
+| macOS | [macOS 설치 파일 v1.17.1](https://github.com/Kimmacaroni/CY_Viewer/releases/download/macos-v1.17.1/CYViewer-macOS-v1.17.1.dmg) |
 | iPhone·iPad·웹 | [CY뷰어 웹앱 열기](https://kimmacaroni.github.io/CY_Viewer/) |
 
 아이폰에서는 Safari로 웹앱을 연 뒤 `공유` → `홈 화면에 추가`를 선택하면
 CY뷰어 아이콘으로 실행할 수 있습니다. 개발자 모드나 유선 연결은 필요하지 않습니다.
 
-Windows 10·11 64비트 환경을 지원합니다. Release에서 `CYViewer-Setup-v1.14.0.exe`를 내려받아 설치하세요. 설치 마법사에서 설치 위치와 바탕화면 바로가기 생성 여부를 선택할 수 있습니다.
+Windows 10·11 64비트 환경을 지원합니다. Release에서 `CYViewer-Setup-v1.14.1.exe`를 내려받아 설치하세요. 설치 마법사에서 설치 위치와 바탕화면 바로가기 생성 여부를 선택할 수 있습니다.
 
 ## 업데이트
 
