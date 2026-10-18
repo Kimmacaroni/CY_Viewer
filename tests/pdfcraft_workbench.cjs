@@ -26,7 +26,7 @@ const {execFileSync}=require('node:child_process');
   async function command(id){await canvas.press(modifier+'+k');await canvas.evaluate(()=>new Promise(resolve=>requestAnimationFrame(()=>requestAnimationFrame(resolve))));await page.keyboard.type(id);await page.waitForTimeout(250);await page.keyboard.press('Enter');await page.waitForTimeout(300);}
   await command('comment.note');await canvas.click({position:{x:650,y:330}});await page.keyboard.type('CY full source annotation');await page.keyboard.press(modifier+'+Enter');await page.waitForTimeout(300);
   await command('form.add.text');
-  const box=await canvas.boundingBox();await page.mouse.move(box.x+450,box.y+480);await page.mouse.down();await page.mouse.move(box.x+650,box.y+520,{steps:8});await page.mouse.up();await page.waitForTimeout(500);
+  const box=await canvas.boundingBox();await page.mouse.move(box.x+450,box.y+480);await page.mouse.down();await page.waitForTimeout(150);await page.mouse.move(box.x+650,box.y+520,{steps:8});await page.waitForTimeout(150);await page.mouse.up();await page.waitForTimeout(500);
   await command('edit.text');await canvas.click({position:{x:480,y:600}});await page.keyboard.type('CY ported body text');await canvas.evaluate(()=>new Promise(resolve=>requestAnimationFrame(()=>requestAnimationFrame(resolve))));
   // 원본 UI의 텍스트 완료(✓)를 눌러 본문 편집을 확정한다.
   await canvas.click({position:{x:684,y:612}});await page.waitForTimeout(300);
