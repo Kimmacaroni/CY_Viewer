@@ -58,6 +58,10 @@ assert 'getField("total").value' in example
 
 # 실제 원본 파서로 복수형·줄임표·자리표시자와 진단 치환을 검사한다.
 def quoted(path):return json.dumps(str(path),ensure_ascii=False)
+registry_source=(I18N/'mod.rs').read_text(encoding='utf-8')
+registry=registry_source.split('pub struct LangInfo {',1)[1].split('impl LangInfo {',1)[0]
+registry='pub struct LangInfo {'+registry
+registry=re.sub(r'include_str!\("([^"\n]+)"\)',lambda m:'include_str!('+quoted(I18N/m[1])+')',registry)
 probe=f'''mod i18n {{
     #[path={quoted(I18N/'catalog.rs')}] pub mod catalog;
     pub struct Lang;
@@ -68,6 +72,17 @@ probe=f'''mod i18n {{
         C.get_or_init(|| catalog::Catalog::parse(include_str!({quoted(I18N/'ko.tsv')}),1).0).plain(s).unwrap_or(s)
     }}
     #[path={quoted(I18N/'cy_korean.rs')}] pub mod cy_korean;
+}}
+mod registry {{
+    use std::sync::OnceLock;
+    use super::i18n::catalog::Catalog;
+    {registry}
+}}
+#[test] fn source_language_and_korean_plural_rules_are_preserved() {{
+    assert_eq!(registry::LANGUAGES[0].code,"en");
+    let ko=registry::LANGUAGES.iter().find(|l| l.code=="ko").unwrap();
+    for n in [0,1,2,100] {{ assert_eq!((ko.plural)(n),0); }}
+    assert!(!ko.rtl);
 }}
 #[test] fn korean_catalog_is_valid() {{
     let (_, errors)=i18n::catalog::parse_entries(include_str!({quoted(I18N/'ko.tsv')}),1);

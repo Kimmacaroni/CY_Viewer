@@ -66,7 +66,9 @@ pub fn artcraft_mark(ui: &mut egui::Ui, size: f32) -> Response {
     for stack in fonts.families.values_mut() { stack.push("CY-Korean".to_owned()); }
     let fallback: Vec<String> = fonts.families''')
     i18n = SOURCE/'crates/ui-egui/src/i18n/mod.rs'
-    replace(i18n, 'pub static LANGUAGES: [LangInfo; 23] = [', 'pub static LANGUAGES: [LangInfo; 24] = [\n    LangInfo { code: "ko", name: "한국어", source: include_str!("ko.tsv"), plural: plural_none, rtl: false, catalog: OnceLock::new() },')
+    replace(i18n, 'pub static LANGUAGES: [LangInfo; 23] = [', 'pub static LANGUAGES: [LangInfo; 24] = [')
+    # Lang::EN은 0번 항목이므로 원본 언어의 위치를 바꾸지 않는다.
+    replace(i18n, '    LangInfo { code: "ja",', '    LangInfo { code: "ko", name: "한국어", source: include_str!("ko.tsv"), plural: plural_none, rtl: false, catalog: OnceLock::new() },\n    LangInfo { code: "ja",')
     shutil.copy2(ROOT/'pdf_workbench/patches/ko.tsv', i18n.parent/'ko.tsv')
     replace(i18n, 'mod catalog;', 'mod catalog;\npub mod cy_korean;')
     shutil.copy2(ROOT/'pdf_workbench/patches/ko_diagnostics.rs',i18n.parent/'cy_korean.rs')
@@ -93,7 +95,7 @@ pub fn artcraft_mark(ui: &mut egui::Ui, size: f32) -> Response {
         replace(SOURCE/'crates/ui-egui/src'/name,old,new)
     web = SOURCE/'apps/pdfcraft-web/src/main.rs'
     replace(web, 'let mut app = PdfCraftApp::new();', 'let mut app = PdfCraftApp::new();\n                    app.language = "ko".into();\n                    app.set_theme_preference(pdfcraft_ui_egui::theme::ThemePreference::System);')
-    replace(web, '                    // `?file=<url>`', '                    app.language = "ko".into();\n                    // `?file=<url>`')
+    replace(web, '                    // `?file=<url>`', '                    app.language = "ko".into();\n                    pdfcraft_ui_egui::i18n::set_current(pdfcraft_ui_egui::i18n::Lang::from_pref("ko"));\n                    // `?file=<url>`')
     replace(SOURCE/'apps/pdfcraft-web/index.html', '<title>PdfCraft</title>', '<title>CY뷰어 PDF 작업실 · PdfCraft</title>')
     home=SOURCE/'crates/ui-egui/src/home.rs'
     text=home.read_text(encoding='utf-8');a=text.index('            egui::Frame::NONE');b=text.index('            ui.add_space(22.0);',a)

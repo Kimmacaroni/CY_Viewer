@@ -42,6 +42,7 @@ fn launch(renderer: eframe::Renderer, initial: Option<PathBuf>) -> eframe::Resul
                 app.restore(&saved);
             }
             app.language = "ko".into();
+            pdfcraft_ui_egui::i18n::set_current(pdfcraft_ui_egui::i18n::Lang::from_pref("ko"));
             app.system_text_scale = text_scale::system();
             app.printer_source = Some(pdfcraft_ui_egui::system_printers());
             app.os_key_store_ids = cfg!(any(target_os = "macos", target_os = "windows"));

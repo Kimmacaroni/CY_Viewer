@@ -24,7 +24,13 @@ const {execFileSync}=require('node:child_process');
   await canvas.click({position:{x:600,y:350}});await page.waitForTimeout(1500);
   const modifier=await canvas.evaluate(()=>/(Mac|iPhone|iPad)/.test(navigator.userAgent)?'Meta':'Control');
   async function command(query){await canvas.press(modifier+'+k');await canvas.evaluate(()=>new Promise(resolve=>requestAnimationFrame(()=>requestAnimationFrame(resolve))));await page.keyboard.insertText(query);await page.waitForTimeout(250);await page.keyboard.press('Enter');await page.waitForTimeout(300);}
-  await command('스티커 메모 추가');await canvas.click({position:{x:650,y:330}});await page.keyboard.insertText('한글 주석 저장 확인');await page.keyboard.press(modifier+'+Enter');await page.waitForTimeout(300);
+  await command('스티커 메모 추가');await canvas.click({position:{x:650,y:330}});
+  // 새 주석 입력란이 렌더링되어 초점을 받은 뒤 한글을 입력한다.
+  await canvas.evaluate(()=>new Promise(resolve=>requestAnimationFrame(()=>requestAnimationFrame(resolve))));
+  await page.keyboard.insertText('한글 주석 저장 확인');
+  // WebKit의 입력 확정이 egui 프레임에 반영된 뒤 게시한다.
+  await canvas.evaluate(()=>new Promise(resolve=>requestAnimationFrame(()=>requestAnimationFrame(resolve))));
+  await page.keyboard.press(modifier+'+Enter');await page.waitForTimeout(300);
   await command('텍스트 필드 추가');
   const box=await canvas.boundingBox();await page.mouse.move(box.x+450,box.y+480);await page.mouse.down();await page.waitForTimeout(150);await page.mouse.move(box.x+650,box.y+520,{steps:8});await page.waitForTimeout(150);await page.mouse.up();await page.waitForTimeout(500);
   await command('텍스트 추가');await canvas.click({position:{x:480,y:600}});await page.keyboard.type('CY ported body text');await canvas.evaluate(()=>new Promise(resolve=>requestAnimationFrame(()=>requestAnimationFrame(resolve))));
