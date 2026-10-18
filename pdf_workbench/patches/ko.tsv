@@ -1619,7 +1619,7 @@
 	Paste pages	페이지 붙여넣기
 	Path	경로
 	Paths	경로
-	Pattern	무늬
+	Pattern	패턴
 	Patterns	패턴
 	Patterns (graphics objects)	패턴(그래픽 개체)
 	PdfCraft	CY뷰어 PDF 작업실
@@ -3046,6 +3046,7 @@ certificate	Validity ends	유효기간 종료
 certificate	Validity starts	유효기간 시작
 certificate	Version	버전
 comment menu	Edit	편집
+date format	Pattern	형식 코드
 key	Ctrl	Ctrl
 key	Delete	Delete
 key	End	End

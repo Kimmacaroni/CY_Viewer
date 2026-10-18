@@ -40,9 +40,13 @@ const {execFileSync}=require('node:child_process');
   const link=page.getByRole('link',{name:'다운로드',exact:true});await link.waitFor();
   const pending=page.waitForEvent('download');await link.click();await(await pending).saveAs(path.join(temp,'full-workbench.pdf'));
   execFileSync(process.env.CY_TEST_PYTHON||'python3',['-c',`
-import pymupdf,sys
+import pymupdf,sys,datetime
 with pymupdf.open(sys.argv[1]) as d:
  assert len(d)==4
+ stamp=d.metadata.get('modDate','')
+ assert stamp.startswith('D:') and stamp.endswith('Z'), stamp
+ modified=datetime.datetime.strptime(stamp[2:16],'%Y%m%d%H%M%S').replace(tzinfo=datetime.timezone.utc)
+ assert abs((datetime.datetime.now(datetime.timezone.utc)-modified).total_seconds())<300, stamp
  comments=[a.info.get('content') for p in d for a in p.annots() or []]
  assert '한글 주석 저장 확인' in comments, comments
  widgets=[w for p in d for w in p.widgets() or []]

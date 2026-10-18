@@ -29,6 +29,8 @@ for p in (SOURCE/'crates/ui-egui/src').rglob('*.rs'):
     source=p.read_text(encoding='utf-8').split('#[cfg(test)]')[0]
     for m in re.finditer(r'(?:tl!\(|i18n::t\()\s*"((?:\\.|[^"\\])*)"',source):
         required.add(('',encode(json.loads('"'+m[1]+'"'))));literal_count+=1
+    for m in re.finditer(r'tl_ctx!\(\s*"((?:\\.|[^"\\])*)"\s*,\s*"((?:\\.|[^"\\])*)"',source):
+        required.add(tuple(encode(json.loads('"'+s+'"')) for s in m.groups()))
 error_keys=set()
 for p in (SOURCE/'crates').glob('*/src/**/*.rs'):
     source=p.read_text(encoding='utf-8')

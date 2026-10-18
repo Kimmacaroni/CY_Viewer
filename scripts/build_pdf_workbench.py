@@ -102,12 +102,20 @@ pub fn artcraft_mark(ui: &mut egui::Ui, size: f32) -> Response {
         replace(SOURCE/'crates/ui-egui/src'/name,old,new)
     replace(SOURCE/'crates/ui-egui/src/js_ui.rs','format!("Error: {e}")','format!("오류: {}", crate::i18n::cy_korean::diagnostic(&e.to_string()))')
     replace(SOURCE/'crates/ui-egui/src/js_ui.rs',"// The engine's reason, in English.",'// 엔진 진단도 현재 UI 언어로 표시한다.')
+    replace(SOURCE/'crates/ui-egui/src/js_ui.rs','let label = ui.label(tl!("Pattern"));','let label = ui.label(tl_ctx!("date format", "Pattern"));')
     replace(SOURCE/'crates/ui-egui/src/measure_ui.rs','u.page.saturating_add(1), u.reason','u.page.saturating_add(1), crate::i18n::cy_korean::diagnostic(&u.reason)')
     for name,variable in [('bulk_fields.rs','error'),('dialogs.rs','e'),('sign_ui.rs','e'),('print_ui.rs','e')]:
         replace(SOURCE/'crates/ui-egui/src'/name,f'tl!({variable})',f'crate::i18n::cy_korean::diagnostic(&{variable}.to_string())')
     web = SOURCE/'apps/pdfcraft-web/src/main.rs'
     replace(web, 'let mut app = PdfCraftApp::new();', 'let mut app = PdfCraftApp::new();\n                    app.language = "ko".into();\n                    app.set_theme_preference(pdfcraft_ui_egui::theme::ThemePreference::System);')
-    replace(web, '                    // `?file=<url>`', '                    app.language = "ko".into();\n                    pdfcraft_ui_egui::i18n::set_current(pdfcraft_ui_egui::i18n::Lang::from_pref("ko"));\n                    // `?file=<url>`')
+    replace(web, '                    // `?file=<url>`', '''                    app.language = "ko".into();
+                    pdfcraft_ui_egui::i18n::set_current(pdfcraft_ui_egui::i18n::Lang::from_pref("ko"));
+                    // WASM에는 시스템 시계가 없으므로 브라우저의 UTC 시각과 현재 시간대를 전달한다.
+                    app.session = std::mem::take(&mut app.session).with_wall_clock(
+                        || (js_sys::Date::now() / 1000.0) as i64,
+                        || (-js_sys::Date::new_0().get_timezone_offset() * 60.0) as i64,
+                    );
+                    // `?file=<url>`''')
     replace(SOURCE/'apps/pdfcraft-web/index.html', '<title>PdfCraft</title>', '<title>CY뷰어 PDF 작업실 · PdfCraft</title>')
     home=SOURCE/'crates/ui-egui/src/home.rs'
     text=home.read_text(encoding='utf-8');a=text.index('            egui::Frame::NONE');b=text.index('            ui.add_space(22.0);',a)
