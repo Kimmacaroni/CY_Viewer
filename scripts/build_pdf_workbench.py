@@ -74,7 +74,12 @@ pub fn artcraft_mark(ui: &mut egui::Ui, size: f32) -> Response {
     text=text[:a]+text[b:];chrome.write_text(text,encoding='utf-8')
     replace(SOURCE/'crates/ui-egui/src/updates.rs', 'https://github.com/storytold/pdfcraft/releases', 'https://github.com/Kimmacaroni/CY_Viewer/releases')
     text=chrome.read_text(encoding='utf-8');start=text.index('pub fn mode_bar(');needle='            ui.horizontal_centered(|ui| {';at=text.index(needle,start)
-    text=text[:at]+'''            if ui.available_width() < 700.0 {
+    text=text[:at]+'''            let compact = ui.available_width() < 700.0;
+            let compact_id = egui::Id::new("cy_compact_workbench");
+            let was_compact = ui.ctx().data(|d| d.get_temp::<bool>(compact_id).unwrap_or(false));
+            if compact && !was_compact { app.left_open = false; app.choose_right_panel(None); }
+            ui.ctx().data_mut(|d| d.insert_temp(compact_id, compact));
+            if compact {
                 ui.horizontal_centered(|ui| {
                     main_menu(app, ui);
                     if ui.add(egui::Button::new("도구 찾기").min_size(vec2(80.0, 44.0))).clicked() { app.palette_open = true; }

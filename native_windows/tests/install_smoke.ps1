@@ -38,3 +38,24 @@ foreach ($pair in @(
 }
 & (Join-Path $target '_internal/pdfcraft/cy-pdf-workbench.exe') --version
 if ($LASTEXITCODE -ne 0) { throw '설치된 전체 PDF 작업실이 실행되지 않습니다.' }
+# 설치된 전체 편집기를 실제 GUI로 시작한다. 검사 PDF는 수정되지 않아야 한다.
+$fixture = (Resolve-Path 'macos_app/test/fixtures/print-pages.pdf').Path
+$fixtureHash = (Get-FileHash $fixture -Algorithm SHA256).Hash
+$workbench = Start-Process -FilePath (Join-Path $target '_internal/pdfcraft/cy-pdf-workbench.exe') -ArgumentList @("`"$fixture`"") -PassThru
+try {
+    $visible = $false
+    foreach ($attempt in 1..30) {
+        Start-Sleep -Milliseconds 500
+        $workbench.Refresh()
+        if ($workbench.HasExited) { throw "전체 PDF 작업실이 창 생성 전에 종료됐습니다: $($workbench.ExitCode)" }
+        if ($workbench.MainWindowHandle -ne 0) { $visible = $true; break }
+    }
+    if (-not $visible) { throw '설치된 전체 PDF 작업실의 창이 생성되지 않았습니다.' }
+    if ((Get-FileHash $fixture -Algorithm SHA256).Hash -ne $fixtureHash) { throw '작업실이 입력 PDF를 변경했습니다.' }
+    Write-Output 'Installed PDF workbench window and input preservation checks passed.'
+} finally {
+    if (-not $workbench.HasExited) {
+        $null = $workbench.CloseMainWindow()
+        if (-not $workbench.WaitForExit(5000)) { $workbench.Kill() }
+    }
+}

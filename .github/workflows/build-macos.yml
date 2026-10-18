@@ -12,6 +12,7 @@ on:
       - "scripts/build_pdfcraft.py"
       - "tests/pdfcraft_integration.py"
       - "tests/pdfcraft_macos_smoke.swift"
+      - "tests/pdf_workbench_macos_smoke.swift"
       - ".github/workflows/build-macos.yml"
   push:
     branches: [main]
@@ -25,6 +26,7 @@ on:
       - "scripts/build_pdfcraft.py"
       - "tests/pdfcraft_integration.py"
       - "tests/pdfcraft_macos_smoke.swift"
+      - "tests/pdf_workbench_macos_smoke.swift"
       - ".github/workflows/build-macos.yml"
 
 permissions:
@@ -124,6 +126,19 @@ jobs:
           <?xml version="1.0" encoding="UTF-8"?><plist version="1.0"><dict><key>CFBundleIdentifier</key><string>com.kimmacaroni.cyviewer.pdfcraft-smoke</string><key>CFBundleExecutable</key><string>Run</string><key>CFBundlePackageType</key><string>APPL</string></dict></plist>
           EOF
           codesign --force --sign - --entitlements pdfcraft_bridge/macos-helper.entitlements "$test_app/Contents/MacOS/cy-pdfcraft"
+          codesign --force --sign - --entitlements macos_app/macos/Runner/Release.entitlements "$test_app"
+          "$PWD/$test_app/Contents/MacOS/Run"
+      - name: Test sandboxed full PDF workbench window
+        working-directory: .
+        run: |
+          test_app="build/PdfWorkbenchSmoke.app"
+          mkdir -p "$test_app/Contents/MacOS"
+          swiftc tests/pdf_workbench_macos_smoke.swift -o "$test_app/Contents/MacOS/Run"
+          cp build/pdf-workbench/bin/cy-pdf-workbench "$test_app/Contents/MacOS/"
+          cat > "$test_app/Contents/Info.plist" <<'EOF'
+          <?xml version="1.0" encoding="UTF-8"?><plist version="1.0"><dict><key>CFBundleIdentifier</key><string>com.kimmacaroni.cyviewer.workbench-smoke</string><key>CFBundleExecutable</key><string>Run</string><key>CFBundlePackageType</key><string>APPL</string></dict></plist>
+          EOF
+          codesign --force --sign - --entitlements pdfcraft_bridge/macos-helper.entitlements "$test_app/Contents/MacOS/cy-pdf-workbench"
           codesign --force --sign - --entitlements macos_app/macos/Runner/Release.entitlements "$test_app"
           "$PWD/$test_app/Contents/MacOS/Run"
       - name: Create DMG
