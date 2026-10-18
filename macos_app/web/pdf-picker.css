@@ -47,3 +47,13 @@
   outline-offset: -4px;
 }
 .cy-pdf-file-input:disabled { opacity: 0.55; cursor: wait; }
+/* 기본 CY 화면 위에 전체 편집 작업실을 표시한다. 파일 입력과 포커스가 뒤로 새지 않게 한다. */
+.cy-workbench{position:fixed;inset:0;z-index:2147483647;display:flex;flex-direction:column;background:#f4f6f9;color:#182235;font:14px -apple-system,BlinkMacSystemFont,sans-serif;padding:env(safe-area-inset-top) env(safe-area-inset-right) env(safe-area-inset-bottom) env(safe-area-inset-left)}
+.cy-workbench header{display:flex;align-items:center;justify-content:space-between;gap:16px;padding:8px 16px;background:#fff;border-bottom:1px solid #dce2eb}
+.cy-workbench button,.cy-workbench a{box-sizing:border-box;min-height:44px;padding:10px 14px;font:inherit;border:1px solid #b7bfcc;border-radius:8px;background:#fff;color:#182235;cursor:pointer;touch-action:manipulation}
+.cy-workbench button:focus-visible,.cy-workbench a:focus-visible{outline:3px solid #245edb;outline-offset:2px}
+.cy-workbench iframe{flex:1;min-height:0;width:100%;border:0;background:transparent}
+.cy-workbench-status{margin:0;padding:8px 16px;line-height:1.5}
+.cy-workbench-actions{display:flex;gap:8px;padding:0 16px 8px}
+.cy-workbench [hidden]{display:none!important}
+@media(prefers-color-scheme:dark){.cy-workbench{background:#10141c;color:#e8edf5}.cy-workbench header,.cy-workbench button,.cy-workbench a{background:#191f2a;color:#e8edf5;border-color:#526174}}

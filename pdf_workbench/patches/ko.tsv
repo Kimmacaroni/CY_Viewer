@@ -1,0 +1,363 @@
+# CY뷰어 한국어 기본 조작 번역. 고급 미번역 문장은 원문을 유지한다.
+	PdfCraft	CY뷰어 PDF 작업실
+	About PdfCraft	CY뷰어 PDF 작업실 정보
+	Menu	메뉴
+	Home	문서함
+	All tools	모든 도구
+	Tools	도구
+	Open	열기
+	Open…	열기…
+	Open file	파일 열기
+	Open PDF	PDF 열기
+	Open a PDF	PDF 열기
+	Open a file	파일 열기
+	Save	저장
+	Save as…	다른 이름으로 저장…
+	Save a copy…	사본 저장…
+	Close	닫기
+	Cancel	취소
+	Apply	적용
+	Done	완료
+	OK	확인
+	Yes	예
+	No	아니요
+	Preferences	설정
+	Settings	설정
+	General	일반
+	Appearance	화면
+	Language	언어
+	Theme	테마
+	System	시스템
+	Light	밝게
+	Dark	어둡게
+	Recent	최근 문서
+	Recent files	최근 파일
+	Edit	편집
+	View	보기
+	Help	도움말
+	File	파일
+	New	새로 만들기
+	New…	새로 만들기…
+	Print…	인쇄…
+	Print	인쇄
+	Undo	되돌리기
+	Redo	다시 실행
+	Copy	복사
+	Paste	붙여넣기
+	Cut	잘라내기
+	Delete	삭제
+	Select all	전체 선택
+	Find	찾기
+	Search	검색
+	Find text	텍스트 찾기
+	Next	다음
+	Previous	이전
+	Zoom in	확대
+	Zoom out	축소
+	Fit page	쪽 맞춤
+	Fit to width	너비 맞춤
+	Fit width	너비 맞춤
+	Actual size	실제 크기
+	Page	쪽
+	Pages	페이지
+	Page thumbnails	페이지 미리보기
+	Bookmarks	책갈피
+	Attachments	첨부파일
+	Layers	레이어
+	Comments	주석
+	Comment	주석
+	Add comment	주석 추가
+	Highlight	강조
+	Underline	밑줄
+	Strikethrough	취소선
+	Sticky note	메모
+	Text	텍스트
+	Image	이미지
+	Rectangle	사각형
+	Ellipse	타원
+	Line	선
+	Arrow	화살표
+	Pencil	펜
+	Ink	펜
+	Stamp	도장
+	Stamps	도장
+	Eraser	지우개
+	Color	색상
+	Opacity	불투명도
+	Width	너비
+	Height	높이
+	Author	작성자
+	Subject	주제
+	Title	제목
+	Keywords	키워드
+	Description	설명
+	Properties	속성
+	Document properties	문서 속성
+	Security	보안
+	Password	암호
+	Enter password	암호 입력
+	Unlock	잠금 해제
+	Organize pages	페이지 구성
+	Combine files	파일 합치기
+	Combine	합치기
+	Split	분할
+	Extract	추출
+	Rotate	회전
+	Rotate left	왼쪽 회전
+	Rotate right	오른쪽 회전
+	Insert	삽입
+	Insert pages	페이지 삽입
+	Replace pages	페이지 교체
+	Crop pages	여백 자르기
+	Crop	자르기
+	Watermark	워터마크
+	Header & footer	머리말·꼬리말
+	Background	배경
+	Optimize PDF	PDF 최적화
+	Export PDF	PDF 내보내기
+	Export	내보내기
+	Create PDF	PDF 만들기
+	Prepare a form	양식 준비
+	Fill & sign	작성·서명
+	Fill and sign	작성·서명
+	Edit PDF	PDF 편집
+	Redact	영구 삭제
+	Compare files	파일 비교
+	Compare	비교
+	Measure	측정
+	Accessibility	접근성
+	Scan & OCR	스캔·OCR
+	Protect	보호
+	Protect PDF	PDF 보호
+	Certificates	인증서
+	Digital signatures	디지털 서명
+	Text field	텍스트 필드
+	Checkbox	체크 상자
+	Radio button	선택 버튼
+	Dropdown	드롭다운
+	List box	목록 상자
+	Button	버튼
+	Signature	서명
+	Name	이름
+	Value	값
+	Required	필수
+	Read only	읽기 전용
+	Options	옵션
+	Add	추가
+	Remove	제거
+	Rename	이름 변경
+	Duplicate	복제
+	Flatten	문서에 고정
+	Import	가져오기
+	Reset	초기화
+	Clear	지우기
+	Reset form	양식 초기화
+	Add files…	파일 추가…
+	Add files	파일 추가
+	Select files	파일 선택
+	Choose file	파일 선택
+	Choose…	선택…
+	Browse…	찾아보기…
+	From file	파일에서
+	From clipboard	클립보드에서
+	Blank page	빈 페이지
+	Page range	페이지 범위
+	All pages	전체 페이지
+	Current page	현재 페이지
+	Selected pages	선택 페이지
+	From	시작
+	To	끝
+	First	처음
+	Last	마지막
+	Before	앞
+	After	뒤
+	Top	위
+	Bottom	아래
+	Left	왼쪽
+	Right	오른쪽
+	Center	가운데
+	Size	크기
+	Font	글꼴
+	Font size	글자 크기
+	Bold	굵게
+	Italic	기울임
+	Align left	왼쪽 정렬
+	Align center	가운데 정렬
+	Align right	오른쪽 정렬
+	Text color	글자색
+	Fill color	채우기 색
+	Border color	테두리 색
+	Border width	테두리 두께
+	No documents open	열린 문서가 없습니다
+	Open a PDF to get started	PDF를 열어 시작하세요
+	Loading…	불러오는 중…
+	Saving…	저장 중…
+	Error	오류
+	Warning	주의
+	Unsaved changes	저장하지 않은 변경
+	Discard	변경 버리기
+	Save changes	변경 저장
+	Keep editing	계속 편집
+	Reply	답글
+	Resolve	해결
+	Delete comment	주석 삭제
+	Delete all	모두 삭제
+	Add bookmark	책갈피 추가
+	New bookmark	새 책갈피
+	Link	링크
+	Add link	링크 추가
+	Edit text	텍스트 편집
+	Add text	텍스트 추가
+	Add image	이미지 추가
+	Select	선택
+	Hand	이동
+	Continuous	연속 보기
+	Single page	한 쪽
+	Two pages	두 쪽
+	Page navigation	페이지 이동
+	Document	문서
+	Tools panel	도구 패널
+	Comments panel	주석 패널
+	Close tab	탭 닫기
+	Close all tabs	모든 탭 닫기
+	More	더 보기
+	None	없음
+	Custom	직접 지정
+	Default	기본
+	Reading	읽기
+	Reading mode	읽기 모드
+	Full screen	전체 화면
+	Exit full screen	전체 화면 나가기
+	Print production	인쇄 제작
+	Preflight	출력 전 검사
+	Output preview	출력 미리보기
+	Reduce file size	파일 크기 줄이기
+	Sanitize document	숨은 정보 제거
+	Remove hidden information	숨은 정보 제거
+	Redact text & images	텍스트·이미지 영구 삭제
+	Apply redactions	영구 삭제 적용
+	Mark for redaction	삭제 영역 지정
+	Attach file	파일 첨부
+	Embedded files	내장 파일
+	Metadata	문서 정보
+	Outline	책갈피
+	Structure	구조
+	Tags	태그
+	Reading order	읽기 순서
+	Add tags	태그 추가
+	Auto-tag	자동 태그
+	Recognize text	문자 인식
+	Run	실행
+	Stop	중지
+	Refresh	새로고침
+	Retry	다시 시도
+	Back	뒤로
+	Continue	계속
+	Finish	마침
+	Ready	준비됨
+	Status	상태
+	Actions	작업
+	Browse	찾아보기
+	Advanced	고급
+	Remove password	암호 해제
+	Set password	암호 설정
+	Open password	열기 암호
+	Permissions password	권한 암호
+	New password	새 암호
+	Confirm password	암호 확인
+	Flatten comments	주석 고정
+	Hide all comments	모든 주석 숨기기
+	Show all comments	모든 주석 표시
+	Import comments…	주석 가져오기…
+	Export comments…	주석 내보내기…
+	Text box	텍스트 상자
+	Callout	설명선
+	Polygon	다각형
+	Polyline	연속선
+	Cloud	구름선
+	Distance	거리
+	Perimeter	둘레
+	Area	면적
+	Scale	축척
+	Units	단위
+	Rotation	회전
+	Page size	페이지 크기
+	Destination	이동 위치
+	URL	URL
+	File name	파일 이름
+	Save to	저장 위치
+	File size	파일 크기
+	Created	만든 날짜
+	Modified	수정 날짜
+	Producer	생성 도구
+	Creator	작성 도구
+	Version	버전
+	About	정보
+	Check for updates	업데이트 확인
+	Share	공유
+	Copy text	텍스트 복사
+	Copy image	이미지 복사
+	Remove attachment	첨부파일 제거
+	Save attachment	첨부파일 저장
+	Add attachment	첨부파일 추가
+	Welcome to PdfCraft	CY뷰어 PDF 작업실
+	An open-source PDF workbench — local, private, and scriptable.	문서를 기기 안에서 편집하는 PDF 작업실입니다.
+	Recognize Text	문자 인식
+	The text recognition models are not installed.	문자 인식 모델이 설치되지 않았습니다.
+	Export a PDF	PDF 내보내기
+	Fill & Sign	작성·서명
+	Edit a PDF	PDF 편집
+	Create a PDF	PDF 만들기
+	Add comments	주석 달기
+	Edit text & images	텍스트·이미지 편집
+	Rotate pages	페이지 회전
+	Delete pages	페이지 삭제
+	Extract pages	페이지 추출
+	Header and footer	머리말·꼬리말
+	Bates numbering	베이츠 번호
+	Modify page	페이지 변경
+	Add content	내용 추가
+	Create from	만들기 원본
+	Add files to combine	합칠 파일 추가
+	Page options	페이지 작업
+	Page grid	페이지 격자
+	Set page boxes	페이지 영역 설정
+	Duplicate pages	페이지 복제
+	Reverse pages	페이지 역순 정렬
+	Page labels	페이지 번호 레이블
+	Page transitions	페이지 전환 효과
+	Markup	텍스트 표시
+	Drawing	그리기
+	Review	검토
+	Highlight text	텍스트 강조
+	Squiggly underline	물결 밑줄
+	Draw freehand	자유롭게 그리기
+	Oval	타원
+	Checkmark	체크 표시
+	Cross	엑스 표시
+	Dot	점
+	Date	날짜
+	Initials	이니셜
+	Change signature	서명 변경
+	Change initials	이니셜 변경
+	Export to	내보내기 형식
+	Text (plain)	일반 텍스트
+	Image (PNG)	이미지 (PNG)
+	Export all images	모든 이미지 내보내기
+	HTML web page	HTML 웹 페이지
+	Rich Text Format (.rtf)	서식 있는 텍스트 (.rtf)
+	Single file	단일 파일
+	Multiple files	여러 파일
+	Separate PDFs	개별 PDF
+	Images	이미지
+	Clipboard	클립보드
+	Page number	페이지 번호
+	Protect a PDF	PDF 보호
+	Use a certificate	인증서 사용
+	Redact a PDF	PDF 영구 삭제
+	Compare PDFs	PDF 비교
+	Measure objects	객체 측정
+	Accessibility tools	접근성 도구
+	Microsoft Word (.docx)	Word 문서 (.docx)
+	Presentation (.pptx)	프레젠테이션 (.pptx)
+	Spreadsheet (.xlsx)	스프레드시트 (.xlsx)

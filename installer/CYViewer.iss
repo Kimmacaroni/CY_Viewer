@@ -1,5 +1,5 @@
 #define MyAppName "CY뷰어"
-#define MyAppVersion "1.13.1"
+#define MyAppVersion "1.14.0"
 #define MyAppPublisher "Kimmacaroni"
 #define MyAppExeName "CYViewer.exe"
 

@@ -8,6 +8,7 @@ from tkinter import ttk, filedialog
 import pymupdf
 from cy_localization import tr
 from pdfcraft import tools_request, parse_pages, save_copy
+from pdf_workbench import launch_workbench
 
 
 class PdfToolsDialog(tk.Toplevel):
@@ -34,6 +35,8 @@ class PdfToolsDialog(tk.Toplevel):
         self.bind('<Control-s>', lambda _: self.save())
         actions = ttk.Frame(self, padding=16)
         actions.pack(side='bottom', fill='x')
+        ttk.Button(self, text=tr('전체 PDF 작업실'), command=self.full_workbench).pack(anchor='w', padx=20, pady=(12, 4))
+        ttk.Label(self, text=tr('주석·양식·텍스트·이미지 편집을 별도 문서 사본에서 시작합니다.'), wraplength=580).pack(anchor='w', padx=20)
         scroller = ttk.Frame(self)
         scroller.pack(fill='both', expand=True)
         canvas = tk.Canvas(scroller, highlightthickness=0, takefocus=True, bg=colors.get('surface', '#FFFFFF'))
@@ -96,6 +99,13 @@ class PdfToolsDialog(tk.Toplevel):
         self.open_button.pack(side='right', padx=8)
         self.fields = {}
         self.inspect()
+
+    def full_workbench(self):
+        try:
+            launch_workbench(self.snapshot, self.original.name if self.original else 'document.pdf')
+            self.grab_release()
+        except Exception as error:
+            self.status.config(text=tr(str(error)))
 
     def close(self):
         if not self.busy:

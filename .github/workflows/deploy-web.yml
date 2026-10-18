@@ -7,6 +7,8 @@ on:
       - "macos_app/**"
       - "site/**"
       - "pdfcraft_bridge/**"
+      - "pdf_workbench/**"
+      - "scripts/build_pdf_workbench.py"
       - "scripts/build_pdfcraft*.py"
       - "tests/pdfcraft*"
       - "tests/package*.json"
@@ -18,6 +20,8 @@ on:
       - "macos_app/**"
       - "site/**"
       - "pdfcraft_bridge/**"
+      - "pdf_workbench/**"
+      - "scripts/build_pdf_workbench.py"
       - "scripts/build_pdfcraft*.py"
       - "tests/pdfcraft*"
       - "tests/package*.json"
@@ -34,7 +38,7 @@ concurrency:
 jobs:
   build:
     runs-on: ubuntu-latest
-    timeout-minutes: 20
+    timeout-minutes: 60
     defaults:
       run:
         working-directory: macos_app
@@ -51,6 +55,9 @@ jobs:
       - name: Build browser PdfCraft engine
         working-directory: .
         run: python3 scripts/build_pdfcraft_web.py
+      - name: Build complete PdfCraft workbench
+        working-directory: .
+        run: python3 scripts/build_pdf_workbench.py --web
       - name: Test browser PdfCraft engine
         working-directory: .
         run: |

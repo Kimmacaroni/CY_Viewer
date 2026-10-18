@@ -4,11 +4,17 @@ PDF를 읽고, 찾고, 표시하고, 저장하고, 인쇄할 수 있는 개인�
 
 ## 오픈소스 사용 고지
 
-CY뷰어의 웹·Mac·Windows **PDF 도구(페이지 편집·병합·분할·문서 정보·책갈피·암호·문서 마무리 기능)는 [PdfCraft](https://github.com/storytold/pdfcraft)의 오픈소스 코드(`pdfcraft-cos`, `pdfcraft-organize`, `pdfcraft-edit`, `pdfcraft-optimize`)를 활용합니다.** 원본 제작자와 기여자는 **ArtCraft Team 및 PdfCraft contributors**입니다.
+CY뷰어의 웹·Mac·Windows **PDF 도구와 전체 PDF 작업실은 [PdfCraft](https://github.com/storytold/pdfcraft)의 오픈소스 코드를 활용합니다.** 기존 문서 도구 네 모듈 외에, 전체 작업실에는 PdfCraft 0.9.0의 PDF 엔진과 egui 편집 화면을 소스에서 빌드해 연결합니다. 원본 제작자와 기여자는 **ArtCraft Team 및 PdfCraft contributors**입니다.
 
 Copyright (c) 2026 ArtCraft Team and the PdfCraft contributors.
 
 PdfCraft는 MIT 또는 Apache-2.0으로 제공되며, CY뷰어는 해당 코드를 **MIT 라이선스 조건으로 사용**합니다. [원본 저작권·MIT 라이선스 전문](pdfcraft_bridge/LICENSE-PDFCRAFT-MIT.txt)을 보존하고, 배포 설치본과 [웹 모듈](https://kimmacaroni.github.io/CY_Viewer/pdfcraft/THIRD_PARTY_NOTICES.txt)에 PdfCraft 및 의존성의 라이선스 고지(`THIRD_PARTY_NOTICES.txt`)를 포함합니다. 사용한 원본 커밋과 연결 범위는 [PdfCraft 문서 마무리 기록](docs/PDFCRAFT_FINISHING.md)에 적었습니다.
+
+## 전체 PDF 작업실
+
+PDF를 연 뒤 **PDF 도구 → 전체 PDF 작업실**을 선택하세요. 주석·도형·펜, 양식 작성과 필드 편집, 텍스트·이미지 편집, 문서 비교·내보내기·첨부파일·레이어·서명 등 원본에 구현된 편집 흐름을 별도 문서 사본으로 제공합니다. 웹은 같은 사이트의 WASM 작업실, Mac·Windows는 설치본에 포함된 편집 창을 사용합니다. 원본의 예정 기능·외부 서비스 기능은 별도로 구분하며 일부 고급 메뉴는 영어입니다. 원본 OCR 모델은 영어 전용이며 CY의 한국어 OCR 경로는 유지합니다. [원본 소스·이식 범위·제한](pdf_workbench/README.md)을 참고하세요.
+
+ArtCraft 로고와 상표 자산은 포함하지 않습니다. 작업실의 [전체 제3자 고지](https://kimmacaroni.github.io/CY_Viewer/pdf-workbench/THIRD_PARTY_NOTICES.txt)와 MIT 저작권을 보존합니다.
 
 ## PDF 도구 확장
 
@@ -20,14 +26,14 @@ PdfCraft는 MIT 또는 Apache-2.0으로 제공되며, CY뷰어는 해당 코드�
 
 | 사용 환경 | 다운로드 및 실행 |
 | --- | --- |
-| Windows 10·11 64비트 | [Windows 설치 파일 v1.13.1](https://github.com/Kimmacaroni/CY_Viewer/releases/download/windows-v1.13.1/CYViewer-Setup-v1.13.1.exe) |
-| macOS | [macOS 설치 파일 v1.16.3](https://github.com/Kimmacaroni/CY_Viewer/releases/download/macos-v1.16.3/CYViewer-macOS-v1.16.3.dmg) |
+| Windows 10·11 64비트 | [Windows 설치 파일 v1.14.0](https://github.com/Kimmacaroni/CY_Viewer/releases/download/windows-v1.14.0/CYViewer-Setup-v1.14.0.exe) |
+| macOS | [macOS 설치 파일 v1.17.0](https://github.com/Kimmacaroni/CY_Viewer/releases/download/macos-v1.17.0/CYViewer-macOS-v1.17.0.dmg) |
 | iPhone·iPad·웹 | [CY뷰어 웹앱 열기](https://kimmacaroni.github.io/CY_Viewer/) |
 
 아이폰에서는 Safari로 웹앱을 연 뒤 `공유` → `홈 화면에 추가`를 선택하면
 CY뷰어 아이콘으로 실행할 수 있습니다. 개발자 모드나 유선 연결은 필요하지 않습니다.
 
-Windows 10·11 64비트 환경을 지원합니다. Release에서 `CYViewer-Setup-v1.13.1.exe`를 내려받아 설치하세요. 설치 마법사에서 설치 위치와 바탕화면 바로가기 생성 여부를 선택할 수 있습니다.
+Windows 10·11 64비트 환경을 지원합니다. Release에서 `CYViewer-Setup-v1.14.0.exe`를 내려받아 설치하세요. 설치 마법사에서 설치 위치와 바탕화면 바로가기 생성 여부를 선택할 수 있습니다.
 
 ## 업데이트
 
