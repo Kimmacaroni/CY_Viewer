@@ -110,7 +110,13 @@ fn known(message: &str, depth: usize) -> Option<String> {
         let (texts, holes) = parts(translated);
         let mut result = texts[0].clone();
         for (i, hole) in holes.iter().enumerate() {
-            let Some(index) = names.iter().position(|name| name == hole) else {
+            let occurrence = holes[..i].iter().filter(|name| *name == hole).count();
+            let Some((index, _)) = names
+                .iter()
+                .enumerate()
+                .filter(|(_, name)| *name == hole)
+                .nth(occurrence)
+            else {
                 continue;
             };
             // 이 진단의 값은 문서 데이터가 아니라 엔진의 고정 권한 이름이다.

@@ -118,6 +118,13 @@ mod dates {{ {date_probe} }}
     let field="there is no field named \\\"unsupported filter: X\\\"";
     assert!(i18n::cy_korean::diagnostic(field).contains("unsupported filter: X"));
 }}
+#[test] fn anonymous_diagnostic_values_remain_distinct() {{
+    let message="its certificate holds RSA key but the store's private key is EC key";
+    let translated=i18n::cy_korean::diagnostic(message);
+    assert_ne!(translated,message);
+    assert!(translated.contains("RSA"));
+    assert!(translated.contains("EC"));
+}}
 #[test] fn actual_custom_date_validation_is_in_korean() {{
     for pattern in ["", "HH:MM", "yyy", "Date"] {{
         let raw=dates::check_date_format(pattern).unwrap_err();
