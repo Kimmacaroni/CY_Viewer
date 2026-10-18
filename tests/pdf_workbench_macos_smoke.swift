@@ -16,8 +16,22 @@ pdf.fill(rectangle)
 pdf.endPDFPage()
 pdf.closePDF()
 let original = try Data(contentsOf: input)
+// 상속형 도구는 샌드박스 부모 안에서 버전 검사도 실행한다.
+let helper = Bundle.main.bundleURL.appendingPathComponent("Contents/MacOS/cy-pdf-workbench")
+let version = Process()
+let output = Pipe()
+version.executableURL = helper
+version.arguments = ["--version"]
+version.standardOutput = output
+try version.run()
+version.waitUntilExit()
+let versionText = String(data: output.fileHandleForReading.readDataToEndOfFile(), encoding: .utf8) ?? ""
+guard version.terminationStatus == 0, versionText.contains("PdfCraft 0.9.0") else {
+    fatalError("샌드박스 PDF 작업실 버전 검사가 실패했습니다.")
+}
+print(versionText)
 let task = Process()
-task.executableURL = Bundle.main.bundleURL.appendingPathComponent("Contents/MacOS/cy-pdf-workbench")
+task.executableURL = helper
 task.arguments = [input.path]
 try task.run()
 defer { if task.isRunning { task.terminate(); task.waitUntilExit() } }

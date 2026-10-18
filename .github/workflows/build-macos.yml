@@ -114,7 +114,6 @@ jobs:
           codesign --force --sign - --entitlements ../pdfcraft_bridge/macos-helper.entitlements "$app/Contents/MacOS/cy-pdfcraft"
           codesign --force --sign - --entitlements macos/Runner/Release.entitlements "$app"
           codesign --verify --deep --strict "$app"
-          "$app/Contents/MacOS/cy-pdf-workbench" --version
       - name: Test sandboxed PdfCraft subprocess
         working-directory: .
         run: |
