@@ -31,8 +31,14 @@ for p in (SOURCE/'crates/ui-egui/src').rglob('*.rs'):
         required.add(('',encode(json.loads('"'+m[1]+'"'))));literal_count+=1
 error_keys=set()
 for p in (SOURCE/'crates').glob('*/src/**/*.rs'):
-    for m in re.finditer(r'#\[error\(\s*"((?:\\.|[^"\\])*)"',p.read_text(encoding='utf-8')):
+    source=p.read_text(encoding='utf-8')
+    for m in re.finditer(r'#\[error\(\s*"((?:\\.|[^"\\])*)"',source):
         error_keys.add(('',encode(json.loads('"'+m[1]+'"'))))
+    if p.name!='tests.rs' and 'tests' not in p.parts and 'i18n' not in p.parts:
+        for m in re.finditer(r'\bErr\(\s*(?:format!\(\s*)?"((?:\\.|[^"\\])*)"',source.split('#[cfg(test)]')[0]):
+            error_keys.add(('',encode(json.loads('"'+m[1]+'"'))))
+for wording in json.loads((I18N/'cy_error_templates.rs').read_text(encoding='utf-8')[1:]):
+    error_keys.add(('',encode(wording)))
 required.update(error_keys)
 commands=(SOURCE/'crates/engine/src/commands.rs').read_text(encoding='utf-8')
 engine=(SOURCE/'crates/engine/src/lib.rs').read_text(encoding='utf-8')
@@ -62,6 +68,13 @@ registry_source=(I18N/'mod.rs').read_text(encoding='utf-8')
 registry=registry_source.split('pub struct LangInfo {',1)[1].split('impl LangInfo {',1)[0]
 registry='pub struct LangInfo {'+registry
 registry=re.sub(r'include_str!\("([^"\n]+)"\)',lambda m:'include_str!('+quoted(I18N/m[1])+')',registry)
+date_source=(SOURCE/'crates/engine/src/dates.rs').read_text(encoding='utf-8')
+date_parts=[re.search(r'pub const MAX_DATE_FORMAT_CHARS[^;]+;',date_source)[0]]
+for name in ['check_date_format','unescaped','runs']:
+    start=date_source.index(('pub fn ' if name=='check_date_format' else 'fn ')+name+'(')
+    end=date_source.index('\n}\n',start)+3
+    date_parts.append(date_source[start:end])
+date_probe='\n'.join(date_parts)
 probe=f'''mod i18n {{
     #[path={quoted(I18N/'catalog.rs')}] pub mod catalog;
     pub struct Lang;
@@ -78,6 +91,7 @@ mod registry {{
     use super::i18n::catalog::Catalog;
     {registry}
 }}
+mod dates {{ {date_probe} }}
 #[test] fn source_language_and_korean_plural_rules_are_preserved() {{
     assert_eq!(registry::LANGUAGES[0].code,"en");
     let ko=registry::LANGUAGES.iter().find(|l| l.code=="ko").unwrap();
@@ -95,6 +109,30 @@ mod registry {{
     assert!(translated.contains(value));
     assert!(i18n::cy_korean::diagnostic("the password is wrong").contains("비밀번호"));
     assert!(i18n::cy_korean::diagnostic("unrecognised vendor error 9876").contains("기술 정보"));
+}}
+#[test] fn nested_diagnostics_are_translated_but_field_names_are_not() {{
+    let message="stream data could not be decoded: unsupported filter: X";
+    let translated=i18n::cy_korean::diagnostic(message);
+    assert!(translated.contains("지원되지"));
+    assert!(!translated.contains("unsupported"));
+    let field="there is no field named \\\"unsupported filter: X\\\"";
+    assert!(i18n::cy_korean::diagnostic(field).contains("unsupported filter: X"));
+}}
+#[test] fn actual_custom_date_validation_is_in_korean() {{
+    for pattern in ["", "HH:MM", "yyy", "Date"] {{
+        let raw=dates::check_date_format(pattern).unwrap_err();
+        let translated=i18n::cy_korean::diagnostic(&raw);
+        assert_ne!(raw,translated,"{{pattern}}: {{raw}}");
+        assert!(!translated.contains("the date format"));
+        assert!(!translated.contains("time letter"));
+    }}
+    let raw=dates::check_date_format("HH:MM").unwrap_err();
+    assert!(i18n::cy_korean::diagnostic(&raw).contains("`H`"));
+    let raw=dates::check_date_format("yyy").unwrap_err();
+    let translated=i18n::cy_korean::diagnostic(&raw);
+    assert!(translated.contains("`yyy`"));
+    assert!(translated.contains("yy 또는 yyyy"));
+    assert_eq!(dates::check_date_format("yyyy-mm-dd"),Ok("yyyy-mm-dd"));
 }}
 '''
 with tempfile.TemporaryDirectory(prefix='cy-ko-check-') as tmp:

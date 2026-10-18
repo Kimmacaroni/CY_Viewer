@@ -7,6 +7,7 @@
 	 on page {label}	 페이지 {label}
 	 on page {p}	 페이지 {p}
 	 · password-protected	 · 비밀번호로 보호됨
+	"{text}" can't be written into the PDF yet: Fill & Sign text is Western European only ({bad}); pick a numeric format such as dd.mm.yyyy	현재 작성·서명은 서유럽권 문자만 지원해 "{text}"를 PDF에 넣을 수 없습니다({bad}). dd.mm.yyyy처럼 숫자 날짜 형식을 선택해 주세요.
 	% of all commits	모든 커밋의 %
 	(none)	(없음)
 	+Bin	+바이너리
@@ -36,6 +37,8 @@
 	A document needs at least one page: copy instead	문서에는 최소한 한 페이지가 필요합니다. 대신 복사하세요.
 	A font isn't embedded	글꼴이 포함되지 않았습니다.
 	A form field has additional actions	양식 필드에는 추가 작업이 있습니다.
+	A hidden panel cannot restore over the document view	숨겨진 패널은 문서 보기 위에 복원할 수 없습니다.
+	A hidden panel has an invalid or duplicate identity	숨겨진 패널에 유효하지 않거나 중복된 ID가 있습니다.
 	A link	링크
 	A script	스크립트
 	A selected field has no widget on any page, so the fields can't be edited together.	선택한 필드에는 어떤 페이지에도 위젯이 없으므로 필드를 함께 편집할 수 없습니다.
@@ -163,6 +166,7 @@
 	Added {n} comments	{n} 주석을 추가했습니다.
 	Adding images arrives on the web with file pickers for images	이미지 추가는 이미지용 파일 선택기를 사용하여 웹에 도착합니다.
 	Adds invisible text over each word; the page image is not changed	각 단어 위에 보이지 않는 텍스트를 추가합니다. 페이지 이미지는 변경되지 않습니다
+	Adobe-authored font assets are excluded by the project's asset policy	Adobe에서 제작한 글꼴 자산은 프로젝트 자산 정책에 의해 제외됩니다.
 	Advanced	고급
 	Advanced Options {chevron}	고급 옵션 {chevron}
 	Advanced optimization	고급 최적화
@@ -233,6 +237,7 @@
 	Apply redactions…	영구 삭제 적용…
 	Apply scale	스케일 적용
 	Appropriate nesting	적절한 중첩
+	Apr needs positive arguments	Apr 함수의 인수는 양수여야 합니다.
 	April	4월
 	Arbitrary Mask	임의 마스크
 	Archive documents	문서 보관
@@ -312,7 +317,9 @@
 	Button is checked by default	버튼은 기본적으로 선택되어 있습니다.
 	Buttons with the same name and value are selected in unison	이름과 값이 같은 버튼이 한꺼번에 선택됩니다.
 	Bytes	바이트
+	CCITT fax images can't be exported yet	CCITT 팩스 이미지는 아직 내보낼 수 없습니다.
 	CRL Signing	CRL 서명
+	CTerm needs positive arguments	CTerm 함수의 인수는 양수여야 합니다.
 	Calculate	계산
 	Calibrate from two points	두 지점에서 교정
 	Callout	설명선
@@ -516,6 +523,7 @@
 	Copy text	텍스트 복사
 	Copy to clipboard	클립보드에 복사
 	Correct recognized text	인식된 텍스트를 수정하세요.
+	Could not reveal the file in the system file manager	시스템 파일 관리자에서 파일을 표시할 수 없습니다.
 	Could not save: {e}	저장할 수 없습니다: {e}
 	Couldn't add {name}: {e}	{name}를 추가할 수 없습니다: {e}
 	Couldn't check for updates: {e}	업데이트를 확인할 수 없습니다: {e}
@@ -813,6 +821,7 @@
 	Endpoint	엔드포인트
 	Endpoints	엔드포인트
 	English	영어
+	English plural forms must be nonempty and have matching placeholders	영어 복수형은 비어 있지 않아야 하며 일치하는 자리 표시자가 있어야 합니다.
 	Enhance camera image	카메라 이미지 향상
 	Enhance page	페이지 보정
 	Enhance scanned file	스캔한 파일 향상
@@ -920,7 +929,9 @@
 	File Name	파일 이름
 	File attachments	파일 첨부
 	File name	파일 이름
+	File reveal is not available on this platform	이 플랫폼에서는 시스템 파일 관리자에 파일을 표시할 수 없습니다.
 	File size	파일 크기
+	FileManager1 unavailable	FileManager1을 사용할 수 없습니다.
 	Filename	파일 이름
 	Files are combined from top to bottom. Leave Pages empty to take every page.	파일은 위에서 아래로 결합됩니다. 모든 페이지를 가져오려면 페이지를 비워 두세요.
 	Files are combined in the order shown. Drag them to change it.	파일은 표시된 순서대로 결합됩니다. 변경하려면 드래그하세요.
@@ -1162,6 +1173,9 @@
 	Item:	항목:
 	Items marked Ready work today.	‘사용 가능’으로 표시된 기능은 지금 사용할 수 있습니다.
 	Its security settings don't allow copying pages	보안 설정으로 인해 페이지 복사가 허용되지 않습니다.
+	JBIG2 images can't be exported yet	JBIG2 이미지는 아직 내보낼 수 없습니다.
+	JPEG 2000 images can't be exported yet	JPEG 2000 이미지는 아직 내보낼 수 없습니다.
+	JPEG images inside other filters can't be exported yet	다른 필터 내의 JPEG 이미지는 아직 내보낼 수 없습니다.
 	January	1월
 	JavaScript	자바스크립트
 	JavaScript Console	자바스크립트 콘솔
@@ -1643,6 +1657,7 @@
 	Planned for milestone	개발 단계에서 제공 예정
 	Planned for milestone {m} — open to see what it will include	이정표 {m}에 대한 계획 — 포함 내용을 확인하려면 열어보세요.
 	Planned · {m}	예정 · {m}
+	Pmt needs a positive number of periods	Pmt 함수의 기간 수는 양수여야 합니다.
 	Points from the page's bottom-left corner.	페이지 왼쪽 하단 모서리의 점입니다.
 	Polygon	다각형
 	Polyline	연속선
@@ -1715,6 +1730,7 @@
 	Radio	라디오
 	Radio Button Properties	라디오 버튼 속성
 	Radio button	선택 버튼
+	Rate needs positive arguments	Rate 함수의 인수는 양수여야 합니다.
 	Re-type Password	비밀번호 재입력
 	Read	읽기
 	Read Only	읽기 전용
@@ -2191,6 +2207,7 @@
 	Tags give the document a logical structure that assistive technology follows. Tag the document (Automatically tag PDF).	태그는 보조 기술이 따르는 논리적 구조를 문서에 제공합니다. 문서에 태그를 지정합니다(PDF에 자동으로 태그 지정).
 	Tags panel	태그 패널
 	Take a snapshot	스냅샷 찍기
+	Term needs positive arguments	Term 함수의 인수는 양수여야 합니다.
 	Text	텍스트
 	Text (plain)	일반 텍스트
 	Text Color:	텍스트 색상:
@@ -2247,6 +2264,9 @@
 	The document isn't tagged, so none of its content is	문서에 태그가 지정되지 않았으므로 해당 내용이 전혀 없습니다.
 	The document now conforms to {level}; save it to keep the changes	이제 문서는 {level}를 준수합니다. 변경 사항을 유지하려면 저장하세요.
 	The document opens without a password; this password is needed to change the restrictions. It's applied when you save.	문서는 비밀번호 없이 열립니다. 이 비밀번호는 제한 사항을 변경하는 데 필요합니다. 저장하면 적용됩니다.
+	The document view cannot be collapsed	문서 보기는 축소할 수 없습니다.
+	The document view cannot float	문서 보기는 부동할 수 없습니다.
+	The document view cannot share a tab group	문서 보기에서는 탭 그룹을 공유할 수 없습니다.
 	The document was closed before it could be saved.	문서를 저장하기 전에 닫혔습니다.
 	The document's embedded revocation information shows that the signer's certificate has not been revoked.	문서에 포함된 해지 정보는 서명자의 인증서가 해지되지 않았음을 보여줍니다.
 	The document's security settings don't allow copying text and images	문서의 보안 설정으로 인해 텍스트 및 이미지 복사가 허용되지 않습니다.
@@ -2257,6 +2277,7 @@
 	The field properties could not be changed.	필드 속성을 변경할 수 없습니다.
 	The field properties dialog is no longer open.	필드 속성 대화 상자가 더 이상 열리지 않습니다.
 	The field {name} no longer exists.	{name} 필드가 더 이상 존재하지 않습니다.
+	The file no longer exists	파일이 더 이상 존재하지 않습니다.
 	The font {} isn't embedded	{} 글꼴이 포함되지 않았습니다.
 	The fonts PdfCraft writes with can't draw “{c}” ({code}), so it shows as ? in every PDF viewer. The text is saved.	PdfCraft가 작성하는 글꼴은 "{c}"({code})를 그릴 수 없으므로 ?로 표시됩니다. 모든 PDF 뷰어에서. 텍스트가 저장됩니다.
 	The form asks to be submitted to {u}; PdfCraft doesn't send form data. Save the document to keep your entries.	양식은 {u}에 제출하도록 요청합니다. PdfCraft는 양식 데이터를 보내지 않습니다. 항목을 유지하려면 문서를 저장하세요.
@@ -2273,6 +2294,7 @@
 	The operation failed.	작업이 실패했습니다.
 	The page has changed; select the image again	페이지가 변경되었습니다. 이미지를 다시 선택하세요
 	The pages were extracted but not deleted, because the document changed while you were choosing a folder.	폴더를 선택하는 동안 문서가 변경되었기 때문에 페이지가 추출되었지만 삭제되지 않았습니다.
+	The panel layout must contain its document view and bounded hidden panels	패널 레이아웃에는 문서 보기와 제한된 숨겨진 패널이 포함되어야 합니다.
 	The password is incorrect.	비밀번호가 올바르지 않습니다.
 	The password is only used to read the file; it isn't saved.	비밀번호는 파일을 읽는 데에만 사용됩니다. 저장되지 않습니다.
 	The password must have at least 6 characters.	비밀번호는 6자 이상이어야 합니다.
@@ -2559,67 +2581,130 @@
 	Zoom out ({key})	축소({key})
 	Zoom out (⌘−)	축소(⌘−)
 	Zoom to page level	페이지 수준으로 확대
+	`{code}` is not a date code; use {use_}	`{code}`는 날짜 코드가 아닙니다. {use_} 형식을 사용해 주세요.
 	`{command}` {when}	`{command}` {when}
+	`{c}` is a time letter (H h M s t); put \\ before it to show it as is	`{c}`는 시간 코드(H h M s t)입니다. 문자 그대로 표시하려면 앞에 \\를 붙여 주세요.
 	a bookmark cannot be moved inside itself	책갈피는 책갈피 내부로 이동할 수 없습니다.
+	a damaged ICC colour space	손상된 ICC 색 공간
+	a damaged colour space	손상된 색 공간
+	a decoded prefix exceeds 1024 UTF-8 bytes	디코딩된 접두사가 1024 UTF-8 바이트를 초과합니다.
 	a document must keep at least one page	문서는 적어도 한 페이지를 유지해야 합니다
+	a raw prefix exceeds 2050 bytes	원시 접두사가 2050바이트를 초과합니다.
+	a replacement text span mixes included and excluded content; disable the exclusions to count this page	대체 텍스트 범위에는 포함된 콘텐츠와 제외된 콘텐츠가 혼합되어 있습니다. 이 페이지를 계산하려면 제외를 비활성화하세요.
 	a tag type must be a nonempty PDF name using letters, digits, colon, period, underscore or hyphen	태그 유형은 문자, 숫자, 콜론, 마침표, 밑줄 또는 하이픈을 사용하는 비어 있지 않은 PDF 이름이어야 합니다.
 	already a PDF	이미 PDF입니다
 	alternate text hides an annotation inside it	대체 텍스트는 그 안에 주석을 숨깁니다.
 	alternate text on an element with no page content	페이지 콘텐츠가 없는 요소의 대체 텍스트
+	an ICC colour space with an unusual number of components	비정상적인 수의 구성 요소를 포함하는 ICC 색 공간
+	an indexed colour space with an invalid hival	잘못된 hival이 있는 인덱스 색상 공간
+	an indexed colour space without a lookup table	조회 테이블이 없는 인덱스 색상 공간
 	and {n} more	그리고 {n} 더
+	automation filesystem access is not granted: read authority is absent: {shown}	자동화 파일 시스템 액세스가 부여되지 않았습니다. 읽기 권한이 없습니다: {shown}
+	automation filesystem access is not granted: write authority is absent: {shown}	자동화 파일 시스템 액세스가 부여되지 않았습니다. 쓰기 권한이 없습니다: {shown}
+	automation path rejected: a link that leads nowhere: {shown}	거부된 자동화 경로: 아무데도 연결되지 않는 링크: {shown}
+	automation path rejected: cannot resolve {shown}: {e}	자동화 경로 거부됨: {shown}: {e}를 확인할 수 없습니다.
+	automation path rejected: outside the read root {root}: {shown}	자동화 경로 거부됨: 읽기 루트 외부 {root}: {shown}
+	automation path rejected: outside the write root {root}: {shown}	거부된 자동화 경로: 쓰기 루트 외부 {root}: {shown}
+	automation path rejected: parent traversal below a folder that doesn't exist: {shown}	자동화 경로 거부됨: 존재하지 않는 폴더 아래의 상위 순회: {shown}
+	automation path rejected: path is empty	자동화 경로가 거부됨: 경로가 비어 있습니다.
+	automation path rejected: reserved device names are not allowed: {shown}	자동화 경로 거부됨: 예약된 장치 이름은 허용되지 않음: {shown}
 	average	평균
 	background	배경
+	bad for loop bounds	루프 경계에 적합하지 않음
+	before only applies to a center move	before 매개변수는 center 영역으로 이동할 때만 사용할 수 있습니다.
 	both tags must be distinct, reachable, direct children of the same structure parent	두 태그 모두 고유하고 연결 가능해야 하며 동일한 구조 상위의 직계 하위 항목이어야 합니다.
 	cancelled	취소
+	cannot assign to that	그것에 할당할 수 없습니다
 	changes to the document	문서 변경
 	changing security	보안 설정 변경
 	characters	문자
+	command missing	명령 누락
 	comments	주석
 	content walk exceeded the operator bound	콘텐츠 워크가 연산자 범위를 초과했습니다.
 	copying text and images	텍스트·이미지 복사
 	couldn't update the parent tree: {0}	상위 트리를 업데이트할 수 없습니다: {0}
 	couldn't use {0}	{0}를 사용할 수 없습니다
+	custom labels exceed 4 MiB in total	맞춤 라벨이 총 4MiB를 초과합니다.
+	custom needs background as #rrggbb	사용자 정의에는 #rrggbb라는 배경이 필요합니다.
+	custom needs text and background as #rrggbb	사용자 정의에는 #rrggbb와 같은 텍스트와 배경이 필요합니다.
+	custom needs text as #rrggbb	사용자 정의에는 #rrggbb라는 텍스트가 필요합니다.
+	d, dd, ddd or dddd	d, dd, ddd 또는 dddd
 	decoded output exceeds the limit of {0} bytes	디코딩된 출력이 {0} 바이트 제한을 초과합니다.
+	decoded prefixes exceed 4 MiB in total	디코딩된 접두사가 총 4MiB를 초과합니다.
+	division by zero	0으로 나누기
 	document security store	문서 보안 저장소
 	document structure	문서 구조
 	e.g. My stamps	예: 내 스탬프
 	e.g. en-US	예를 들어 en-US
+	expected `context<TAB>source<TAB>translation`	`context<TAB>source<TAB>translation` 형식이 필요합니다.
+	expected {forms} nonempty plural forms	예상되는 {forms} 비어 있지 않은 복수형
 	extracting pages	페이지 추출
 	filling in form fields	양식 필드 작성
+	font contains an invalid advance	글꼴에 잘못된 글자 진행 너비가 있습니다.
+	font contains an unavailable shaped glyph	글꼴에 사용할 수 없는 조판 글리프가 있습니다.
 	for images above	위 이미지의 경우
 	form XObjects nest deeper than the audit follows	XObjects는 감사가 따르는 것보다 더 깊게 중첩됩니다.
 	form fill	양식 작성
 	header or footer	머리글 또는 꼬리말
 	initials	머리 글자
 	internal lock poisoned	내부 작업 잠금 오류가 발생했습니다.
+	invalid BitsPerComponent {b}	잘못된 BitsPerComponent {b}
+	invalid Colors {}	잘못된 Colors 값: {}
+	invalid Columns {}	잘못된 Columns 값: {}
 	is available	이용 가능
 	is not available yet	아직 사용할 수 없습니다
 	it is password-protected	비밀번호로 보호되어 있습니다
 	its alternate text is inside another element's and will never be read	대체 텍스트가 다른 요소 안에 있으므로 절대 읽을 수 없습니다.
+	its certificate holds a P-{bits} key but the store's private key has {actual} bits	해당 인증서에는 P-{bits} 키가 있지만 저장소의 개인 키에는 {actual} 비트가 있습니다.
+	its certificate holds {} key but the store's private key is {} key	해당 인증서에는 {} 키가 있지만 저장소의 개인 키는 {} 키입니다.
 	its security settings don't allow copying pages	보안 설정으로 인해 페이지 복사가 허용되지 않습니다.
 	just now	방금
+	line {line}: a string is too long	{line} 줄: 문자열이 너무 깁니다.
+	line {line}: expected a name after func	{line} 줄: func 뒤에 이름이 있어야 합니다.
+	line {line}: expected a name after var	{line} 줄: var 뒤에 이름이 필요합니다.
+	line {line}: expected a parameter name	{line} 줄: 매개변수 이름이 필요합니다.
+	line {line}: expected a variable after for	{line} 라인: for 뒤에 변수가 필요합니다.
+	line {line}: expected a variable after foreach	{line} 라인: foreach 이후에 변수가 필요합니다.
+	line {line}: expected upto or downto	{line}줄: upto 또는 downto가 필요합니다.
+	line {line}: unexpected {}	라인 {line}: 예상치 못한 {}
+	line {line}: unterminated string	라인 {line}: 종료되지 않은 문자열
+	line {}: an expression is too long	{} 줄: 표현식이 너무 깁니다.
+	line {}: expected a name after .	{} 라인: 뒤에 이름이 있어야 합니다.
+	line {}: expected a name after ..	{} 라인: .. 뒤에 이름이 있어야 합니다.
+	line {}: expected {op}	라인 {}: {op} 예상
+	line {}: expected {word}	라인 {}: {word} 예상
+	line {}: unexpected {}	라인 {}: 예상치 못한 {}
 	links	링크
 	loading {0}: {1}	{0} 로드: {1}
+	m, mm, mmm or mmmm	m, mm, mmm 또는 mmmm
 	malformed data: {0}	잘못된 데이터: {0}
 	malformed encryption dictionary: {0}	잘못된 암호화 사전: {0}
 	maximum	최대
 	metadata	메타데이터
 	minimum	최소
 	needs an AI provider (off by default)	AI 서비스 연결 필요(기본적으로 꺼짐)
+	nested indexed colour spaces aren't valid	중첩된 인덱스 색상 공간이 유효하지 않습니다.
 	no alternate text	대체 텍스트 없음
+	no document	문서 없음
 	no header cells (TH)	헤더 셀 없음(TH)
+	no object to call {method} on	{method}를 호출할 개체가 없습니다.
+	no object to take {name} from	{name}를 가져올 개체가 없습니다.
 	no output folder was chosen	출력 폴더가 선택되지 않았습니다
 	no such document	해당 문서가 없습니다.
 	no summary	요약 없음
 	no unused output name	사용되지 않은 출력 이름 없음
 	none	없음
 	not a PDF file (no %PDF- header)	PDF 파일이 아님(%PDF- 헤더 없음)
+	not a function	함수가 아닙니다.
+	not an image	이미지가 아닙니다.
 	not in a TR	TR 안에 있지 않음
 	not in a Table, THead, TBody or TFoot	Table, THead, TBody 또는 TFoot 안에 있지 않음
 	not in an L (list)	L(목록)에 없음
 	not in an LI (list item)	LI에 없음(목록 항목)
 	not supported: {0}	지원되지 않음: {0}
 	nothing in the file matches this document	파일에 이 문서와 일치하는 항목이 없습니다.
+	nothing to create	생성할 내용이 없습니다.
+	nothing to import	가져올 것이 없습니다
 	nothing to redo	다시 실행할 항목 없음
 	nothing to undo	실행취소할 항목 없음
 	object {0} is missing	개체 {0}가 누락되었습니다.
@@ -2632,10 +2717,12 @@
 	of {pages}	{pages}의
 	on page {label}	페이지 {label}
 	open to see what it will include	열어서 무엇이 포함되어 있는지 확인하세요
+	operation must be open, close, activate, float, move, moveFloating, resizeSplit, setStackOpen or resizeStack	작업은 open, close, activate, float, move, moveFloating, resizeSplit, setStackOpen 또는 resizeStack이어야 합니다.
 	other changes	기타 변경사항
 	page changes	페이지 변경
 	page content	페이지 콘텐츠
 	page has a malformed /Annots entry	페이지에 잘못된 /Annots 항목이 있습니다.
+	page is out of range	페이지가 범위를 벗어났습니다.
 	page {0} has content that can't be read, so it can't be redacted safely	페이지 {0}에 읽을 수 없는 콘텐츠가 있으므로 안전하게 영구 삭제할 수 없습니다.
 	page {0} has vertical-writing text while a redaction mark is pending, and PdfCraft cannot tell whether that text lies under the mark yet, so nothing was changed	페이지 {0}에는 삭제 표시가 보류 중인 동안 세로 쓰기 텍스트가 있으며 PdfCraft는 해당 텍스트가 아직 표시 아래에 있는지 여부를 알 수 없으므로 아무것도 변경되지 않았습니다.
 	page {0} is out of range (1–{1})	페이지 {0}가 범위를 벗어났습니다(1–{1}).
@@ -2643,25 +2730,54 @@
 	page {n} is out of range (1–{count})	페이지 {n}가 범위를 벗어났습니다(1–{count}).
 	page {page}: {reason}	페이지 {page}: {reason}
 	page {} does not exist	{} 페이지가 존재하지 않습니다
+	page {} has an empty or invalid page box ({w}×{h} pt)	페이지 {}에 비어 있거나 잘못된 페이지 상자가 있습니다({w}×{h} pt).
+	page {} has too many text blocks to preview (maximum {MAX_BLOCKS})	페이지 {}에 미리 볼 텍스트 블록이 너무 많습니다(최대 {MAX_BLOCKS}).
+	page {} is outside the document	{} 페이지가 문서 외부에 있습니다.
+	page {}: {e}	페이지 {}: {e}
+	page {}: {}	페이지 {}: {}
 	pages	페이지
 	pages added or removed	추가 또는 제거된 페이지
+	placeholders differ from the English source	자리 표시자가 영어 소스와 다릅니다.
+	plural placeholders differ from the English source	복수 자리 표시자가 영어 소스와 다릅니다.
+	plural source must be one|other	복수 소스는 하나|다른 소스여야 합니다
+	preview scale must be finite and positive	미리보기 배율은 유한하고 양수여야 합니다.
 	printing	인쇄
 	product (x)	곱 (×)
+	reading the attachment crashed: {}	첨부 파일 읽기가 중단되었습니다: {}
 	redaction appearance has invalid geometry or exceeds the 8 MiB budget; reduce the marked area, turn off repeated text or apply fewer pages at once (nothing was redacted)	영구 삭제 모양에 유효하지 않은 지오메트리가 있거나 8MiB 예산을 초과합니다. 표시된 영역을 줄이거나, 반복되는 텍스트를 끄거나, 한 번에 더 적은 수의 페이지를 적용하십시오(아무것도 영구 삭제되지 않았습니다).
 	redaction could not be verified: {0} item(s) were still found under the marks, so nothing was changed	영구 삭제을 확인할 수 없습니다. {0} 항목이 여전히 표시 아래에 있으므로 변경된 사항이 없습니다.
+	region must be [x0, y0, x1, y1] in points	지역은 포인트 단위로 [x0, y0, x1, y1]이어야 합니다.
+	requested page {} raster scale {req_scale} exceeds renderer limits (maximum scale {scale})	요청한 페이지 {} 래스터 배율 {req_scale}가 렌더러 제한을 초과합니다(최대 배율 {scale}).
 	rows have between {min} and {max} columns	행은 {min}와 {max} 열 사이에 있습니다.
+	select a static instance of this variable font before embedding	포함하기 전에 이 가변 글꼴의 정적 인스턴스를 선택하세요.
+	select an openly licensed font whose name table declares its licence (OFL, Apache, Ubuntu, Bitstream Vera or MIT)	이름 테이블에 라이센스(OFL, Apache, Ubuntu, Bitstream Vera 또는 MIT)가 선언되어 있는 공개 라이센스 글꼴을 선택하세요.
+	shape one bounded text row at a time	한 번에 하나의 경계 텍스트 행 모양 만들기
+	shaped font mapping exceeds its budget	모양의 글꼴 매핑이 예산을 초과했습니다.
+	shaped row exceeds its geometry budget	모양의 행이 지오메트리 예산을 초과합니다.
+	sheet {} has no usable size	시트 {}에는 사용 가능한 크기가 없습니다.
 	ships in milestone {m}	개발 단계 {m}에서 제공 예정
 	signature	서명
 	sorted ascending	오름차순으로 정렬
 	sorted descending	내림차순 정렬
+	source and translation must be nonempty	소스와 번역은 비어 있어서는 안 됩니다.
 	splitting the document	문서 분할
 	stream data could not be decoded: {0}	스트림 데이터를 디코딩할 수 없습니다: {0}
 	sum (+)	합계 (+)
 	syntax error at byte {offset}: {detail}	바이트 {offset}에서 구문 오류: {detail}
 	tag property text is too long (maximum 65536 bytes)	태그 속성 텍스트가 너무 깁니다(최대 65536바이트).
+	text extraction returned no result	텍스트 추출이 결과를 반환하지 않았습니다.
 	text recognition failed: {0}	텍스트 인식 실패: {0}
+	the AcroForm has no untagged page widgets	AcroForm에는 태그가 지정되지 않은 페이지 위젯이 없습니다.
+	the PDF has no AcroForm fields	PDF에 AcroForm 필드가 없습니다.
 	the PDF has no document catalog	PDF에 문서 카탈로그가 없습니다
 	the XFA template could not be read: {0}	XFA 템플릿을 읽을 수 없습니다: {0}
+	the app has closed	앱이 닫혔어요
+	the area is too large at this zoom	이 확대/축소에서는 영역이 너무 넓습니다.
+	the clipboard image is empty or malformed	클립보드 이미지가 비어 있거나 형식이 잘못되었습니다.
+	the corners are out of range	모서리가 범위를 벗어났습니다.
+	the date format is empty	날짜 형식을 입력해 주세요.
+	the date format is longer than {MAX_DATE_FORMAT_CHARS} characters	날짜 형식은 {MAX_DATE_FORMAT_CHARS}자 이내로 입력해 주세요.
+	the date format shows no year (y), month (m) or day (d)	날짜 형식에는 연도(y), 월(m), 일(d) 중 하나가 필요합니다.
 	the document already has a structure tree; review its existing tags instead	문서에 이미 구조 트리가 있습니다. 대신 기존 태그를 검토하세요.
 	the document has no form fields	문서에 양식 필드가 없습니다.
 	the document has no page tree	문서에 페이지 트리가 없습니다
@@ -2675,15 +2791,43 @@
 	the edited document could not be written: {0}	편집된 문서를 쓸 수 없습니다: {0}
 	the file can't be read: {0}	파일을 읽을 수 없습니다: {0}
 	the file is not a readable PDF: {0}	파일이 읽을 수 있는 PDF가 아닙니다: {0}
+	the file name is not valid	파일 이름이 유효하지 않습니다
 	the first heading is an H{n}; headings should not skip levels	첫 번째 제목은 H{n}입니다. 제목은 레벨을 건너뛰어서는 안 됩니다.
+	the font family name is invalid	글꼴 계열 이름이 잘못되었습니다.
+	the full font lacks a required contextual glyph; choose the complete source face	전체 글꼴에는 필수 상황별 문자 모양이 부족합니다. 완전한 소스 면을 선택하세요
+	the image has no colour space	이미지에 색 공간이 없습니다
+	the image has no size	이미지에 크기가 없습니다
 	the image is empty	이미지가 비어 있습니다
+	the image is too large to copy ({w} × {h} pixels); use Save Image As	이미지가 너무 커서 복사할 수 없습니다({w} × {h} 픽셀). 다른 이름으로 이미지 저장 사용
 	the name is not a plain file name	이름이 일반 파일 이름이 아닙니다.
+	the number tree has too many pending nodes	숫자 트리에 보류 중인 노드가 너무 많습니다.
+	the number tree is too deep	숫자나무가 너무 깊다
+	the number tree repeats a node or contains a cycle	숫자 트리는 노드를 반복하거나 순환을 포함합니다.
 	the optimization was cancelled	최적화가 취소되었습니다
+	the page could not be read as a picture	페이지를 그림으로 읽을 수 없습니다
 	the parent must list each tag exactly once in its /K array	부모는 /K 배열에 각 태그를 정확히 한 번만 나열해야 합니다.
 	the parent must list the tag exactly once	상위 항목은 태그를 정확히 한 번만 나열해야 합니다.
 	the password is incorrect	비밀번호가 틀렸습니다
 	the password is wrong	비밀번호가 올바르지 않습니다.
+	the print job stopped unexpectedly	인쇄 작업이 예기치 않게 중단되었습니다
+	the region is outside the window	그 지역은 창밖이야
+	the scan stopped unexpectedly	검사가 예기치 않게 중지되었습니다
+	the script is nested too deeply	스크립트가 너무 깊게 중첩되었습니다.
+	the selected added item is not text	선택한 추가 항목이 텍스트가 아닙니다
+	the selected font exceeds 16 MiB	선택한 글꼴이 16MiB를 초과합니다.
+	the selected font has no Unicode mapping or valid units per em	선택한 글꼴에는 유니코드 매핑이 없거나 em당 유효한 단위가 없습니다.
+	the selected font has no usable TrueType/CFF outlines and metrics	선택한 글꼴에는 사용 가능한 TrueType/CFF 윤곽선 및 메트릭이 없습니다.
+	the selected font has too many Unicode mappings for one PDF font	선택한 글꼴에 하나의 PDF 글꼴에 대한 유니코드 매핑이 너무 많습니다
+	the selected font maps Unicode to a glyph outside its program	선택한 글꼴은 유니코드를 프로그램 외부의 문자 모양으로 매핑합니다.
+	the sheets need more than {} MB as pictures, too much to print from the browser; save the print-ready PDF and print it from a PDF viewer	시트에는 그림으로 {}MB 이상이 필요하며 브라우저에서 인쇄하기에는 너무 많습니다. 인쇄용 PDF를 저장하고 PDF 뷰어에서 인쇄
+	the signature image is damaged	서명 이미지가 손상되었습니다
 	the signed version could not be read	서명된 버전을 읽을 수 없습니다
+	the source subset has no contextual substitution tables; select its full font	소스 하위 집합에 상황별 대체 테이블이 없습니다. 전체 글꼴을 선택하세요
+	the structure parent tree has a negative key	구조 부모 트리에 음수 키가 있습니다
+	the structure parent tree has a non-integer key	구조 상위 트리에 정수가 아닌 키가 있습니다.
+	the structure parent tree has an odd number of entries	구조 상위 트리에 홀수 개의 항목이 있습니다.
+	the structure requires compatibility repair	구조에 호환성 수리가 필요합니다.
+	the structure tree root must point directly to a Document element	구조 트리 루트는 문서 요소를 직접 가리켜야 합니다.
 	the tag has child structure elements; mark a leaf tag instead	태그에는 하위 구조 요소가 있습니다. 대신에 리프 태그를 표시하세요
 	the tag has no direct marked content	태그에 직접 표시된 콘텐츠가 없습니다.
 	the tag has no page	태그에 페이지가 없습니다
@@ -2692,8 +2836,13 @@
 	the tag's marked content was not found on its page	태그에 표시된 콘텐츠를 페이지에서 찾을 수 없습니다.
 	the text recognition models are not installed (reinstall PdfCraft, or set PDFCRAFT_MODELS to the folder that holds them)	텍스트 인식 모델이 설치되지 않았습니다(PdfCraft를 다시 설치하거나 PDFCRAFT_MODELS를 해당 모델이 있는 폴더로 설정)
 	the title must not be empty	제목은 비워둘 수 없습니다.
+	the update check stopped unexpectedly	업데이트 확인이 예기치 않게 중지되었습니다
+	the web version can't put files on the clipboard yet; use Save Image As	웹 버전에서는 아직 클립보드에 파일을 넣을 수 없습니다. 다른 이름으로 이미지 저장 사용
+	the web version can't put images on the clipboard yet; use Save Image As	웹 버전에서는 아직 클립보드에 이미지를 넣을 수 없습니다. 다른 이름으로 이미지 저장 사용
+	the word-count page range is out of bounds	단어 수 페이지 범위가 범위를 벗어났습니다.
 	there are no pages to print	인쇄할 페이지가 없습니다
 	there are no redaction marks to apply	적용할 삭제 표시가 없습니다.
+	there are no sheets to print	인쇄할 시트가 없습니다
 	there is no bookmark at {0:?}	{0:?}에 책갈피가 없습니다
 	there is no comment {index} on page {page}	{page} 페이지에 {index} 주석이 없습니다.
 	there is no field named {0:?}	{0:?}라는 필드가 없습니다.
@@ -2702,27 +2851,64 @@
 	this document is signed: rewriting it would invalidate its signatures (save it incrementally instead)	이 문서는 서명되었습니다. 다시 작성하면 서명이 무효화됩니다(대신 증분 저장).
 	this document was opened read-only with a decode limit and cannot be saved	이 문서는 디코딩 제한으로 인해 읽기 전용으로 열렸으므로 저장할 수 없습니다.
 	this file isn't XFDF, FDF, XML or text form data	이 파일은 XFDF, FDF, XML 또는 텍스트 형식 데이터가 아닙니다.
+	this font family is excluded by the project's asset policy	이 글꼴 모음은 프로젝트 자산 정책에 의해 제외됩니다.
+	this font's embedding permissions prohibit editable outline embedding	이 글꼴의 포함 권한으로 인해 편집 가능한 윤곽선 포함이 금지됩니다.
 	to	에게
 	to {n}	{n}로
+	trailing backslash; use \\\\ for a literal backslash	후행 백슬래시; 리터럴 백슬래시에는 \\\\를 사용합니다.
+	trailing ellipsis differs from the English source	후행 줄임표가 영어 소스와 다릅니다.
+	ui.click: no enabled clickable widget labelled {label:?} (try ui.inspect with query)	ui.click: {label:?}라는 라벨이 붙은 활성화된 클릭 가능한 위젯이 없습니다(쿼리로 ui.inspect 시도).
+	ui.click: no widget with id {} on screen (run ui.inspect again)	ui.click: 화면에 ID가 {}인 위젯이 없습니다(ui.inspect를 다시 실행).
+	ui.click: pass id, label, or x and y	ui.click: ID, 라벨 또는 x와 y를 전달합니다.
+	ui.click: widget {} ({}) is disabled	ui.click: 위젯 {}({})가 비활성화되었습니다.
+	ui.click: {} widgets are labelled {label:?}; click one by id	ui.click: {} 위젯에는 {label:?} 라벨이 지정됩니다. 아이디별로 하나씩 클릭
+	ui.drag: from and to must be a finite distance apart, in points	ui.drag: 시작과 끝은 포인트 단위로 유한한 거리만큼 떨어져 있어야 합니다.
+	ui.drag: {k} must be [x, y] in points	ui.drag: {k}는 포인트 단위로 [x, y]여야 합니다.
+	ui.focus: no enabled focusable widget labelled {label:?}	ui.focus: {label:?}라는 라벨이 붙은 활성화된 포커스 가능 위젯이 없습니다.
+	ui.focus: pass exactly one widget id or label	ui.focus: 정확히 하나의 위젯 ID 또는 라벨을 전달합니다.
+	ui.focus: widget {} is disabled or not focusable	ui.focus: 위젯 {}가 비활성화되었거나 포커스를 받을 수 없습니다.
+	ui.focus: {} widgets are labelled {label:?}; use a widget id	ui.focus: {} 위젯에는 {label:?} 라벨이 지정됩니다. 위젯 ID 사용
+	ui.key: unknown modifier {other:?} (command, shift, alt, ctrl)	ui.key: 알 수 없는 수정자 {other:?}(command, Shift, Alt, Ctrl)
+	ui.open needs a file system; on the web, drop the file on the page	ui.open에는 파일 시스템이 필요합니다. 웹에서는 파일을 페이지에 드롭하세요.
+	ui.quit needs a native window	ui.quit에는 기본 창이 필요합니다
+	ui.resize needs a native window	ui.resize에는 기본 창이 필요합니다
+	ui.set: missing parameter value	ui.set: 매개변수 값이 누락되었습니다.
+	unknown escape \\{other}; use \\n, \\t or \\\\	알 수 없는 탈출 \\{other}; \\n, \\t 또는 \\\\를 사용하세요.
+	unknown function {name}	알 수 없는 함수 {name}
+	unknown instance manager _{child}	알 수 없는 인스턴스 관리자 _{child}
+	unknown method {other:?} (ui.state, ui.inspect, ui.click, ui.focus, ui.resize, ui.quit, ui.move, ui.drag, ui.type, ui.key, ui.command, ui.commands, ui.set, ui.open, ui.screenshot)	알 수 없는 메서드 {other:?}(ui.state, ui.inspect, ui.click, ui.focus, ui.resize, ui.quit, ui.move, ui.drag, ui.type, ui.key, ui.command, ui.commands, ui.set, ui.open, ui.screenshot)
+	unknown mode {other:?}; expected one of: off, black-on-white, white-on-black, yellow-on-black, green-on-black, custom	알 수 없는 모드 {other:?}입니다. off, black-on-white, white-on-black, yellow-on-black, green-on-black, custom 중 하나를 지정하세요.
+	unknown name {name}	알 수 없는 이름 {name}
+	unknown reserved context {context:?}	알 수 없는 예약된 컨텍스트 {context:?}
 	unsupported filter: {0}	지원되지 않는 필터: {0}
 	unsupported security handler: {0}	지원되지 않는 보안 핸들러: {0}
 	unsupported security: {0}	지원되지 않는 보안: {0}
 	watermark	워터마크
+	word count cancelled	단어 개수가 취소됨
 	yesterday	어제
+	yy or yyyy	yy 또는 yyyy
 	yyyy or yy year · m or mm month · mmm or mmmm month name · d or dd day · ddd or dddd weekday. H, h, M, s and t are time letters and can't be used on their own: put {escape} before a letter to show it as is.	yyyy 또는 yy 연도 · m 또는 mm 월 · mmm 또는 mmmm 월 이름 · d 또는 dd 일 · ddd 또는 dddd 평일. H, h, M, s 및 t는 시간 문자이므로 단독으로 사용할 수 없습니다. 문자 앞에 {escape}를 넣으면 있는 그대로 표시됩니다.
+	zone must be center, left, right, top or bottom	영역은 center(가운데), left(왼쪽), right(오른쪽), top(위쪽), bottom(아래쪽) 중 하나여야 합니다.
 	{0:?} is not a page number or label	{0:?}는 페이지 번호나 레이블이 아닙니다.
 	{0:?} is read-only	{0:?}는 읽기 전용입니다.
 	{0}	{0}
 	{0} comments can't be restyled yet (their appearance can't be regenerated)	{0} 주석은 아직 스타일을 변경할 수 없습니다(해당 모양은 재생성할 수 없습니다).
 	{0} isn't possible in a signed document: it would rewrite the file and invalidate the signatures	서명된 문서에서는 {0}가 불가능합니다. 파일을 다시 작성하고 서명을 무효화합니다.
 	{0}: {1}	{0}: {1}
-	{chars} can't be written into the PDF yet: Fill & Sign text is Western European only. Pick a numeric format such as dd.mm.yyyy.	{chars}는 아직 PDF에 쓸 수 없습니다. 채우기 및 서명 텍스트는 서유럽어에만 해당됩니다. dd.mm.yyyy와 같은 숫자 형식을 선택합니다.
+	{TOOL_CALL} needs an object with name and arguments	{TOOL_CALL}에는 이름과 인수가 있는 객체가 필요합니다.
+	{TOOL_CALL}: arguments must be an object	{TOOL_CALL}: 인수는 객체여야 합니다.
+	{TOOL_SEARCH} and {TOOL_CALL} are called directly, not through {TOOL_CALL}	{TOOL_SEARCH} 및 {TOOL_CALL}는 {TOOL_CALL}를 통하지 않고 직접 호출됩니다.
+	{TOOL_SEARCH} takes an object with optional query, category and name	{TOOL_SEARCH}는 선택적 쿼리, 카테고리 및 이름이 포함된 개체를 사용합니다.
+	{TOOL_SEARCH}: {key} must be a string	{TOOL_SEARCH}: {key}는 문자열이어야 합니다.
+	{chars} can't be written into the PDF yet: Fill & Sign text is Western European only. Pick a numeric format such as dd.mm.yyyy.	현재 작성·서명은 서유럽권 문자만 지원해 {chars}를 PDF에 넣을 수 없습니다. dd.mm.yyyy처럼 숫자 날짜 형식을 선택해 주세요.
 	{c} of {n}{more}	{n}{more}의 {c}
 	{dpi} pixels/inch	{dpi} 픽셀/인치
+	{error:?}	{error:?}
 	{field}: {e}	{field}: {e}
 	{file} is too large for a stamp (at most {n} MB)	{file}는 스탬프에 비해 너무 큽니다(최대 {n}MB).
 	{filter}: corrupt data: {detail}	{filter}: 손상된 데이터: {detail}
 	{folder} is already pinned to Home	{folder}는 이미 홈에 고정되어 있습니다.
+	{id} is disabled right now	{id}는 현재 비활성화되어 있습니다
 	{kind} Properties	{kind} 속성
 	{kind} field	{kind} 필드
 	{kind} · page {p}	{kind} · 페이지 {p}
@@ -2731,6 +2917,8 @@
 	{label} (1 issue)	{label}(문제 1개)
 	{label} ({n} issues)	{label}({n} 문제)
 	{label} failed: {e}	{label} 실패: {e}
+	{method}: unknown button {other:?} (primary, secondary, middle)	{method}: 알 수 없는 버튼 {other:?}(기본, 보조, 중간)
+	{method}: unknown parameter {key:?}	{method}: 알 수 없는 매개변수 {key:?}
 	{month} {day}, {y}	{y}년 {month} {day}일
 	{month} {y}	{y}년 {month}
 	{msg} to {dir}	{dir}: {msg}
@@ -2742,6 +2930,7 @@
 	{name} submits the form to {url}; PdfCraft doesn't send form data. Save the document to keep your entries.	{name}는 {url}에 양식을 제출합니다. PdfCraft는 양식 데이터를 보내지 않습니다. 항목을 유지하려면 문서를 저장하세요.
 	{name} — unsaved changes	{name} — 저장되지 않은 변경 사항
 	{name}: choosing images arrives on the web with file pickers for images	{name}: 이미지 선택은 이미지용 파일 선택기를 사용하여 웹에 도착합니다.
+	{name}: network access is not available to form scripts	{name}: 스크립트를 작성하는 데 네트워크 액세스를 사용할 수 없습니다.
 	{name}: the {other} action isn't supported yet	{name}: {other} 작업은 아직 지원되지 않습니다.
 	{n} contributors · {c} commits	{n} 기여자 · {c} 커밋
 	{n} days ago	{n}일 전
@@ -2762,12 +2951,18 @@
 	{n} pages selected	{n} 페이지가 선택됨
 	{n} pages selected.	{n} 페이지가 선택되었습니다.
 	{n} selected	{n} 선택됨
+	{n} sheets are too many to print from the browser (at most {MAX_SHEETS}); save the print-ready PDF and print it from a PDF viewer	{n} 시트가 너무 많아 브라우저에서 인쇄할 수 없습니다(최대 {MAX_SHEETS}). 인쇄용 PDF를 저장하고 PDF 뷰어에서 인쇄
 	{n} tags	{n} 태그
 	{n} word(s) or phrase(s)	단어·구문 {n}개
 	{n} {kind}	{n} {kind}
+	{other} bits per component isn't supported	구성 요소당 {other} 비트는 지원되지 않습니다.
 	{page} is not a page number or label	{page}는 페이지 번호나 레이블이 아닙니다.
+	{reference}: Keychain identities are only available on macOS	{reference}: 키체인 ID는 macOS에서만 사용할 수 있습니다.
+	{reference}: Windows certificate store identities are only available on Windows	{reference}: Windows 인증서 저장소 ID는 Windows에서만 사용할 수 있습니다.
 	{rule} - {status}	{rule} - {status}
+	{som} has no {other} to assign to	{som}에는 할당할 {other}가 없습니다.
 	{s} action	{s} 작업
+	{tool}: unknown argument {k:?} (expected: {})	{tool}: 알 수 없는 인수 {k:?}(예상: {})
 	{ty} element on page {p}: {what}	{p} 페이지의 {ty} 요소: {what}
 	{ty} element: {what}	{ty} 요소: {what}
 	{verb} Background	{verb} 배경
@@ -2781,8 +2976,14 @@
 	{who}, certificate issued by an unknown issuer.	{who}, 알 수 없는 발급자가 발급한 인증서입니다.
 	{who}, certificate issued by {issuer}.	{who}, {issuer}에서 발급한 인증서입니다.
 	{words} on {pages}	{pages}의 {words}
+	{w} × {h} is too large to export	{w} × {h}가 너무 커서 내보낼 수 없습니다.
 	{} annotation on page {p} isn't tagged	{p} 페이지의 {} 주석이 태그되지 않았습니다.
 	{} annotations aren't allowed	{} 주석은 허용되지 않습니다.
+	{} has no method {method}	{}에는 {method} 메서드가 없습니다.
+	{} has no property {name}	{}에는 {name} 속성이 없습니다.
+	{} images can't be exported yet	{} 이미지는 아직 내보낼 수 없습니다.
+	{} is not a field	{}는 필드가 아닙니다.
+	{} is not a folder	{}는 폴더가 아닙니다
 	ΔLOC	ΔLOC
 	— (protection is applied when you save)	— (저장 시 보호가 적용됩니다)
 	“{name}” changed on disk after it was opened or last saved. Saving now replaces that newer version with this one.	디스크를 열거나 마지막으로 저장한 후 디스크에서 "{name}"가 변경되었습니다. 지금 저장하면 최신 버전이 이 버전으로 대체됩니다.

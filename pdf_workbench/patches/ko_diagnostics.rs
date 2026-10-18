@@ -58,13 +58,44 @@ fn capture<'a>(message: &'a str, literals: &[String], values: &mut Vec<&'a str>)
     false
 }
 
-pub fn diagnostic(message: &str) -> String {
-    if super::current().code() != "ko" {
-        return message.to_owned();
+fn nested_diagnostic(wording: &str, hole: &str) -> bool {
+    // 원본 엔진의 원인 필드만 대상으로 삼고 파일명·필드명은 제외한다.
+    match (wording, hole) {
+        ("loading {0}: {1}" | "page {0}: {1}" | "{0}: {1}", "1") => true,
+        ("page {page}: {reason}", "reason") => true,
+        (
+            "syntax error at byte {offset}: {detail}" | "{filter}: corrupt data: {detail}",
+            "detail",
+        ) => true,
+        (
+            "stream data could not be decoded: {0}"
+            | "the file is not a readable PDF: {0}"
+            | "the file can't be read: {0}"
+            | "this document can't be edited: {0}"
+            | "malformed data: {0}"
+            | "malformed encryption dictionary: {0}"
+            | "text recognition failed: {0}"
+            | "couldn't update the parent tree: {0}"
+            | "the XFA template could not be read: {0}"
+            | "the edited document could not be reopened: {0}"
+            | "the edited document could not be written: {0}"
+            | "Couldn't decode the photo: {0}"
+            | "Couldn't decode the signature image: {0}"
+            | "Couldn't read the photo: {0}"
+            | "Couldn't read the signature image: {0}",
+            "0",
+        ) => true,
+        _ => false,
+    }
+}
+
+fn known(message: &str, depth: usize) -> Option<String> {
+    if depth == 8 {
+        return None;
     }
     let exact = super::t(message);
-    if exact != message {
-        return exact.to_owned();
+    if exact != message && (depth == 0 || WORDINGS.contains(&message)) {
+        return Some(exact.to_owned());
     }
     for wording in WORDINGS {
         let (literals, names) = parts(wording);
@@ -83,15 +114,29 @@ pub fn diagnostic(message: &str) -> String {
                 continue;
             };
             // 이 진단의 값은 문서 데이터가 아니라 엔진의 고정 권한 이름이다.
-            let value = if wording.starts_with("the document's security settings don't allow ") {
-                super::t(values[index])
+            let value = if wording.starts_with("the document's security settings don't allow ")
+                || (*wording == "`{code}` is not a date code; use {use_}" && hole == "use_")
+            {
+                super::t(values[index]).to_owned()
+            } else if nested_diagnostic(wording, hole) {
+                known(values[index], depth + 1).unwrap_or_else(|| values[index].to_owned())
             } else {
-                values[index]
+                values[index].to_owned()
             };
-            result.push_str(value);
+            result.push_str(&value);
             result.push_str(&texts[i + 1]);
         }
-        return result;
+        return Some(result);
+    }
+    None
+}
+
+pub fn diagnostic(message: &str) -> String {
+    if super::current().code() != "ko" {
+        return message.to_owned();
+    }
+    if let Some(translated) = known(message, 0) {
+        return translated;
     }
     if message.chars().any(|c| ('가'..='힣').contains(&c)) {
         return message.to_owned();

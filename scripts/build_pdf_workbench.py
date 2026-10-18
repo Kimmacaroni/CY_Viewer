@@ -72,16 +72,20 @@ pub fn artcraft_mark(ui: &mut egui::Ui, size: f32) -> Response {
     shutil.copy2(ROOT/'pdf_workbench/patches/ko.tsv', i18n.parent/'ko.tsv')
     replace(i18n, 'mod catalog;', 'mod catalog;\npub mod cy_korean;')
     shutil.copy2(ROOT/'pdf_workbench/patches/ko_diagnostics.rs',i18n.parent/'cy_korean.rs')
-    wordings=set()
+    wordings={"Permission denied (os error 13)", "No such file or directory (os error 2)", "Access is denied. (os error 5)"}
     for path in (SOURCE/'crates').glob('*/src/**/*.rs'):
-        for match in re.finditer(r'#\[error\(\s*"((?:\\.|[^"\\])*)"',path.read_text(encoding='utf-8')):
+        source=path.read_text(encoding='utf-8')
+        for match in re.finditer(r'#\[error\(\s*"((?:\\.|[^"\\])*)"',source):
             wordings.add(json.loads('"'+match[1]+'"'))
+        if path.name!='tests.rs' and 'tests' not in path.parts and 'i18n' not in path.parts:
+            for match in re.finditer(r'\bErr\(\s*(?:format!\(\s*)?"((?:\\.|[^"\\])*)"',source.split('#[cfg(test)]')[0]):
+                wordings.add(json.loads('"'+match[1]+'"'))
     (i18n.parent/'cy_error_templates.rs').write_text('&'+json.dumps(sorted(wordings),ensure_ascii=False),encoding='utf-8')
     lib=SOURCE/'crates/ui-egui/src/lib.rs'
     replace(lib, 'self.notify(error.to_string());', 'self.notify(i18n::cy_korean::diagnostic(&error.to_string()));')
     replace(lib, 'self.notify(i18n::fmt(tl!(template), args));', '''let failure = ["Couldn't", "failed", "could not", "not applied", "Can't", "cannot"].iter().any(|part| template.contains(part));
         let values: Vec<String> = args.iter().map(|(key, value)| {
-            if failure && matches!(*key, "e" | "error" | "reason" | "why") { i18n::cy_korean::diagnostic(value) }
+            if matches!(*key, "e" | "error") || (failure && matches!(*key, "reason" | "why")) { i18n::cy_korean::diagnostic(value) }
             else { (*value).to_owned() }
         }).collect();
         let localized: Vec<(&str, &str)> = args.iter().zip(values.iter()).map(|((key, _), value)| (*key, value.as_str())).collect();
@@ -90,9 +94,17 @@ pub fn artcraft_mark(ui: &mut egui::Ui, size: f32) -> Response {
         ('word_count_ui.rs','ui.label(error.to_string());','ui.label(crate::i18n::cy_korean::diagnostic(&error.to_string()));'),
         ('word_count_ui.rs','ui.colored_label(ui.visuals().error_fg_color, error);','ui.colored_label(ui.visuals().error_fg_color, crate::i18n::cy_korean::diagnostic(&error.to_string()));'),
         ('measure_ui.rs','ui.colored_label(Color32::from_rgb(190, 50, 50), error);','ui.colored_label(Color32::from_rgb(190, 50, 50), crate::i18n::cy_korean::diagnostic(&error.to_string()));'),
+        ('measure_ui.rs','ui.colored_label(Color32::from_rgb(190, 50, 50), e);','ui.colored_label(Color32::from_rgb(190, 50, 50), crate::i18n::cy_korean::diagnostic(&e.to_string()));'),
         ('page_selection_ui.rs','ui.label(error);','ui.label(crate::i18n::cy_korean::diagnostic(&error.to_string()));'),
+        ('js_ui.rs','egui::RichText::new(e).color(egui::Color32::from_rgb(0xD1, 0x3B, 0x3B))','egui::RichText::new(crate::i18n::cy_korean::diagnostic(&e.to_string())).color(egui::Color32::from_rgb(0xD1, 0x3B, 0x3B))'),
+        ('combine_ui.rs','egui::RichText::new(e).color(ERROR)','egui::RichText::new(crate::i18n::cy_korean::diagnostic(&e.to_string())).color(ERROR)'),
     ]:
         replace(SOURCE/'crates/ui-egui/src'/name,old,new)
+    replace(SOURCE/'crates/ui-egui/src/js_ui.rs','format!("Error: {e}")','format!("오류: {}", crate::i18n::cy_korean::diagnostic(&e.to_string()))')
+    replace(SOURCE/'crates/ui-egui/src/js_ui.rs',"// The engine's reason, in English.",'// 엔진 진단도 현재 UI 언어로 표시한다.')
+    replace(SOURCE/'crates/ui-egui/src/measure_ui.rs','u.page.saturating_add(1), u.reason','u.page.saturating_add(1), crate::i18n::cy_korean::diagnostic(&u.reason)')
+    for name,variable in [('bulk_fields.rs','error'),('dialogs.rs','e'),('sign_ui.rs','e'),('print_ui.rs','e')]:
+        replace(SOURCE/'crates/ui-egui/src'/name,f'tl!({variable})',f'crate::i18n::cy_korean::diagnostic(&{variable}.to_string())')
     web = SOURCE/'apps/pdfcraft-web/src/main.rs'
     replace(web, 'let mut app = PdfCraftApp::new();', 'let mut app = PdfCraftApp::new();\n                    app.language = "ko".into();\n                    app.set_theme_preference(pdfcraft_ui_egui::theme::ThemePreference::System);')
     replace(web, '                    // `?file=<url>`', '                    app.language = "ko".into();\n                    pdfcraft_ui_egui::i18n::set_current(pdfcraft_ui_egui::i18n::Lang::from_pref("ko"));\n                    // `?file=<url>`')
