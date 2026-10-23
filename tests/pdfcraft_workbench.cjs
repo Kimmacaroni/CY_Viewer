@@ -36,6 +36,21 @@ const {execFileSync}=require('node:child_process');
   await command('텍스트 추가');await canvas.click({position:{x:480,y:600}});await page.keyboard.type('CY ported body text');await canvas.evaluate(()=>new Promise(resolve=>requestAnimationFrame(()=>requestAnimationFrame(resolve))));
   // 원본 UI의 텍스트 완료(✓)를 눌러 본문 편집을 확정한다.
   await canvas.click({position:{x:684,y:612}});await page.waitForTimeout(300);
+  // 실기기의 CSS 해상도와 동일하다는 뜻은 아니다. 접기·펼치기·회전·작은 창을 검사한다.
+  const originalFrame=await page.locator('.cy-workbench iframe').elementHandle();
+  for(const viewport of [{width:466,height:678},{width:890,height:626},{width:626,height:890},{width:466,height:360},{width:1360,height:1000}]){
+   await page.setViewportSize(viewport);
+   await page.waitForFunction(({width,height})=>{
+    const panel=document.querySelector('.cy-workbench').getBoundingClientRect();
+    return Math.abs(panel.width-width)<2&&Math.abs(panel.height-height)<2;
+   },viewport);
+   assert(await originalFrame.evaluate(node=>node===document.querySelector('.cy-workbench iframe')),'화면 전환 때 편집 iframe을 교체하지 않아야 한다');
+   const visible=await canvas.boundingBox();assert(visible.width>250&&visible.height>100);
+   assert(visible.x>=0&&visible.y>=0&&visible.x+visible.width<=viewport.width+1&&visible.y+visible.height<=viewport.height+1);
+   const close=await page.locator('.cy-workbench').getByRole('button',{name:'닫기',exact:true}).boundingBox();
+   assert(close.height>=44&&close.x+close.width<=viewport.width+1);
+  }
+  await page.waitForTimeout(300);
   await canvas.press(modifier+'+s');
   const link=page.getByRole('link',{name:'다운로드',exact:true});await link.waitFor();
   const pending=page.waitForEvent('download');await link.click();await(await pending).saveAs(path.join(temp,'full-workbench.pdf'));

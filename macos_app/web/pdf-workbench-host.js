@@ -22,11 +22,30 @@
     if(bootstrap)address.searchParams.set('release',new URL(bootstrap.src).searchParams.get('release')||'0.9.0');
     frame.src=address.href;
     panel.append(toolbar,note,actions,frame);
+    // 접기·펼치기, 화면 회전, Safari 키보드가 바꾸는 실제 표시 영역을 따른다.
+    // iframe을 다시 만들지 않아 열린 문서와 미저장 편집을 보존한다.
+    const viewport=window.visualViewport;
+    let viewportFrame=0;
+    function positionPanel(){
+      viewportFrame=0;
+      const width=viewport?.width||window.innerWidth, height=viewport?.height||window.innerHeight;
+      panel.style.left=`${viewport?.offsetLeft||0}px`;
+      panel.style.top=`${viewport?.offsetTop||0}px`;
+      panel.style.width=`${width}px`;
+      panel.style.height=`${height}px`;
+    }
+    function schedulePosition(){if(!viewportFrame)viewportFrame=requestAnimationFrame(positionPanel);}
+    window.addEventListener('resize',schedulePosition);
+    viewport?.addEventListener('resize',schedulePosition);
+    viewport?.addEventListener('scroll',schedulePosition);
+    positionPanel();
     const hidden=[...document.body.children].filter(e=>!['SCRIPT','STYLE'].includes(e.tagName)).map(e=>[e,e.inert]);
     for(const [element] of hidden)element.inert=true;
     let dirty=false,saved=null,url=null,downloaded=false,ready=false;
     function dispose(value){
       if((dirty||(saved&&!downloaded&&!value))&&!window.confirm('저장하지 않은 작업이 있습니다. PDF 작업실을 닫을까요?'))return;
+      cancelAnimationFrame(viewportFrame);window.removeEventListener('resize',schedulePosition);
+      viewport?.removeEventListener('resize',schedulePosition);viewport?.removeEventListener('scroll',schedulePosition);
       clearTimeout(timer);window.removeEventListener('message',receive);window.removeEventListener('beforeunload',unload);panel.remove();for(const [element,inert] of hidden)element.inert=inert;if(url)URL.revokeObjectURL(url);opened=false;previous?.focus();resolve(value);
     }
     function unload(e){if(dirty||(saved&&!downloaded)){e.preventDefault();e.returnValue='';}}
