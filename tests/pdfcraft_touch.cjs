@@ -30,7 +30,11 @@ const fs=require('node:fs'),path=require('node:path'),http=require('node:http'),
    await page.getByRole('tab',{name:'정보·책갈피',exact:true}).tap();
    await page.getByRole('textbox',{name:'제목',exact:true}).waitFor();
    const title=page.getByRole('textbox',{name:'제목',exact:true});
-   await title.fill('듀오 화면 전환');
+   await title.tap();
+   await page.evaluate(()=>new Promise(r=>requestAnimationFrame(()=>requestAnimationFrame(r))));
+   await page.keyboard.insertText('듀오 화면 전환');
+   await page.evaluate(()=>new Promise(r=>requestAnimationFrame(()=>requestAnimationFrame(r))));
+   await title.press('Tab');
    for(const viewport of [{width:890,height:626},{width:466,height:678},{width:678,height:466},{width:390,height:844}]){
     await page.setViewportSize(viewport);
     await page.waitForTimeout(150);
