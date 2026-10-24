@@ -87,6 +87,8 @@ jobs:
       - name: Test browser PDF tools workflow
         working-directory: .
         run: |
+          node tests/pdfcraft_safe_area.cjs
+          CY_TEST_BROWSER=webkit node tests/pdfcraft_safe_area.cjs
           node tests/pdfcraft_viewport.cjs
           CY_TEST_BROWSER=webkit node tests/pdfcraft_viewport.cjs
           node tests/pdfcraft_ui.cjs
