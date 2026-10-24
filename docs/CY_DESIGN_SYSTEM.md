@@ -256,3 +256,5 @@ Refero 스타일 조회는 NO_SUBSCRIPTION으로 불가했으며 내장 craft-de
 - 작업실도 같은 CSS 안전 영역을 공유한다. 모델명·스크린샷 픽셀을 하드코딩하지 않는다.
 
 공식 근거: https://docs.flutter.dev/platform-integration/web/initialization 및 https://webkit.org/blog/7929/designing-websites-for-iphone-x/ . 화면별 색상·버튼·기능은 기존 기준을 유지한다. 실기기 확인과 안전 영역 주입 브라우저 검사는 구분한다.
+
+홈 화면 상태 표시줄은 `default`로 두어 콘텐츠를 덮는 `black-translucent` 구성을 해제한다. CSS 안전 영역과 함께 적용하며 실제 iOS 버전별 동작을 확인했다고 주장하지 않는다. 공식 근거: https://developer.apple.com/library/archive/documentation/AppleApplications/Reference/SafariHTMLRef/Articles/MetaTags.html .
