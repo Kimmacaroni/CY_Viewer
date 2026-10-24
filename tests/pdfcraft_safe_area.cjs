@@ -16,6 +16,7 @@ const fs=require('node:fs'),path=require('node:path'),http=require('node:http'),
    const page=await browser.newPage({viewport:{width:1280,height:900},hasTouch:true,isMobile:true,locale:'ko-KR',colorScheme:dark?'dark':'light'});page.setDefaultTimeout(60000);
    await page.addInitScript(()=>Object.defineProperty(navigator,'standalone',{get:()=>true}));
    await page.goto(process.env.CY_SAFE_URL||`http://127.0.0.1:${server.address().port}/CY_Viewer/`);
+   assert.equal(await page.locator('meta[name=apple-mobile-web-app-status-bar-style]').getAttribute('content'),'default');
    const picker=page.locator('input[type=file]');await picker.waitFor({state:'visible'});
    async function safe(top,right,bottom,left){
     await page.evaluate(({top,right,bottom,left})=>{for(const [k,v] of Object.entries({top,right,bottom,left}))document.documentElement.style.setProperty('--cy-safe-'+k,v+'px');},{top,right,bottom,left});
