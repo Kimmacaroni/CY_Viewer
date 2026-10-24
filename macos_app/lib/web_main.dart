@@ -20,6 +20,7 @@ import 'recent_web_store.dart';
 import 'cy_recent_files.dart';
 import 'web_inline_print.dart';
 import 'web_native_control.dart';
+import 'web_safe_viewport.dart';
 import 'web_print_platform.dart';
 import 'pdfcraft_dialog.dart';
 import 'pdfcraft_service.dart';
@@ -54,6 +55,7 @@ class CyViewerWebApp extends StatelessWidget {
           highContrast: true,
         ),
         themeMode: ThemeMode.system,
+        builder: (context, child) => WebSafeViewport(child: child!),
         home: _WebLibraryPage(saveRecent: saveRecent),
       ),
     ),

@@ -1,3 +1,6 @@
+/* Safari 상태 표시줄·노치·홈 표시줄의 실제 안전 영역을 모든 웹 화면에 공유한다. */
+:root{--cy-safe-top:env(safe-area-inset-top,0px);--cy-safe-right:env(safe-area-inset-right,0px);--cy-safe-bottom:env(safe-area-inset-bottom,0px);--cy-safe-left:env(safe-area-inset-left,0px)}
+.cy-safe-area-probe{position:fixed;visibility:hidden;pointer-events:none;width:0;height:0;padding:var(--cy-safe-top) var(--cy-safe-right) var(--cy-safe-bottom) var(--cy-safe-left)}
 /* 입력 상자가 아니라 Safari의 실제 파일 선택 버튼까지 터치 영역을 채운다. */
 .cy-pdf-file-input {
   display: block;
@@ -49,7 +52,7 @@
 .cy-pdf-file-input:disabled { opacity: 0.55; cursor: wait; }
 @font-face{font-family:CYWorkbenchKorean;src:url("pdf-workbench/CY-NanumGothic.ttf") format("truetype");font-display:swap}
 /* 기본 CY 화면 위에 전체 편집 작업실을 표시한다. 파일 입력과 포커스가 뒤로 새지 않게 한다. */
-.cy-workbench{position:fixed;inset:0;box-sizing:border-box;overflow:hidden;z-index:2147483647;display:flex;flex-direction:column;background:#f4f6f9;color:#182235;font:14px -apple-system,BlinkMacSystemFont,CYWorkbenchKorean,sans-serif;padding:env(safe-area-inset-top) env(safe-area-inset-right) env(safe-area-inset-bottom) env(safe-area-inset-left)}
+.cy-workbench{position:fixed;inset:0;box-sizing:border-box;overflow:hidden;z-index:2147483647;display:flex;flex-direction:column;background:#f4f6f9;color:#182235;font:14px -apple-system,BlinkMacSystemFont,CYWorkbenchKorean,sans-serif;padding:var(--cy-safe-top) var(--cy-safe-right) var(--cy-safe-bottom) var(--cy-safe-left)}
 .cy-workbench header{display:flex;align-items:center;justify-content:space-between;gap:16px;padding:8px 16px;background:#fff;border-bottom:1px solid #dce2eb}
 .cy-workbench button,.cy-workbench a{box-sizing:border-box;min-height:44px;padding:10px 14px;font:inherit;border:1px solid #b7bfcc;border-radius:8px;background:#fff;color:#182235;cursor:pointer;touch-action:manipulation}
 .cy-workbench button:focus-visible,.cy-workbench a:focus-visible{outline:3px solid #245edb;outline-offset:2px}
